@@ -1,0 +1,26 @@
+{
+  "name": "skillgrid",
+  "version": "1.0.0",
+  "description": "MERN educational portal based on video lessons",
+  "homepage": "https://github.com/GregSharov/SkillGrid#readme",
+  "bugs": {
+    "url": "https://github.com/GregSharov/SkillGrid/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GregSharov/SkillGrid.git"
+  },
+  "license": "ISC",
+  "author": "Gregory Sharov, Ivan Latishov",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mongodb": "^6.14.2",
+    "mongoose": "^8.12.1"
+  }
+}
