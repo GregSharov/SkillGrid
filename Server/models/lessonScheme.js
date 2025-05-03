@@ -2,11 +2,13 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const lessonSchema = new Schema({
-    subject: {
-        type: String,
-        required: true,
-        unique: true
-    },
+    subjects: [
+        {
+            type: String,
+            required: true,
+            unique: true
+        }
+    ],
     themes: [
         {
             type: String,
