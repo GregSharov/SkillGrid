@@ -6,13 +6,13 @@ const lessonSchema = new Schema({
         {
             type: String,
             required: true,
-            unique: true
-        }
-    ],
-    themes: [
-        {
-            type: String,
-            required: true
+            unique: true,
+            themes: [
+                {
+                    type: String,
+                    required: true
+                }
+            ]
         }
     ]
 });
