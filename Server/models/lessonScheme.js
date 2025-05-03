@@ -4,9 +4,11 @@ const { Schema } = mongoose;
 const lessonSchema = new Schema({
     subjects: [
         {
-            type: String,
-            required: true,
-            unique: true,
+            name: {
+                type: String,
+                required: true,
+                unique: true
+            },
             themes: [
                 {
                     type: String,
