@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const commentSchema = new Schema({
     title: { type: String, required: true },
-    author: String,
+    author: { type: String, required: true },
     comments: [{ body: String, date: Date }],
     date: { type: Date, default: Date.now },
     rating: Number
