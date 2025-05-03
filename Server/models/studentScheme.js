@@ -19,12 +19,12 @@ const studentSchema = new Schema({
         type: String,
         required: true
     },
-    subject: {
+    chosenSubjects: {
         type: String,
         required: true,
         unique: true
     },
-    themes: [
+    chosenThemes: [
         {
             type: String,
             required: true
