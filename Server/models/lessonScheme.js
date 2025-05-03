@@ -4,8 +4,14 @@ const { Schema } = mongoose;
 const lessonSchema = new Schema({
     subject: {
         type: String,
-        themes: [{ type: String, required: true }], required: true
-    }
+        required: true
+    },
+    themes: [
+        {
+            type: String,
+            required: true
+        }
+    ]
 });
 
 
