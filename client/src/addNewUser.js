@@ -7,3 +7,5 @@ function addNewUser() {
         </div>
     );
 }
+
+export default addNewUser;
