@@ -15,10 +15,6 @@ const teacherSchema = new Schema({
         required: true,
         trim: true,
     },
-    sex: {
-        type: String,
-        required: true
-    },
     email: {
         type: String,
         required: true
