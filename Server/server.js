@@ -19,7 +19,7 @@ mongoose.connect(uri)
 
 
 app.get("/", (req, res) => {
-    // res.send("<h1>Hello!</h1>");
+    res.send("<h1>Server Side!</h1>");
 })
 
 app.listen(PORT, () => {
