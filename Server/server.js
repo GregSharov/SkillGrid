@@ -18,7 +18,7 @@ mongoose.connect(uri)
     });
 
 
-app.get("/", (req, res) => {
+app.post("/user/add", (req, res) => {
     // res.send("<h1>Hello!</h1>");
 })
 
