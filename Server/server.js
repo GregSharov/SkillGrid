@@ -7,6 +7,7 @@ const uri = "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/?retryWr
 const app = express();
 const PORT = 3000;
 
+
 app.use(cors());
 app.use(express.json());
 
