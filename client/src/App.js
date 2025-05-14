@@ -5,7 +5,6 @@ import AddNewUser from "./addNewUser.js";
 function App() {
   return (
     <div>
-      <h1>Hello</h1>
       <AddNewUser />
     </div>
   );
