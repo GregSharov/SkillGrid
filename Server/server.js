@@ -24,9 +24,9 @@ app.get("/", (req, res) => {
 });
 
 app.post("/user/add", (req, res) => {
-    const { firstName } = req.body;
-    console.log("Received data:", firstName);
-    res.json({ message: `Received form for ${firstName}` });
+    const { firstName, secondName, dateOfBirth, email, phone, password } = req.body;
+    console.log("Received data:", firstName, secondName, dateOfBirth, email, phone, password);
+    res.json({ message: `Received form for ${firstName} ${secondName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
 });
 
 app.listen(PORT, () => {
