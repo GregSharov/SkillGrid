@@ -21,7 +21,13 @@ mongoose.connect(uri)
 
 app.get("/", (req, res) => {
     res.send("<h1>Server Side!</h1>");
-})
+});
+
+app.post("/user/add", (req, res) => {
+    const { firstName } = req.body;
+    console.log("Received data:", firstName);
+    res.json({ message: `Received form for ${firstName}` });
+});
 
 app.listen(PORT, () => {
     console.log('Server runs on port ', PORT);
