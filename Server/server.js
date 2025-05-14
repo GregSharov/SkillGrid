@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
+import User from "./models/studentScheme.js";
 
-const uri = "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+const uri = "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/SkillGridDB?retryWrites=true&w=majority&appName=Cluster0";
 
 const app = express();
 const PORT = 3000;
@@ -23,10 +25,30 @@ app.get("/", (req, res) => {
     res.send("<h1>Server Side!</h1>");
 });
 
-app.post("/user/add", (req, res) => {
-    const { firstName, secondName, dateOfBirth, email, phone, password } = req.body;
-    console.log("Received data:", firstName, secondName, dateOfBirth, email, phone, password);
-    res.json({ message: `Received form for ${firstName} ${secondName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
+app.post("/user/add", async (req, res) => {
+    try {
+        const { firstName, lastName, dateOfBirth, email, phone, password } = req.body;
+        console.log("Received data:", firstName, lastName, dateOfBirth, email, phone, password);
+
+        const newUser = new User(
+            {
+                firstName,
+                lastName,
+                dateOfBirth,
+                email,
+                phone,
+                password
+            }
+        );
+
+        const savedUser = await newUser.save();
+        console.log("User saved:", savedUser);
+
+        res.json({ message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
+    } catch (error) {
+        console.error("Error saving user:", error);
+        res.status(500).json({ message: "Error saving user." });
+    }
 });
 
 app.listen(PORT, () => {

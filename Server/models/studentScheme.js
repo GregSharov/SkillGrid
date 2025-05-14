@@ -26,19 +26,19 @@ const studentSchema = new Schema({
     password: {
         type: String,
         required: true,
-        unique: true
+        unique: false
     },
     subjects: [
         {
             name: {
                 type: String,
-                required: true,
-                unique: true
+                required: false,
+                unique: false
             },
             themes: [
                 {
                     type: String,
-                    required: true
+                    required: false
                 }
             ]
         }
@@ -46,4 +46,6 @@ const studentSchema = new Schema({
 });
 
 
-module.exports = studentSchema;
+// module.exports = studentSchema;
+const User = mongoose.model("Student", studentSchema, "Students");
+export default User;
