@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
 import User from "./models/studentSchema.js";
+import Subject from "./models/subjectSchema.js";
 
 const uri =
   "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/SkillGridDB?retryWrites=true&w=majority&appName=Cluster0";
@@ -33,6 +34,22 @@ app.get("/", (req, res) => {
     .catch((err) => {
       console.error("Error fetching data: ", err);
       res.status(500).json(err);
+    });
+});
+
+// Retrieve data from subjects database using subjectSchema
+app.get("/subjects", (req, res) => {
+    Subject.find()
+    .then((items) => {
+        console.log("Fetched subjects data: ");
+        items.forEach((item) => {
+            console.log(item);
+        });
+        res.status(200).json(items);
+    })
+    .catch((err) => {
+        console.error("Error fetching subjects data: ", err);
+        res.status(500).json(err);
     });
 });
 
