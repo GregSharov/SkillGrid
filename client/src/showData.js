@@ -9,10 +9,7 @@ function ShowData() {
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                const sortedData = data.flatMap(item => item.firstNames.map(firstName => ({
-                    student: item.firstName
-                }))).sort((a, b) => a.firstName - b.firstName);
-
+                const sortedData = data.sort((a, b) => a.firstName.localeCompare(b.firstName));
                 setUserData(sortedData);
             })
             .catch(err => console.log('Error fetching data', err));
