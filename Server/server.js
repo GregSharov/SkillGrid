@@ -51,6 +51,7 @@ app.post("/user/add", async (req, res) => {
     }
 });
 
+// Listen to a Server
 app.listen(PORT, () => {
     console.log('Server runs on port ', PORT);
 });
