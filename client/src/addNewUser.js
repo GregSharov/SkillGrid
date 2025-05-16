@@ -1,4 +1,6 @@
 import { useState } from "react";
+// Function to add a new user
+// This function is used to add a new user to the database
 
 function AddNewUser() {
     const [formData, setFormData] = useState(
