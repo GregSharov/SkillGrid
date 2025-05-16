@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-const { Schema } = mongoose;
+const { Schema, model } = mongoose;
 
 const studentSchema = new Schema({
   firstName: {
@@ -45,6 +45,6 @@ const studentSchema = new Schema({
   ],
 });
 
-// module.exports = studentSchema;
-const User = mongoose.model("Student", studentSchema, "Students");
-export default User;
+// Export both the schema and the model
+const Student = model("Student", studentSchema, "Students");
+export default Student;

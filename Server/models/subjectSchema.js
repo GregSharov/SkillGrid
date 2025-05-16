@@ -36,5 +36,6 @@ const subjectSchema = new Schema({
   lessons: [lessonSchema],
 });
 
-const Subject = model("Subject", subjectSchema);
-export default Subject;
+// Export both the schema and the model
+const Subject = model("Subject", subjectSchema, "Subjects");
+export { subjectSchema, Subject };
