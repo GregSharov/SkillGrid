@@ -19,9 +19,9 @@ function ShowStudentData() {
 
   return (
     <div>
+      <h1>Students:</h1>
       {studentData.map((item, index) => (
         <div key={index}>
-          <p>{item._id}</p>
           <p>
             {item.firstName} {item.lastName}
           </p>

@@ -2,14 +2,16 @@
 import "./App.css";
 import AddNewUser from "./addNewUser.js";
 import SignIn from ".//signIn.js";
-import ShowData from "./showData.js";
+import DisplayStudentsData from "./displayStudentsData.js";
+import DisplaySubjectData from "./displaySubjectsData.js";
 
 function App() {
   return (
     <div>
       <AddNewUser />
       <SignIn />
-      <ShowData />
+      <DisplayStudentsData />
+      <DisplaySubjectData />
     </div>
   );
 }
