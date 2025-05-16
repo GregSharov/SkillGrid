@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
-import User from "./models/studentSchema.js";
+import Student from "./models/studentSchema.js";
 import Subject from "./models/subjectSchema.js";
 
 const uri =
@@ -21,9 +21,9 @@ mongoose
     console.error("Could not connect to MongoDB " + err);
   });
 
-// Retrieve the data from database to the user
-app.get("/", (req, res) => {
-  User.find()
+// Retrieve the data from database to the student
+app.get("/students", (req, res) => {
+  Student.find()
     .then((items) => {
       console.log("Fetched data: ");
       items.forEach((item) => {
@@ -39,46 +39,20 @@ app.get("/", (req, res) => {
 
 // Retrieve data from subjects database using subjectSchema
 app.get("/subjects", (req, res) => {
-    Subject.find()
+  Subject.find()
     .then((items) => {
-        console.log("Fetched subjects data: ");
-        items.forEach((item) => {
-            console.log(item);
-        });
-        res.status(200).json(items);
+      console.log("Fetched subjects data: ");
+      items.forEach((item) => {
+        console.log(item);
+      });
+      res.status(200).json(items);
     })
     .catch((err) => {
-        console.error("Error fetching subjects data: ", err);
-        res.status(500).json(err);
+      console.error("Error fetching subjects data: ", err);
+      res.status(500).json(err);
     });
 });
 
-// This function is used to add a new user to the database
-// app.post("/user/add", async (req, res) => {
-//     try {
-//         const { firstName, lastName, dateOfBirth, email, phone, password } = req.body;
-//         console.log("Received data:", firstName, lastName, dateOfBirth, email, phone, password);
-
-//         const newUser = new User(
-//             {
-//                 firstName,
-//                 lastName,
-//                 dateOfBirth,
-//                 email,
-//                 phone,
-//                 password
-//             }
-//         );
-
-//         const savedUser = await newUser.save();
-//         console.log("User saved:", savedUser);
-
-//         res.json({ message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
-//     } catch (error) {
-//         console.error("Error saving user:", error);
-//         res.status(500).json({ message: "Error saving user." });
-//     }
-// });
 // This function is used to add a new user to the database
 app.post("/user/add", async (req, res) => {
   try {
@@ -94,7 +68,7 @@ app.post("/user/add", async (req, res) => {
       password
     );
 
-    const newUser = new User({
+    const newStudent = new Student({
       firstName,
       lastName,
       dateOfBirth,
@@ -104,18 +78,16 @@ app.post("/user/add", async (req, res) => {
     });
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingStudent = await Student.findOne({ email });
+    if (existingStudent) {
       res.status(400).json({ message: "User already exists." });
     } else {
-      const savedUser = await newUser.save();
-      console.log("User saved:", savedUser);
+      const savedStudent = await newStudent.save();
+      console.log("User saved:", savedStudent);
 
-      res
-        .status(201)
-        .json({
-          message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}`,
-        });
+      res.status(201).json({
+        message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}`,
+      });
     }
   } catch (error) {
     console.error("Error saving user:", error);
@@ -129,7 +101,7 @@ app.post("/user/signin", async (req, res) => {
     const { email, password } = req.body;
     console.log("Received data:", email, password);
 
-    const user = await User.find({ email, password });
+    const user = await Student.find({ email, password });
     console.log("User found:", user);
 
     // Check if user exists
