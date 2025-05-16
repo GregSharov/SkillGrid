@@ -1,14 +1,23 @@
 import mongoose from "mongoose";
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import cors from "cors";
 import Student from "./models/studentSchema.js";
-import Subject from "./models/subjectSchema.js";
+import { Subject } from "./models/subjectSchema.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// MongoDB connection string
 const uri =
   "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/SkillGridDB?retryWrites=true&w=majority&appName=Cluster0";
 
 const app = express();
 const PORT = 3000;
+
+// Serve static image files
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use(cors());
 app.use(express.json());
@@ -21,7 +30,7 @@ mongoose
     console.error("Could not connect to MongoDB " + err);
   });
 
-// Retrieve the data from database to the student
+// Retrieve the data from students database
 app.get("/students", (req, res) => {
   Student.find()
     .then((items) => {
@@ -37,7 +46,7 @@ app.get("/students", (req, res) => {
     });
 });
 
-// Retrieve data from subjects database using subjectSchema
+// Retrieve data from subjects database
 app.get("/subjects", (req, res) => {
   Subject.find()
     .then((items) => {
