@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
-const { Schema } = mongoose;
+const { Schema, model } = mongoose;
 
+// Define the lesson schema
 const lessonSchema = new Schema({
   name: {
     type: String,
@@ -17,6 +18,7 @@ const lessonSchema = new Schema({
   },
 });
 
+// Define the subject schema with embedded lessons
 const subjectSchema = new Schema({
   name: {
     type: String,
@@ -28,10 +30,11 @@ const subjectSchema = new Schema({
     required: true,
   },
   description: {
-    ype: String,
+    type: String,
     required: true,
   },
   lessons: [lessonSchema],
 });
 
-module.exports = subjectSchema;
+const Subject = model("Subject", subjectSchema);
+export default Subject;
