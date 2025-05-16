@@ -17,7 +17,7 @@ function AddNewUser() {
         setFormData({ ...formData, [event.target.name]: event.target.value });
     };
 
-// This function is used to handle form submission and send data to the server
+    // This function is used to handle form submission and send data to the server
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -30,7 +30,7 @@ function AddNewUser() {
         const data = await res.json();
         alert(`Server says: ${data.message}`);
     };
-// This function is used to render the form
+    // This function is used to render the form
     return (
         <div>
             <h2>Welcome</h2>
