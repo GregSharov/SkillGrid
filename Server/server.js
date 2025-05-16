@@ -13,6 +13,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
+
 // Connect to MongoDB
 mongoose.connect(uri)
     .then(() => console.log('Connected to MongoDB!'))
@@ -22,7 +23,18 @@ mongoose.connect(uri)
 
 // Retrieve the data from database to the user
 app.get("/", (req, res) => {
-    res.send("<h1>Server Side!</h1>");
+    User.find()
+        .then((items) => {
+            console.log("Fetched data: ");
+            items.forEach((item) => {
+                console.log(item);
+            });
+            res.status(200).json(items);
+        })
+        .catch((err) => {
+            console.error("Error fetching data: ", err);
+            res.status(500).json(err);
+        });
 });
 
 // This function is used to add a new user to the database
