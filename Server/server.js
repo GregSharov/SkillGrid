@@ -38,6 +38,32 @@ app.get("/", (req, res) => {
 });
 
 // This function is used to add a new user to the database
+// app.post("/user/add", async (req, res) => {
+//     try {
+//         const { firstName, lastName, dateOfBirth, email, phone, password } = req.body;
+//         console.log("Received data:", firstName, lastName, dateOfBirth, email, phone, password);
+
+//         const newUser = new User(
+//             {
+//                 firstName,
+//                 lastName,
+//                 dateOfBirth,
+//                 email,
+//                 phone,
+//                 password
+//             }
+//         );
+
+//         const savedUser = await newUser.save();
+//         console.log("User saved:", savedUser);
+
+//         res.json({ message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
+//     } catch (error) {
+//         console.error("Error saving user:", error);
+//         res.status(500).json({ message: "Error saving user." });
+//     }
+// });
+// This function is used to add a new user to the database
 app.post("/user/add", async (req, res) => {
     try {
         const { firstName, lastName, dateOfBirth, email, phone, password } = req.body;
@@ -54,13 +80,42 @@ app.post("/user/add", async (req, res) => {
             }
         );
 
-        const savedUser = await newUser.save();
-        console.log("User saved:", savedUser);
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            res.status(400).json({ message: "User already exists." });
+        } else {
 
-        res.json({ message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
+            const savedUser = await newUser.save();
+            console.log("User saved:", savedUser);
+
+            res.json({ message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}` });
+        }
     } catch (error) {
         console.error("Error saving user:", error);
         res.status(500).json({ message: "Error saving user." });
+    }
+});
+
+// This function is used to sign in a user
+app.post("/user/signin", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log("Received data:", email, password);
+
+        const user = await User.find({ email, password });
+        console.log("User found:", user);
+
+        // Check if user exists
+        if (user.length === 0) {
+            return res.status(401).json({ message: "Invalid email or password." });
+        } else {
+            // This place to redirect to user acount page !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            res.json({ message: `User found ${email}, ${password}` });
+        }
+    } catch (error) {
+        console.error("Error signing in user:", error);
+        res.status(500).json({ message: "Error signing in user." });
     }
 });
 
