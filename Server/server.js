@@ -57,7 +57,7 @@ app.get("/subjects", (req, res) => fetchUsersData(Subject, req, res));
 // Add a new user to the database
 app.post("/user/add", async (req, res) => {
   try {
-    const { firstName, lastName, dateOfBirth, email, phone, password } =
+    const { firstName, lastName, dateOfBirth, email, phone, password, isTeacher } =
       req.body;
 
     console.log(
@@ -70,7 +70,13 @@ app.post("/user/add", async (req, res) => {
       password
     );
 
-    const newStudent = new Student({
+    console.log("isTeacher: ", isTeacher);
+    let Model = Student;
+    if (isTeacher) {
+      Model = Teacher;
+    }
+
+    const newUser = new Model({
       firstName,
       lastName,
       dateOfBirth,
@@ -80,12 +86,12 @@ app.post("/user/add", async (req, res) => {
     });
 
     // Check if user already exists
-    const existingStudent = await Student.findOne({ email });
-    if (existingStudent) {
+    const existingUser = await Model.findOne({ email });
+    if (existingUser) {
       res.status(400).json({ message: "User already exists." });
     } else {
-      const savedStudent = await newStudent.save();
-      console.log("User saved:", savedStudent);
+      const savedUser = await newUser.save();
+      console.log("User saved:", savedUser);
 
       res.status(201).json({
         message: `Received form for ${firstName} ${lastName}, ${dateOfBirth}, ${email}, ${phone}, ${password}`,
