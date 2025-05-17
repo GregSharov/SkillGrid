@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// This function is used to add a new user to the database
+// Add a new user to the database
 function AddNewUser() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -9,13 +9,19 @@ function AddNewUser() {
     email: "",
     phone: "",
     password: "",
+    isTeacher: false,
   });
 
+  // Universal input handler (including checkbox)
   const handleChange = (event) => {
-    setFormData({ ...formData, [event.target.name]: event.target.value });
+    const { name, type, value, checked } = event.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
-  // This function is used to handle form submission and send data to the server
+  // Handle form submission and send data to the server
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -27,67 +33,99 @@ function AddNewUser() {
 
     const data = await res.json();
     alert(`Server says: ${data.message}`);
+
+    // Reset the form
+    setFormData({
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      email: "",
+      phone: "",
+      password: "",
+      isTeacher: false,
+    });
   };
-  // This function is used to render the form
+
+  // Render the form
   return (
     <div>
       <h2>Welcome</h2>
       <form onSubmit={handleSubmit}>
-        <label for="firstName">First name</label>
+        <label htmlFor="firstName">First name</label>
         <input
           type="text"
           id="firstName"
           name="firstName"
+          value={formData.firstName}
           onChange={handleChange}
           placeholder="Enter a first name"
           required
         />
-        <label for="lastName">Second name</label>
+
+        <label htmlFor="lastName">Second name</label>
         <input
           type="text"
           id="lastName"
           name="lastName"
+          value={formData.lastName}
           onChange={handleChange}
           placeholder="Enter a second name"
           required
         />
-        <label for="dateOfBirth">Date of birth</label>
+
+        <label htmlFor="dateOfBirth">Date of birth</label>
         <input
           type="date"
           id="dateOfBirth"
           name="dateOfBirth"
+          value={formData.dateOfBirth}
           onChange={handleChange}
-          placeholder="Enter your date of birth"
           required
         />
-        <label for="email">Email</label>
+
+        <label htmlFor="email">Email</label>
         <input
           type="email"
           id="email"
           name="email"
+          value={formData.email}
           onChange={handleChange}
           placeholder="Enter an email"
           required
         />
-        <label for="phone">Phone</label>
+
+        <label htmlFor="phone">Phone</label>
         <input
           type="tel"
           id="phone"
           name="phone"
+          value={formData.phone}
           onChange={handleChange}
           pattern="[0-9]{10}"
           placeholder="Enter phone number"
           required
         />
-        <label for="password">Password</label>
+
+        <label htmlFor="password">Password</label>
         <input
           type="password"
           id="password"
           name="password"
+          value={formData.password}
           onChange={handleChange}
           placeholder="Enter a password"
           required
         />
+
+        <label htmlFor="isTeacher">I am a teacher</label>
+        <input
+          type="checkbox"
+          id="isTeacher"
+          name="isTeacher"
+          checked={formData.isTeacher}
+          onChange={handleChange}
+        />
+
         <button type="submit">Submit</button>
       </form>
     </div>
