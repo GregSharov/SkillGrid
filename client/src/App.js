@@ -3,6 +3,7 @@ import "./App.css";
 import AddNewUser from "./addNewUser.js";
 import SignIn from ".//signIn.js";
 import DisplayStudentsData from "./displayStudentsData.js";
+import DisplayTeachersData from "./displayTeachersData.js";
 import DisplaySubjectData from "./displaySubjectsData.js";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
       <AddNewUser />
       <SignIn />
       <DisplayStudentsData />
+      <DisplayTeachersData />
       <DisplaySubjectData />
     </div>
   );
