@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Subject } from "./subjectSchema.js";
 const { Schema, model } = mongoose;
 
 const studentSchema = new Schema({
@@ -13,12 +14,10 @@ const studentSchema = new Schema({
   dateOfBirth: {
     type: Date,
     required: true,
-    trim: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true,
   },
   phone: {
     type: String,
@@ -28,21 +27,7 @@ const studentSchema = new Schema({
     type: String,
     required: true,
   },
-  subjects: [
-    {
-      name: {
-        type: String,
-        required: false,
-        unique: false,
-      },
-      themes: [
-        {
-          type: String,
-          required: false,
-        },
-      ],
-    },
-  ],
+  subjects: [Subject.schema],
 });
 
 // Export both the schema and the model

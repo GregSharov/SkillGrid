@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import SubjectSchema from "./subjectSchema.js";
+import { Subject } from "./subjectSchema.js";
 const { Schema, model } = mongoose;
 
 const teacherSchema = new Schema({
@@ -23,7 +23,7 @@ const teacherSchema = new Schema({
     type: String,
     required: true,
   },
-  subjects: [SubjectSchema],
+  subjects: [Subject.schema],
 });
 
 // Export both the schema and the model
