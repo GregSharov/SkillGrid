@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import Student from "./models/studentSchema.js";
+import Teacher from "./models/teacherSchema.js";
 import { Subject } from "./models/subjectSchema.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,9 +31,10 @@ mongoose
     console.error("Could not connect to MongoDB " + err);
   });
 
-// Retrieve the data from students database
-app.get("/students", (req, res) => {
-  Student.find()
+// Retrieve the data from databases
+function fetchUsersData (model, req, res) {
+  console.log("Model is ", model);
+  model.find()
     .then((items) => {
       console.log("Fetched data: ");
       items.forEach((item) => {
@@ -44,29 +46,20 @@ app.get("/students", (req, res) => {
       console.error("Error fetching data: ", err);
       res.status(500).json(err);
     });
-});
+};
 
-// Retrieve data from subjects database
-app.get("/subjects", (req, res) => {
-  Subject.find()
-    .then((items) => {
-      console.log("Fetched subjects data: ");
-      items.forEach((item) => {
-        console.log(item);
-      });
-      res.status(200).json(items);
-    })
-    .catch((err) => {
-      console.error("Error fetching subjects data: ", err);
-      res.status(500).json(err);
-    });
-});
+// Use the function to fetch data from different models
+app.get("/students", (req, res) => fetchUsersData(Student, req, res));
+app.get("/teachers", (req, res) => fetchUsersData(Teacher, req, res));
+app.get("/subjects", (req, res) => fetchUsersData(Subject, req, res));
 
-// This function is used to add a new user to the database
+
+// Add a new user to the database
 app.post("/user/add", async (req, res) => {
   try {
     const { firstName, lastName, dateOfBirth, email, phone, password } =
       req.body;
+
     console.log(
       "Received data:",
       firstName,
@@ -104,7 +97,7 @@ app.post("/user/add", async (req, res) => {
   }
 });
 
-// This function is used to sign in a user
+// Sign in a user
 app.post("/user/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
