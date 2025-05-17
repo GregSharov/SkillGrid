@@ -25,6 +25,15 @@ function ShowStudentData() {
           <p>
             {item.firstName} {item.lastName}
           </p>
+          <ul>
+            {item.subjects.map((subject, subjectIndex) => (
+              <li key={subjectIndex}>
+                <h2>{subject.name}</h2>
+                <p>{subject.description}</p>
+                <img src={subject.image} alt={`${subject.name} view`}></img>
+              </li>
+            ))}
+          </ul>
         </div>
       ))}
     </div>
