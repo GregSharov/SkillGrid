@@ -4,6 +4,8 @@ import Teacher from "../models/teacherSchema.js";
 
 const router = express.Router();
 
+var Model = Student;
+
 // Add a new user
 router.post("/add", async (req, res) => {
   try {
@@ -17,7 +19,7 @@ router.post("/add", async (req, res) => {
       isTeacher,
     } = req.body;
 
-    let Model = Student;
+    // let Model = Student;
     if (isTeacher) {
       Model = Teacher;
     }
@@ -46,14 +48,21 @@ router.post("/add", async (req, res) => {
 // Sign in user
 router.post("/signin", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await Student.find({ email, password });
+    const { email, password, isTeacher } = req.body;
+
+    // let Model = Student;
+    if (isTeacher) {
+      Model = Teacher;
+    }
+
+    // Check if the user exists
+    const user = await Model.find({ email, password });
 
     if (user.length === 0) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    res.json({ message: `User found: ${email}` });
+    res.json({ message: `User found: ${email} ${password}` });
   } catch (error) {
     console.error("Error signing in user:", error);
     res.status(500).json({ message: "Error signing in user." });

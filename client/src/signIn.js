@@ -5,9 +5,15 @@ function SignIn() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    isTeacher: false,
   });
+
   const handleChange = (event) => {
-    setFormData({ ...formData, [event.target.name]: event.target.value });
+    const { name, type, value, checked } = event.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   // This function is used to handle form submission and send data to the server
@@ -46,6 +52,14 @@ function SignIn() {
           onChange={handleChange}
           placeholder="Enter a password"
           required
+        />
+        <label for="isTeacher">I am a teacher</label>
+        <input
+          type="checkbox"
+          id="isTeacher"
+          name="isTeacher"
+          checked={formData.isTeacher}
+          onChange={handleChange}
         />
         <button type="submit">Submit</button>
       </form>
