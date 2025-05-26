@@ -13,9 +13,9 @@ import LessonCard from "./lessonCard.js";
 
 import Layout from "./pages/Layout.js";
 import NoPage from "./pages/NoPage.js";
-import Home from "./pages/Home.js";
-import SignIn from "./pages/SignIn.js";
-import SignUp from "./pages/SignUp.js";
+import Home from "./pages/HomePage.js";
+import SignIn from "./pages/SignInPage.js";
+import SignUp from "./pages/SignUpPage.js";
 
 
 

@@ -48,87 +48,185 @@ function AddNewUser() {
 
   // Render the form
   return (
-    <div>
-      <h2>Welcome</h2>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="firstName">First name</label>
-        <input
-          type="text"
-          id="firstName"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          placeholder="Enter a first name"
-          required
-        />
 
-        <label htmlFor="lastName">Second name</label>
-        <input
-          type="text"
-          id="lastName"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          placeholder="Enter a second name"
-          required
-        />
+      <main className="mx-auto flex min-h-screen w-full items-center justify-center bg-gray-900 text-white">
+        <form onSubmit={handleSubmit}>
+          <section className="flex w-[30rem] flex-col space-y-10">
+            <div className="text-center text-4xl font-medium">Sign Up</div>
 
-        <label htmlFor="dateOfBirth">Date of birth</label>
-        <input
-          type="date"
-          id="dateOfBirth"
-          name="dateOfBirth"
-          value={formData.dateOfBirth}
-          onChange={handleChange}
-          required
-        />
+            <div className="w-full transform border-b-2 bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                placeholder="First name"
+                required
+                className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"/>
+            </div>
 
-        <label htmlFor="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="Enter an email"
-          required
-        />
+            <div className="w-full transform border-b-2 bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                placeholder="Last name"
+                required
+                className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"/>
+            </div>
 
-        <label htmlFor="phone">Phone</label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          pattern="[0-9]{10}"
-          placeholder="Enter phone number"
-          required
-        />
+            <div className="w-full transform border-b-2 bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+              <input
+                type="date"
+                id="dateOfBirth"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                required
+                className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"/>
+            </div>
 
-        <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Enter a password"
-          required
-        />
+            <div className="w-full transform border-b-2 bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email Address"
+                required
+                className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"/>
+            </div>
 
-        <label htmlFor="isTeacher">I am a teacher</label>
-        <input
-          type="checkbox"
-          id="isTeacher"
-          name="isTeacher"
-          checked={formData.isTeacher}
-          onChange={handleChange}
-        />
+            <div className="w-full transform border-b-2 bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                pattern="[0-9]{10}"
+                placeholder="Enter phone number"
+                required
+                className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"/>
+            </div>
 
-        <button type="submit">Submit</button>
-      </form>
-    </div>
+            <div className="w-full transform border-b-2 bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"/>
+            </div>
+
+            <div class="">
+              <label for="isTeacher" className="flex items-center w-full transform bg-transparent text-lg duration-300 focus-within:border-indigo-500">
+                <input
+                  type="checkbox"
+                  id="isTeacher"
+                  name="isTeacher"
+                  checked={formData.isTeacher}
+                  onChange={handleChange}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                  <span class="ml-2 text-xl text-gray-400">I am a teacher</span>
+              </label>
+            </div>
+
+            <button type="submit" className="transform rounded-sm bg-indigo-600 py-2 font-bold duration-300 hover:bg-indigo-400">SIGN UP</button>
+
+          </section>
+        </form>
+      </main>
+
+
+
+
+    // <div>
+    //   <form onSubmit={handleSubmit}>
+    //     <label htmlFor="firstName">First name</label>
+    //     <input
+          // type="text"
+          // id="firstName"
+          // name="firstName"
+          // value={formData.firstName}
+          // onChange={handleChange}
+          // placeholder="Enter a first name"
+          // required
+    //     />
+
+    //     <label htmlFor="lastName">Second name</label>
+        // <input
+          // type="text"
+          // id="lastName"
+          // name="lastName"
+          // value={formData.lastName}
+          // onChange={handleChange}
+          // placeholder="Enter a second name"
+          // required
+        // />
+
+    //     <label htmlFor="dateOfBirth">Date of birth</label>
+        // <input
+          // type="date"
+          // id="dateOfBirth"
+          // name="dateOfBirth"
+          // value={formData.dateOfBirth}
+          // onChange={handleChange}
+          // required
+        // />
+
+    //     <label htmlFor="email">Email</label>
+    //     <input
+          // type="email"
+          // id="email"
+          // name="email"
+          // value={formData.email}
+          // onChange={handleChange}
+          // placeholder="Enter an email"
+          // required
+    //     />
+
+    //     <label htmlFor="phone">Phone</label>
+    //     <input
+          // type="tel"
+          // id="phone"
+          // name="phone"
+          // value={formData.phone}
+          // onChange={handleChange}
+          // pattern="[0-9]{10}"
+          // placeholder="Enter phone number"
+          // required
+    //     />
+
+    //     <label htmlFor="password">Password</label>
+    //     <input
+    //       type="password"
+    //       id="password"
+    //       name="password"
+    //       value={formData.password}
+    //       onChange={handleChange}
+    //       placeholder="Enter a password"
+    //       required
+    //     />
+
+    //     <label htmlFor="isTeacher">I am a teacher</label>
+    //     <input
+          // type="checkbox"
+          // id="isTeacher"
+          // name="isTeacher"
+          // checked={formData.isTeacher}
+          // onChange={handleChange}
+    //     />
+
+    //     <button type="submit">Submit</button>
+    //   </form>
+    // </div>
   );
 }
 
