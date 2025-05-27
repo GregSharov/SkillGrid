@@ -6,7 +6,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { BsCart3 } from "react-icons/bs";
 
 
-  const ProductCarousel = () => {
+  const DisplaySubjectData = () => {
     const [subjectData, setSubjectData] = useState([]);
     const url = "http://localhost:3000/subjects";
 
@@ -38,7 +38,7 @@ import { BsCart3 } from "react-icons/bs";
 
     // Calculate product width on mount and resize
     useEffect(() => {
-      const updateProductWidth = () => {
+      const updateWidth = () => {
         if (carouselRef.current?.firstChild) {
           const productElement = carouselRef.current.firstChild;
           const style = window.getComputedStyle(productElement);
@@ -48,8 +48,8 @@ import { BsCart3 } from "react-icons/bs";
         }
       };
 
-      updateProductWidth();
-      const resizeObserver = new ResizeObserver(updateProductWidth);
+      updateWidth();
+      const resizeObserver = new ResizeObserver(updateWidth);
       if (carouselRef.current) {
         resizeObserver.observe(carouselRef.current);
       }
@@ -57,7 +57,7 @@ import { BsCart3 } from "react-icons/bs";
       return () => resizeObserver.disconnect();
     }, []);
 
-    const scrollToProduct = (index) => {
+    const scrollToLessons = (index) => {
       if (carouselRef.current && productWidth > 0) {
         carouselRef.current.scrollTo({
           left: index * productWidth,
@@ -69,13 +69,13 @@ import { BsCart3 } from "react-icons/bs";
 
     const handlePrev = () => {
       if (currentIndex > 0) {
-        scrollToProduct(currentIndex - 1);
+        scrollToLessons(currentIndex - 1);
       }
     };
 
     const handleNext = () => {
       if (currentIndex < lessons.length - 1) {
-        scrollToProduct(currentIndex + 1);
+        scrollToLessons(currentIndex + 1);
       }
     };
 
@@ -117,7 +117,7 @@ import { BsCart3 } from "react-icons/bs";
               className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
               }`}
-              aria-label="Previous product"
+              aria-label="Previous lessons"
             >
               <FaChevronLeft className="w-4 h-4 text-gray-700" />
             </button>
@@ -183,11 +183,11 @@ import { BsCart3 } from "react-icons/bs";
             {lessons.map((_, index) => (
               <button
                 key={index}
-                onClick={() => scrollToProduct(index)}
+                onClick={() => scrollToLessons(index)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   index === currentIndex ? 'bg-blue-600 w-4' : 'bg-gray-300'
                 }`}
-                aria-label={`Go to product ${index + 1}`}
+                aria-label={`Go to lesson ${index + 1}`}
               />
             ))}
           </div>
@@ -197,7 +197,7 @@ import { BsCart3 } from "react-icons/bs";
   };
 // };
 
-export default ProductCarousel;
+export default DisplaySubjectData;
 
 
 
