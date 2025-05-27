@@ -106,8 +106,86 @@ import { BsCart3 } from "react-icons/bs";
     return (
       <div className="w-full px-4 py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto relative">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Lessons</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Subjects</h2>
           
+          <div className="relative group">
+            {/* Previous Button */}
+            <button
+              onClick={handlePrev}
+              onKeyDown={(e) => handleKeyPress(e, "left")}
+              disabled={currentIndex === 0}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+              }`}
+              aria-label="Previous lessons"
+            >
+              <FaChevronLeft className="w-4 h-4 text-gray-700" />
+            </button>
+
+            
+            {/* Carousel Container */}
+            <div
+              ref={carouselRef}
+              className="flex overflow-x-auto scrollbar-hide gap-6 pb-6 scroll-smooth px-2"
+              style={{ scrollSnapType: 'x mandatory' }}
+            >
+              {subjects.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="flex-none w-64"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
+                    <div className="relative pb-[75%]">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-4 flex-grow flex flex-col">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto">
+                        
+                        <button className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm" aria-label={`Sign up for ${product.name}`}>
+                          {/* <BsCart3 className="w-4 h-4" /> */}
+                          <span>Sign up for a lesson</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+
+            {/* Next Button */}
+            <button
+              onClick={handleNext}
+              onKeyDown={(e) => handleKeyPress(e, "right")}
+              disabled={currentIndex === lessons.length - 1}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                currentIndex === lessons.length - 1 ? 'opacity-50 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+              }`}
+              aria-label="Next lesson"
+            >
+              <FaChevronRight className="w-4 h-4 text-gray-700" />
+            </button>
+          </div>
+
+
+
+
+
+
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Lessons</h2>
+
           <div className="relative group">
             {/* Previous Button */}
             <button
@@ -163,6 +241,7 @@ import { BsCart3 } from "react-icons/bs";
                 </div>
               ))}
             </div>
+            
 
             {/* Next Button */}
             <button
