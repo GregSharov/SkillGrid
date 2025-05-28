@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // import SignIn from ".//signIn.js";
 import DisplayStudentsData from "./displayStudentsData.js";
-import DisplayTeachersData from "./displayTeachersData.js";
+import DisplayTeacherData from "./displayTeachersData.js";
 import DisplaySubjectData from "./displaySubjectsData.js";
 import LessonCard from "./lessonCard.js";
 

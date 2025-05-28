@@ -19,9 +19,10 @@ router.post("/add", async (req, res) => {
       isTeacher,
     } = req.body;
 
-    // let Model = Student;
     if (isTeacher) {
       Model = Teacher;
+    } else {
+      Model = Student;
     }
 
     const existingUser = await Model.findOne({ email });
