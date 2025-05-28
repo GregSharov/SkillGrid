@@ -1,13 +1,11 @@
-// import { useState, useEffect } from "react";
-
 
 import React, { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { BsCart3 } from "react-icons/bs";
 
 
-  const DisplaySubjectData = () => {
-    const [subjectData, setSubjectData] = useState([]);
+  const DisplayLessonsData = () => {
+    const [subjectData, setLessonsData] = useState([]);
     const url = "http://localhost:3000/subjects";
 
 
@@ -21,13 +19,13 @@ import { BsCart3 } from "react-icons/bs";
         const sortedData = data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
-        setSubjectData(sortedData);
+        setLessonsData(sortedData);
       })
       .catch((err) => console.log("Error fetching data", err));
     }, []);
     
     
-    const subjects = subjectData.map((subject) => ({
+    const Lessons = subjectData.map((subject) => ({
       id: subject.id,
       name: subject.name,
       description: subject.description,
@@ -106,9 +104,11 @@ import { BsCart3 } from "react-icons/bs";
     return (
       <div className="w-full px-4 py-2 bg-gray-50">
         <div className="max-w-7xl mx-auto relative">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">S u b j e c t s</h2>
-          
-          {/* Subject section */}
+
+          {/* Lesson section */}
+
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">L e s s o n s</h2>
+
           <div className="relative group">
             {/* Previous Button */}
             <button
@@ -130,7 +130,7 @@ import { BsCart3 } from "react-icons/bs";
               className="flex overflow-x-auto scrollbar-hide gap-6 pb-6 scroll-smooth px-2"
               style={{ scrollSnapType: 'x mandatory' }}
             >
-              {subjects.map((product, index) => (
+              {lessons.map((product, index) => (
                 <div
                   key={product.id}
                   className="flex-none w-64"
@@ -153,6 +153,11 @@ import { BsCart3 } from "react-icons/bs";
                         {product.description}
                       </p>
                       <div className="flex items-center justify-between mt-auto">
+                        
+                        <button className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm" aria-label={`Sign up for ${product.name}`}>
+                          {/* <BsCart3 className="w-4 h-4" /> */}
+                          <span>Sign up for a lesson</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -175,11 +180,6 @@ import { BsCart3 } from "react-icons/bs";
             </button>
           </div>
 
-
-
-
-         
-
           {/* Navigation Indicators */}
           <div className="flex justify-center mt-4 gap-2">
             {lessons.map((_, index) => (
@@ -197,9 +197,8 @@ import { BsCart3 } from "react-icons/bs";
       </div>
     );
   };
-// };
 
-export default DisplaySubjectData;
+export default DisplayLessonsData;
 
 
 
