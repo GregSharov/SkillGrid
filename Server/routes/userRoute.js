@@ -50,9 +50,10 @@ router.post("/signin", async (req, res) => {
   try {
     const { email, password, isTeacher } = req.body;
 
-    // let Model = Student;
     if (isTeacher) {
       Model = Teacher;
+    }else{
+      Model = Student;
     }
 
     // Check if the user exists
