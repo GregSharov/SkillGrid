@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DisplayStudentsData from "./displayStudentsData.js";
 import DisplayTeacherData from "./displayTeachersData.js";
 import DisplaySubjectData from "./displaySubjectsData.js";
-import LessonCard from "./lessonCard.js";
+// import LessonCard from "./lessonCard.js";
 
 import Layout from "./pages/Layout.js";
 import NoPage from "./pages/NoPage.js";
