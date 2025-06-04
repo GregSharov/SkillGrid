@@ -9,7 +9,6 @@ function fetchData(model) {
       } else if (model === "subjects") {
         return data.sort((a, b) => a.name.localeCompare(b.name));
       }
-      //   return data;
     })
     .catch((error) => {
       console.error("Error fetching data:", error);

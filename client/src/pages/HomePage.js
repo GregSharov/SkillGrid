@@ -1,27 +1,15 @@
 import DisplaySubjectData from "../displaySubjectsData.js";
-import DisplayLessonsData from "../displayLessonsDada.js";
+import DisplayLessonData from "../displayLessonsDada.js";
+import DisplayTeacherData from "../displayTeachersData.js";
 
 const Home = () => {
-    return (
-        <div>
-            <DisplaySubjectData />
-            <DisplayLessonsData />
-        </div>
-    )
-
-
-
-
-//   return (
-//     <div>
-//       <AddNewUser />
-//       <SignIn />
-//       <LessonCard />
-//       <DisplayStudentsData />
-//       <DisplayTeachersData />
-//       <DisplaySubjectData />
-//     </div>
-//   );
+  return (
+    <div>
+      <DisplaySubjectData />
+      <DisplayLessonData />
+      <DisplayTeacherData />
+    </div>
+  );
 };
 
 export default Home;

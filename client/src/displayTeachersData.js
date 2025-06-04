@@ -8,13 +8,7 @@ function DisplayTeacherData() {
   useEffect(() => {
     fetchData("teachers")
       .then((data) => {
-        console.log("Data fetched successfully", data);
-
-        const sortedData = data.sort((a, b) =>
-          a.firstName.localeCompare(b.firstName)
-        );
-        setTeacherData(sortedData);
-        // console.log("Teacher data fetched successfully", sortedData);
+        setTeacherData(data);
       })
       .catch((err) => console.log("Error fetching data", err));
   }, []);
