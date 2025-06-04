@@ -8,8 +8,7 @@ import NoPage from "./pages/NoPage.js";
 import Home from "./pages/HomePage.js";
 import SignIn from "./pages/SignInPage.js";
 import SignUp from "./pages/SignUpPage.js";
-
-
+import AddSubject from "./pages/AddSubject.js";
 
 function App() {
   return (
@@ -20,11 +19,11 @@ function App() {
           <Route path="sign-in" element={<SignIn />} />
           <Route path="sign-up" element={<SignUp />} />
           <Route path="*" element={<NoPage />} />
+          <Route path="add-subject" element={<AddSubject />} />
         </Route>
       </Routes>
     </BrowserRouter>
   );
-
 }
 
 export default App;
