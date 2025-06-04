@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import fetchData from "./services/fetchData";
 
 // Show data to main page
 function ShowStudentData() {
@@ -6,13 +7,9 @@ function ShowStudentData() {
   const url = "http://localhost:3000/students";
 
   useEffect(() => {
-    fetch(url)
-      .then((res) => res.json())
+    fetchData("students")
       .then((data) => {
-        const sortedData = data.sort((a, b) =>
-          a.firstName.localeCompare(b.firstName)
-        );
-        setStudentData(sortedData);
+        setStudentData(data);
       })
       .catch((err) => console.log("Error fetching data", err));
   }, []);
