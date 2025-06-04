@@ -1,13 +1,13 @@
-import DisplaySubjectsData from "../displaySubjectsData.js";
-import DisplayLessonsData from "../displayLessonsDada.js";
-import DisplayTeachersData from "../displayTeachersData.js";
+import DisplaySubjectData from "../displaySubjectsData.js";
+import DisplayLessonData from "../displayLessonsDada.js";
+import DisplayTeacherData from "../displayTeachersData.js";
 
 const Home = () => {
   return (
     <div>
-      <DisplaySubjectsData />
-      <DisplayLessonsData />
-      <DisplayTeachersData />
+      <DisplaySubjectData />
+      <DisplayLessonData />
+      <DisplayTeacherData />
     </div>
   );
 };
