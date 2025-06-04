@@ -4,7 +4,6 @@ import fetchData from "./services/fetchData";
 
 const DisplaySubjectData = () => {
   const [subjectData, setSubjectData] = useState([]);
-
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
@@ -17,13 +16,7 @@ const DisplaySubjectData = () => {
       .catch((err) => console.log("Error fetching data", err));
   }, []);
 
-  const subjects = subjectData.map((subject) => ({
-    id: subject.id,
-    name: subject.name,
-    description: subject.description,
-    image: subject.image,
-  }));
-  const lessons = subjectData.flatMap((subject) => subject.lessons || []);
+  const subjects = subjectData.flatMap((subject) => subject || []);
 
   // Calculate product width on mount and resize
   useEffect(() => {
@@ -63,7 +56,7 @@ const DisplaySubjectData = () => {
   };
 
   const handleNext = () => {
-    if (currentIndex < lessons.length - 1) {
+    if (currentIndex < subjects.length - 1) {
       scrollToLessons(currentIndex + 1);
     }
   };
@@ -155,9 +148,9 @@ const DisplaySubjectData = () => {
           <button
             onClick={handleNext}
             onKeyDown={(e) => handleKeyPress(e, "right")}
-            disabled={currentIndex === lessons.length - 1}
+            disabled={currentIndex === subjects.length - 1}
             className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              currentIndex === lessons.length - 1
+              currentIndex === subjects.length - 1
                 ? "opacity-50 cursor-not-allowed"
                 : "opacity-90 hover:opacity-100"
             }`}
@@ -169,7 +162,7 @@ const DisplaySubjectData = () => {
 
         {/* Navigation Indicators */}
         <div className="flex justify-center mt-4 gap-2">
-          {lessons.map((_, index) => (
+          {subjects.map((_, index) => (
             <button
               key={index}
               onClick={() => scrollToLessons(index)}
@@ -184,6 +177,5 @@ const DisplaySubjectData = () => {
     </div>
   );
 };
-// };
 
 export default DisplaySubjectData;
