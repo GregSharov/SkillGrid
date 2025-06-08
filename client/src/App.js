@@ -8,6 +8,8 @@ import NoPage from "./pages/NoPage.js";
 import Home from "./pages/HomePage.js";
 import SignIn from "./pages/SignInPage.js";
 import SignUp from "./pages/SignUpPage.js";
+import Contact from "./pages/contact.js";
+import About from "./pages/aboutUs.js";
 
 
 
@@ -17,6 +19,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="about" element={<About />} />
+          <Route path="contact" element={<Contact />} />
           <Route path="sign-in" element={<SignIn />} />
           <Route path="sign-up" element={<SignUp />} />
           <Route path="*" element={<NoPage />} />
