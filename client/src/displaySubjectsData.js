@@ -2,11 +2,18 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 
-const DisplaySubjectData = () => {
+// import DisplayLessonsData from "./displayLessonsDada";
+
+const DisplaySubjectData = ({ onSubjectClick }) => {
   const [subjectData, setSubjectData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
+
+  const handleButtonClick = (id) => {
+    onSubjectClick(id);
+    console.log("Button clicked with ID:", id);
+  };
 
   useEffect(() => {
     fetchData("subjects")
@@ -116,31 +123,36 @@ const DisplaySubjectData = () => {
             style={{ scrollSnapType: "x mandatory" }}
           >
             {subjects.map((product, index) => (
-              <div
-                key={product.id}
-                className="flex-none w-64"
-                style={{ scrollSnapAlign: "start" }}
+              <button
+                key={product._id}
+                onClick={() => handleButtonClick(product._id)}
               >
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-                  <div className="relative pb-[75%]">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-4 flex-grow flex flex-col">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {product.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
-                      {product.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-auto"></div>
+                <div
+                  key={product._id}
+                  className="flex-none w-64"
+                  style={{ scrollSnapAlign: "start" }}
+                >
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
+                    <div className="relative pb-[75%]">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-4 flex-grow flex flex-col">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
