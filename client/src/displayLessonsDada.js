@@ -2,21 +2,23 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 
-const DisplayLessonsData = () => {
-  const [subjectData, setLessonsData] = useState([]);
+const DisplayLessonsData = ({ id }) => {
+  console.log("Fetching lessons for subject ID:", id);
+  const [lessonData, setLessonsData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
 
   useEffect(() => {
-    fetchData("subjects")
+
+    fetchData("subjects", id)
       .then((data) => {
         setLessonsData(data);
       })
       .catch((err) => console.log("Error fetching data", err));
-  }, []);
+  }, [id]);
 
-  const lessons = subjectData.flatMap((subject) => subject.lessons || []);
+  const lessons = lessonData.flatMap((lesson) => lesson.lessons || []);
 
   // Calculate product width on mount and resize
   useEffect(() => {
