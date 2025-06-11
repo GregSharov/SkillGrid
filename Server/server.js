@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoute.js";
 import studentRoutes from "./routes/studentRoute.js";
 import teacherRoutes from "./routes/teacherRoute.js";
 import subjectRoutes from "./routes/subjectRoute.js";
+import addSubjectRoutes from "./routes/addSubject.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,7 @@ app.use("/user", userRoutes);
 app.use("/students", studentRoutes);
 app.use("/teachers", teacherRoutes);
 app.use("/subjects", subjectRoutes);
+app.use("/subject", addSubjectRoutes);
 
 // Listen to a Server
 app.listen(PORT, () => {
