@@ -8,9 +8,14 @@ const DisplayLessonsData = ({ id }) => {
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
+  const [lessonName, setLessonName] = useState("");
+
+  const handleButtonClick = (lessonName) => {
+    setLessonName(lessonName);
+    console.log("Button clicked with Name:", lessonName);
+  };
 
   useEffect(() => {
-
     fetchData("subjects", id)
       .then((data) => {
         setLessonsData(data);
@@ -19,6 +24,16 @@ const DisplayLessonsData = ({ id }) => {
   }, [id]);
 
   const lessons = lessonData.flatMap((lesson) => lesson.lessons || []);
+
+  // Fetch teachers data when lessonName changes by pressing a button
+  useEffect(() => {
+    fetchData("teachers", lessonName)
+      .then((data) => {
+        
+        console.log("Fetched teachers data:", data, lessonName);
+      })
+      .catch((err) => console.log("Error fetching teachers data", err));
+  }, [lessonName]);
 
   // Calculate product width on mount and resize
   useEffect(() => {
@@ -143,6 +158,7 @@ const DisplayLessonsData = ({ id }) => {
                       <button
                         className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm"
                         aria-label={`Sign up for ${product.name}`}
+                        onClick={() => handleButtonClick(product.name)}
                       >
                         {/* <BsCart3 className="w-4 h-4" /> */}
                         <span>Sign up for a lesson</span>
