@@ -1,5 +1,5 @@
 // Filter data based on the search term.
-function filterData(data, filterTerm) {
+function filterData(data, filterTerm = null) {
   if (!filterTerm) {
     return data;
   }
