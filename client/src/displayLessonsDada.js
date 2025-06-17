@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
+import filterData from "./services/filterData";
 
 const DisplayLessonsData = ({ id }) => {
   console.log("Fetching lessons for subject ID:", id);
@@ -16,9 +17,9 @@ const DisplayLessonsData = ({ id }) => {
   };
 
   useEffect(() => {
-    fetchData("subjects", id)
+    fetchData("subjects")
       .then((data) => {
-        setLessonsData(data);
+        setLessonsData(filterData(data, id));
       })
       .catch((err) => console.log("Error fetching data", err));
   }, [id]);
@@ -27,10 +28,10 @@ const DisplayLessonsData = ({ id }) => {
 
   // Fetch teachers data when lessonName changes by pressing a button
   useEffect(() => {
-    fetchData("teachers", lessonName)
+    fetchData("teachers")
       .then((data) => {
-        
-        console.log("Fetched teachers data:", data, lessonName);
+        const filteredData = filterData(data, lessonName);
+        console.log("Fetched teachers data:", filteredData, lessonName);
       })
       .catch((err) => console.log("Error fetching teachers data", err));
   }, [lessonName]);
