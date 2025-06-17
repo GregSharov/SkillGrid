@@ -1,6 +1,4 @@
-import filterData from "./filterData.js";
-
-function fetchData(model, filterTerm = null) {
+function fetchData(model) {
   const url = "http://localhost:3000/";
 
   // Sort data based on the model type in alphabetical order.
@@ -16,8 +14,7 @@ function fetchData(model, filterTerm = null) {
   return fetch(`${url}${model}`)
     .then((res) => res.json())
     .then((data) => {
-      const filteredData = filterData(data, filterTerm);
-      return sortData(filteredData, model);
+      return sortData(data, model);
     })
     .catch((error) => {
       console.error("Error fetching data:", error);
