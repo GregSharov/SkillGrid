@@ -1,43 +1,46 @@
-function fetchData(model, filterById) {
+function fetchData(model, filterTerm = null) {
   const url = "http://localhost:3000/";
-  console.log("CHECK: ", filterById);
 
-  function deepSearch(obj, searchTerm) {
-    const term = searchTerm.toLowerCase();
+  // Search data by filter term using recursion subfunction to be able to search nested databases.
+  function searchData(object, filterTerm) {
 
-    function recurse(value) {
-      if (typeof value === "string") {
-        return value.toLowerCase().includes(term);
-      } else if (typeof value === "number") {
-        return value.toString().includes(term);
-      } else if (Array.isArray(value)) {
-        return value.some(recurse);
-      } else if (typeof value === "object" && value !== null) {
-        return Object.values(value).some(recurse);
+    // recursion function.
+    function recursion(item) {
+      if (typeof item === "string") {
+        return item.includes(filterTerm);
+      } else if (Array.isArray(item)) {
+        return item.some(recursion);
+      } else if (typeof item === "object" && item !== null) {
+        return Object.values(item).some(recursion);
       }
       return false;
     }
-
-    return recurse(obj);
+    return recursion(object);
   }
 
-  function filterData(data, filterById = null) {
-    if (!filterById) return data;
-    return data.filter((item) => deepSearch(item, filterById));
+  // Filter data based on the search term.
+  function filterSearchedData(data, filterTerm) {
+    if (!filterTerm) {
+      return data;
+    }
+    return data.filter((item) => item && searchData(item, filterTerm));
   }
 
+  // Sort data based on the model type in alphabetical order.
+  function sortData(data, model) {
+    if (model !== "subjects") {
+      return data.sort((a, b) => a.firstName.localeCompare(b.firstName));
+    } else if (model === "subjects") {
+      return data.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }
+
+  // Fetch data from the server and apply filtering and sorting.
   return fetch(`${url}${model}`)
     .then((res) => res.json())
     .then((data) => {
-      const filteredData = filterData(data, filterById);
-
-      if (model !== "subjects") {
-        return filteredData.sort((a, b) =>
-          a.firstName?.localeCompare(b.firstName)
-        );
-      } else {
-        return filteredData.sort((a, b) => a.name?.localeCompare(b.name));
-      }
+      const filteredData = filterSearchedData(data, filterTerm);
+      return sortData(filteredData, model);
     })
     .catch((error) => {
       console.error("Error fetching data:", error);
@@ -46,33 +49,3 @@ function fetchData(model, filterById) {
 }
 
 export default fetchData;
-
-// function fetchData(model, filterById) {
-//   const url = "http://localhost:3000/";
-//   console.log("CHECK: ", filterById);
-
-//   function filterData(data, filterById = null) {
-//     if (filterById === null) {
-//       return data;
-//     }
-//     return data.filter((item) => Object.values(item).includes(filterById));
-//   }
-
-//   return fetch(`${url}${model}`)
-//     .then((res) => res.json())
-//     .then((data) => {
-//       const filteredData = filterData(data, filterById);
-
-//       if (model !== "subjects") {
-//         return filteredData.sort((a, b) => a.firstName.localeCompare(b.firstName));
-//       } else if (model === "subjects") {
-//         return filteredData.sort((a, b) => a.name.localeCompare(b.name));
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching data:", error);
-//       throw error;
-//     });
-// }
-
-// export default fetchData;
