@@ -1,34 +1,36 @@
-import { useRef, useState, useEffect } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import {  useState, useEffect } from "react";
 import fetchData from "./services/fetchData";
+import filterData from "./services/filterData";
 
-const DisplayLessonsInfo = ({ id }) => {
-  console.log("Fetching lessons for subject ID:", id);
-  const [lessonData, setLessonsInfo] = useState([]);
-  const carouselRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [productWidth, setProductWidth] = useState(0);
-  
+
+const DisplayLessonsInfo = ({ lessonId }) => {
+  const [lessonData, setLessonData] = useState([]);
+  console.log("Lesson ID:", lessonId);
 
   useEffect(() => {
-
-    fetchData("subjects", id)
+    fetchData("subjects")
       .then((data) => {
-        setLessonsInfo(data);
+        const filtered = filterData(data); // your logic here
+        const allLessons = filtered.flatMap(item => item.lessons || []);
+        const singleLesson = allLessons.find(lesson => lesson._id === lessonId);
+        setLessonData(singleLesson);
       })
-      .catch((err) => console.log("Error fetching data", err));
-  }, [id]);
+      .catch((err) => console.error("Error fetching lesson:", err));
+  }, [lessonId]);
 
-  const lessons = lessonData.flatMap((lesson) => lesson.lessons || []);
-
-  
-
+  if (!lessonData) {
+    return <p>Loading...</p>;
+  }
 
   return (
-    <div>
-      
+    <div className="lesson-info">
+      <h1>{lessonData.name}</h1>
+      <img src={lessonData.image} alt={lessonData.name} />
+      <p>{lessonData.description}</p>
     </div>
   );
 };
+
+
 
 export default DisplayLessonsInfo;

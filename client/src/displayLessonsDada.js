@@ -5,7 +5,6 @@ import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 
 const DisplayLessonsData = ({ id }) => {
-  console.log("Fetching lessons for subject ID:", id);
   const [lessonData, setLessonsData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
