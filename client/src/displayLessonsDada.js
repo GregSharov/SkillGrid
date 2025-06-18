@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
+import { useNavigate } from "react-router-dom";
 
 const DisplayLessonsData = ({ id }) => {
   console.log("Fetching lessons for subject ID:", id);
@@ -16,8 +17,17 @@ const DisplayLessonsData = ({ id }) => {
     console.log("Button clicked with Name:", lessonName);
   };
 
+  const navigate = useNavigate();
+  const lessonInfo = (lessonId) => {
+    
+    console.log("Lesson clicked with ID:", lessonId);
+    console.log("Lesson info clicked for ID:", lessonId);
+    navigate("/lesson-info");
+  };
+
   useEffect(() => {
     fetchData("subjects")
+    fetchData("subjects", id)
       .then((data) => {
         setLessonsData(filterData(data, id));
       })
@@ -157,12 +167,15 @@ const DisplayLessonsData = ({ id }) => {
                     </p>
                     <div className="flex items-center justify-between mt-auto">
                       <button
+                        // more information about the lesson
+                        onClick={() => lessonInfo(product._id)}
                         className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm"
                         aria-label={`Sign up for ${product.name}`}
                         onClick={() => handleButtonClick(product.name)}
+                        aria-label={`More information about ${product.name}`}
                       >
                         {/* <BsCart3 className="w-4 h-4" /> */}
-                        <span>Sign up for a lesson</span>
+                        <span>More information</span>
                       </button>
                     </div>
                   </div>

@@ -11,6 +11,8 @@ import SignUp from "./pages/SignUpPage.js";
 import AddSubject from "./pages/AddSubject.js";
 import Contact from "./pages/contact.js";
 import About from "./pages/aboutUs.js";
+import LessonInfoPage from "./pages/lessonInfoPage.js";
+
 
 
 
@@ -26,6 +28,7 @@ function App() {
           <Route path="sign-up" element={<SignUp />} />
           <Route path="*" element={<NoPage />} />
           <Route path="add-subject" element={<AddSubject />} />
+          <Route path="lesson-info" element={<LessonInfoPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
