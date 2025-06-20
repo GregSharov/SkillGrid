@@ -1,8 +1,4 @@
 function TeacherCard({ teacher }) {
-  if (teacher.length === 0) {
-    return <p>Very soon a teacher will come...</p>;
-  }
-
   return (
     <>
       <h1>Name: {teacher.firstName}</h1>
