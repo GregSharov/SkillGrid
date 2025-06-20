@@ -34,10 +34,6 @@ const DisplayLessonsInfo = ({ lessonId }) => {
       .catch((err) => console.error("Error fetching teachers:", err));
   }, [lessonData]);
 
-  if (!lessonData) {
-    return <p>Loading...</p>;
-  }
-
   return (
     <div>
       <div className="lesson-info">
