@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 
-// import DisplayLessonsData from "./displayLessonsDada";
 
 const DisplaySubjectData = ({ onSubjectClick }) => {
   const [subjectData, setSubjectData] = useState([]);

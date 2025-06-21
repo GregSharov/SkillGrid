@@ -1,19 +1,4 @@
 
-// import LessonInfo from "../lessonInfo.js";
-
-// const LessonInfoPage = () => {
-  
-
-//   return (
-//     <div>
-//       <LessonInfo />
-//     </div>
-//   );
-// }
-// export default LessonInfoPage;
-
-
-
 
 import { useLocation } from "react-router-dom";
 import DisplayLessonsInfo from "../lessonInfo.js";
@@ -34,3 +19,5 @@ const LessonInfoPage = () => {
 };
 
 export default LessonInfoPage;
+
+

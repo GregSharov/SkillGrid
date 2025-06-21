@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // This function is used to sign in a user
 function SignIn() {
@@ -16,6 +17,7 @@ function SignIn() {
     });
   };
 
+
   // This function is used to handle form submission and send data to the server
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -28,6 +30,12 @@ function SignIn() {
 
     const data = await res.json();
     alert(`Server says: ${data.message}`);
+  };
+
+  // This function is used to navigate to the account page after successful login
+  const Navigate = useNavigate();
+  const openAcountPage = () => {
+    Navigate("/account")
   };
 
   // This function is used to render the form
@@ -60,7 +68,7 @@ function SignIn() {
               className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"
             />
           </div>
-          <div class="">
+          <div className="">
             <label
               for="isTeacher"
               className="flex items-center w-full transform bg-transparent text-lg duration-300 focus-within:border-indigo-500"
@@ -80,6 +88,7 @@ function SignIn() {
           <button
             type="submit"
             className="transform rounded-sm bg-indigo-600 py-2 font-bold duration-300 hover:bg-indigo-400"
+            onClick={() => { openAcountPage() }}
           >
             LOG IN
           </button>
