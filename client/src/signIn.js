@@ -17,7 +17,6 @@ function SignIn() {
     });
   };
 
-
   // This function is used to handle form submission and send data to the server
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -29,24 +28,24 @@ function SignIn() {
     });
 
     const data = await res.json();
+    const userId = data.user.id;
     alert(`Server says: ${data.message}`);
-    if (data.message === 'Invalid email or password.') {
+    if (data.message === "Invalid email or password.") {
       // Reset the form
       setFormData({
         email: "",
         password: "",
         isTeacher: false,
       });
-    } else{
-      openAcountPage();
+    } else {
+      openAcountPage(userId);
     }
-    
   };
 
   // This function is used to navigate to the account page after successful login
-  const Navigate = useNavigate();
-  const openAcountPage = () => {
-    Navigate("/account")
+  const navigate = useNavigate();
+  const openAcountPage = (userId) => {
+    navigate("/account", { state: { userId } });
   };
 
   // This function is used to render the form
@@ -109,7 +108,7 @@ function SignIn() {
               // } else {
               //   alert("Invalid Email or Passwords. Please try again!");
               // }
-           }}
+            }}
           >
             LOG IN
           </button>
