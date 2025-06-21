@@ -58,13 +58,22 @@ router.post("/signin", async (req, res) => {
     }
 
     // Check if the user exists
-    const user = await Model.find({ email, password });
+    const user = await Model.findOne({ email, password });
 
     if (user.length === 0) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    res.json({ message: `User found: ${email} ${password}` });
+    // res.json({ message: `User found: ${email} ${password}` });
+    res.json({
+      message: "User signed in successfully.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isTeacher,
+      }
+    });
   } catch (error) {
     console.error("Error signing in user:", error);
     res.status(500).json({ message: "Error signing in user." });
