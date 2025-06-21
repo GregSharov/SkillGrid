@@ -9,38 +9,24 @@ const DisplayLessonsData = ({ id }) => {
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
-  const [lessonName, setLessonName] = useState("");
 
+  // Navigate to lesson info page with the lessonId
   const navigate = useNavigate();
   const lessonInfo = (lessonId) => {
-    console.log("Navigating to lesson info for ID:", lessonId);
     navigate("/lesson-info", { state: { lessonId } });
   };
-  
-  const handleButtonClick = (lessonName) => {
-    setLessonName(lessonName);
-    console.log("Button clicked with Name:", lessonName);
-  };
 
+  // Fetching data from Subjects database then filtering it to get the lessons data by id
   useEffect(() => {
     fetchData("subjects")
       .then((data) => {
+        // Filter data to get lessons for the specific subject id
         setLessonsData(filterData(data, id));
       })
-      .catch((err) => console.log("Error fetching data", err));
+      .catch((err) => console.error("Error fetching data", err));
   }, [id]);
 
   const lessons = lessonData.flatMap((lesson) => lesson.lessons || []);
-
-  // Fetch teachers data when lessonName changes by pressing a button
-  useEffect(() => {
-    fetchData("teachers")
-      .then((data) => {
-        const filteredData = filterData(data, lessonName);
-        console.log("Fetched teachers data:", filteredData, lessonName);
-      })
-      .catch((err) => console.log("Error fetching teachers data", err));
-  }, [lessonName]);
 
   // Calculate product width on mount and resize
   useEffect(() => {
@@ -164,7 +150,7 @@ const DisplayLessonsData = ({ id }) => {
                     <div className="flex items-center justify-between mt-auto">
                       <button
                         // more information about the lesson
-                        onClick={() => {lessonInfo(product._id); handleButtonClick(product.name)}}
+                        onClick={() => {lessonInfo(product._id)}}
                         className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm"
                         aria-label={`Sign up for ${product.name}`}
                       >
