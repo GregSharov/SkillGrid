@@ -127,7 +127,7 @@ const DisplayLessonsData = ({ id }) => {
           >
             {lessons.map((product, index) => (
               <div
-                key={product.id}
+                key={product._id}
                 className="flex-none w-64"
                 style={{ scrollSnapAlign: "start" }}
               >
