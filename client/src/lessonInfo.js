@@ -46,8 +46,8 @@ const DisplayLessonsInfo = ({ lessonId }) => {
         {teachersData.length === 0 ? (
           <p>No teachers found for this lesson.</p>
         ) : (
-          teachersData.map((teacher, index) => (
-            <TeacherCard key={index} teacher={teacher} />
+          teachersData.map((teacher) => (
+            <TeacherCard key={teacher._id} teacher={teacher} />
           ))
         )}
       </div>
