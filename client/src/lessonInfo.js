@@ -36,21 +36,16 @@ const DisplayLessonsInfo = ({ lessonId }) => {
 
   return (
     <div>
-      {/* <div className="lesson-info">
-        <h1>{lessonData.name}</h1>
-        <img src={lessonData.image} alt={lessonData.name} />
-        <p>{lessonData.description}</p>
-      </div> */}
       <div>
-      {lessonData ? (
-        <div className="lesson-info">
-          <h1>{lessonData.name}</h1>
-          <img src={lessonData.image} alt={lessonData.name} />
-          <p>{lessonData.description}</p>
-        </div>
-      ) : (
-        <p>Loading lesson...</p>
-      )}
+        {lessonData ? (
+          <div className="lesson-info">
+            <h1>{lessonData.name}</h1>
+            <img src={lessonData.image} alt={lessonData.name} />
+            <p>{lessonData.description}</p>
+          </div>
+        ) : (
+          <p>Loading lesson...</p>
+        )}
       </div>
 
       <div>
