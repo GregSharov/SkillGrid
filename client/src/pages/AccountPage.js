@@ -2,38 +2,44 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import fetchData from "../services/fetchData";
 import filterData from "../services/filterData";
+import TeacherCard from "../components/TeacherCard";
+import StudentCard from "../components/StudentCard";
 
-const AcountPage = () => {
+const AccountPage = () => {
   const location = useLocation();
-  const { userId } = location.state || {};
+  const { userId, isTeacher } = location.state || {};
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     fetchData("teachers")
-        .then((data) => {
-            const filteredData = filterData(data, userId);
-            setUserData(filteredData[0]);
-        })
-        .catch((err) => console.error("Error fetching user data:", err));
+      .then((data) => {
+        const filteredData = filterData(data, userId);
+        setUserData(filteredData[0]);
+      })
+      .catch((err) => console.error("Error fetching user data:", err));
   }, [userId]);
 
-  return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">This is Acount page</h1>
-      <div>
+  if (isTeacher) {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold">This is Account page</h1>
         {userData ? (
-          <div className="mt-4">
-            <h2 className="text-xl font-semibold">{userData.firstName} {userData.lastName}</h2>
-            <p>Email: {userData.email}</p>
-            <p>Phone: {userData.phone}</p>
-            <p>Date of Birth: {new Date(userData.dateOfBirth).toLocaleDateString()}</p>
-          </div>
+          <TeacherCard teacher={userData} />
         ) : (
           <p>Loading user data...</p>
         )}
       </div>
+    );
+  }
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold">This is Account page</h1>
+      {userData ? (
+        <StudentCard student={userData} />
+      ) : (
+        <p>Loading user data...</p>
+      )}
     </div>
   );
 };
-
-export default AcountPage;
+export default AccountPage;
