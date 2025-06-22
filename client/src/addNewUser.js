@@ -130,9 +130,9 @@ function AddNewUser() {
             />
           </div>
 
-          <div class="">
+          <div className="">
             <label
-              for="isTeacher"
+              htmlFor="isTeacher"
               className="flex items-center w-full transform bg-transparent text-lg duration-300 focus-within:border-indigo-500"
             >
               <input
@@ -143,7 +143,7 @@ function AddNewUser() {
                 onChange={handleChange}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span class="ml-2 text-xl text-gray-400">I am a teacher</span>
+              <span className="ml-2 text-xl text-gray-400">I am a teacher</span>
             </label>
           </div>
 
