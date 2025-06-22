@@ -53,26 +53,26 @@ router.post("/signin", async (req, res) => {
 
     if (isTeacher) {
       Model = Teacher;
-    }else{
+    } else {
       Model = Student;
     }
 
     // Check if the user exists
     const user = await Model.findOne({ email, password });
 
-    if (user.length === 0) {
+    if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    // res.json({ message: `User found: ${email} ${password}` });
     res.json({
       message: "User signed in successfully.",
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         isTeacher,
-      }
+      },
     });
   } catch (error) {
     console.error("Error signing in user:", error);
