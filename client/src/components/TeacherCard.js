@@ -116,7 +116,7 @@ function TeacherCard({ teacher }) {
       {/* Save button to commit selections to backend */}
       <button
         onClick={() => {
-          console.log("Saving data...");
+          console.log("Saving data...", teacher._id, selectedSubjects, selectedLessonsBySubject);
         }}
         className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
       >
