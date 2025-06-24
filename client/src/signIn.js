@@ -8,6 +8,7 @@ function SignIn() {
     password: "",
     isTeacher: false,
   });
+  const [error, setError] = useState(false);
 
   const handleChange = (event) => {
     const { name, type, value, checked } = event.target;
@@ -21,25 +22,27 @@ function SignIn() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const res = await fetch("http://localhost:3000/user/signin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    const data = await res.json();
-    const userId = data.user.id;
-    const isTeacher = data.user.isTeacher;
-    alert(`Server says: ${data.message}`);
-    if (data.message === "Invalid email or password.") {
-      // Reset the form
-      setFormData({
-        email: "",
-        password: "",
-        isTeacher: false,
+    try {
+      const res = await fetch("http://localhost:3000/user/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-    } else {
-      openAccountPage(userId, isTeacher);
+
+      const data = await res.json(); // Always parse JSON regardless of status
+
+      if (res.ok) {
+        setError(false);
+        console.log("Login successful");
+        const userId = data.user.id;
+        const isTeacher = data.user.isTeacher;
+        openAccountPage(userId, isTeacher);
+      } else {
+        setError(true);
+        console.error("Login failed:", data.message);
+      }
+    } catch (err) {
+      console.error("Error during login:", err);
     }
   };
 
@@ -61,10 +64,11 @@ function SignIn() {
               type="email"
               id="email"
               name="email"
+              value={formData.email}
               onChange={handleChange}
               placeholder="Email Address"
               required
-              className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"
+              className={`w-full border-b-2 bg-transparent text-lg outline-none placeholder:italic duration-300`}
             />
           </div>
 
@@ -73,12 +77,18 @@ function SignIn() {
               type="password"
               id="password"
               name="password"
+              value={formData.password}
               onChange={handleChange}
               placeholder="Password"
               required
-              className="w-full border-none bg-transparent outline-none placeholder:italic focus:outline-none"
+              className={`w-full border-b-2 bg-transparent text-lg outline-none placeholder:italic duration-300`}
             />
           </div>
+          {error && (
+            <p className="text-sm text-red-500 text-center">
+              Please check email or password or "I am a teacher" box.
+            </p>
+          )}
           <div className="">
             <label
               htmlFor="isTeacher"
