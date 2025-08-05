@@ -1,4 +1,4 @@
-import AddNewUser from "../addNewUser.js";
+import AddNewUser from "../signUp.js";
 
 const SignUpPage = () => {
   return (

@@ -48,7 +48,7 @@ function AddNewUser() {
 
   // Render the form
   return (
-    <main className="mx-auto flex min-h-screen w-full items-center justify-center bg-gray-900 text-white">
+    <main className="mx-auto flex min-h-screen w-full items-center justify-center bg-gray-100 text-black">
       <form onSubmit={handleSubmit}>
         <section className="flex w-[30rem] flex-col space-y-10">
           <div className="text-center text-4xl font-medium">Sign Up</div>
