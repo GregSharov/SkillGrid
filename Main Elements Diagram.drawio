@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36" version="28.0.7">
   <diagram name="‫עמוד-1‬" id="Q9xwFi5Pk72u2SDolbOF">
-    <mxGraphModel dx="1169" dy="754" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="850" dy="548" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -38,43 +38,49 @@
           <mxGeometry x="624" y="185" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-15" value="" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
-          <mxGeometry x="114" y="320" width="80" height="80" as="geometry" />
+          <mxGeometry x="56" y="320" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-16" value="Teacher Account" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="124" y="345" width="60" height="30" as="geometry" />
+          <mxGeometry x="66" y="345" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-17" value="" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
-          <mxGeometry x="233" y="320" width="80" height="80" as="geometry" />
+          <mxGeometry x="175" y="320" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-18" value="Student Account" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="243" y="345" width="60" height="30" as="geometry" />
+          <mxGeometry x="185" y="345" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-22" value="" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
-          <mxGeometry x="354" y="320" width="80" height="80" as="geometry" />
+          <mxGeometry x="296" y="320" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-23" value="Admin Account" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="364" y="345" width="60" height="30" as="geometry" />
+          <mxGeometry x="306" y="345" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-28" value="" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
-          <mxGeometry x="634" y="320" width="80" height="80" as="geometry" />
+          <mxGeometry x="576" y="320" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-29" value="Lesson Card-Page" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="644" y="345" width="64" height="30" as="geometry" />
+          <mxGeometry x="586" y="345" width="64" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-36" value="&lt;h2&gt;Pages&lt;/h2&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="384" y="90" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-37" value="" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
-          <mxGeometry x="513" y="320" width="80" height="80" as="geometry" />
+          <mxGeometry x="455" y="320" width="80" height="80" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-38" value="Teacher Card-Page" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="523" y="345" width="64" height="30" as="geometry" />
+          <mxGeometry x="465" y="345" width="64" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-41" value="&lt;u&gt;Accounts&lt;/u&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="243" y="280" width="60" height="30" as="geometry" />
+          <mxGeometry x="185" y="280" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t2lev4n_kvF0uTVQBDbr-42" value="&lt;u&gt;Card-pages&lt;/u&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="574" y="280" width="72" height="30" as="geometry" />
+          <mxGeometry x="580" y="280" width="72" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t2lev4n_kvF0uTVQBDbr-43" value="" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="692" y="320" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="t2lev4n_kvF0uTVQBDbr-44" value="Admin Card-Page" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="702" y="345" width="64" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
