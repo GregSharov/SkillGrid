@@ -94,6 +94,9 @@
         <mxCell id="W-tl4R414_ldyoyT90qR-2" value="Video Lesson Card-Page" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="578" y="465" width="80" height="30" as="geometry" />
         </mxCell>
+        <mxCell id="W-tl4R414_ldyoyT90qR-3" value="&lt;b&gt;&lt;font style=&quot;color: rgb(255, 51, 51);&quot;&gt;Add Button/Icon for User&#39;s Account&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="160" y="418" width="110" height="30" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
