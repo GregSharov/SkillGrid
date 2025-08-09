@@ -2,6 +2,7 @@ import { useState } from "react";
 import DisplaySubjectData from "../displaySubjectsData.js";
 import DisplayLessonData from "../displayLessonsDada.js";
 import LessonInfoPage from "../pages/lessonInfoPage.js";
+import DisplayTeacherList from "../displayTeacherList";
 
 const Home = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
@@ -14,6 +15,11 @@ const Home = () => {
         lessonInfo={setSelectedLessonId}
       />
       <LessonInfoPage id={selectedLessonId} />
+      
+      <DisplayTeacherList 
+        id={selectedSubjectId}
+        teacherInfo={setSelectedSubjectId} 
+      />
     </div>
   );
 };

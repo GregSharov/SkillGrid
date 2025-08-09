@@ -108,7 +108,7 @@ function SignIn() {
 
           <button
             type="submit"
-            className="transform rounded-sm bg-indigo-600 py-2 font-bold duration-300 hover:bg-indigo-400"
+            className="transform rounded-sm bg-indigo-400 py-2 font-bold duration-300 hover:bg-indigo-400"
           >
             LOG IN
           </button>
