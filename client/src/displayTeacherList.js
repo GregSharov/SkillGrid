@@ -152,7 +152,7 @@ const DisplayTeachersData = () => {
                     <img
                       src={teacher.image || userPicture}
                       alt={teacher.firstName}
-                      className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                       loading="lazy"
                     />
                   </div>
