@@ -152,11 +152,11 @@ function StudentCard({ student }) {
           ))}
         </div>
       </div>
-      <div className="p-4 border w-1/3 rounded-lg shadow-md bg-white m-4">
+      <div className="p-4 border w-1/4 rounded-lg shadow-md bg-white m-4">
         <img
           src={student.image || defaultUserImage}
           alt={`${student.firstName} ${student.lastName}`}
-          className="mt-2 rounded-md"
+          className="mt-2 rounded-md w-full h-96 object-cover transition-transform duration-300"
         />
       </div>
     </div>
