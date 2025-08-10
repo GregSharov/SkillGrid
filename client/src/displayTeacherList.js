@@ -13,9 +13,9 @@ const DisplayTeachersData = () => {
   const [productWidth, setProductWidth] = useState(0);
 
   const navigate = useNavigate();
-  const teacherInfo = (teacherId) => {
-    if (!teacherId) return;
-    navigate("/teacher-info", { state: { teacherId } });
+  const teacherInfo = (teacher) => {
+    if (!teacher) return;
+    navigate("/teacher-info", { state: { teacher } });
   };
 
   // Fetch (with proper loading/error handling)
@@ -264,7 +264,7 @@ const DisplayTeachersData = () => {
 
                           <div className="mt-auto">
                             <button
-                              onClick={() => teacherInfo(teacher._id)}
+                              onClick={() => teacherInfo(teacher)}
                               className="bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm"
                             >
                               More information

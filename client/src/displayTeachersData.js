@@ -1,26 +1,41 @@
-import { useState, useEffect } from "react";
-import fetchData from "./services/fetchData.js";
-import TeacherCard from "./components/TeacherCard.js";
+import { useLocation } from "react-router-dom";
 
 function DisplayTeacherData() {
-  const [teacherData, setTeacherData] = useState([]);
-
-  useEffect(() => {
-    fetchData("teachers")
-      .then((data) => {
-        setTeacherData(data);
-      })
-      .catch((err) => console.log("Error fetching data", err));
-  }, []);
+  const location = useLocation();
+  const teacher = location.state?.teacher; // full object
 
   return (
     <>
-      <h1>Teacher:</h1>
-      <div>
-        {teacherData.map((teacher, index) => (
-          <TeacherCard key={index} teacher={teacher} />
-        ))}
-      </div>
+      {teacher ? (
+        <div>
+          <p>
+            Name: {teacher.firstName} {teacher.lastName}
+          </p>
+          {/* Display current assigned subjects and lessons */}
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold">Assigned Subjects:</h2>
+            {teacher.subjects.length === 0 && <p>No subjects assigned.</p>}
+            {teacher.subjects.map((subject, index) => (
+              <div key={index} className="ml-4 mt-2">
+                <h3 className="font-medium">Subject: {subject.name}</h3>
+                {subject.lessons && subject.lessons.length > 0 ? (
+                  <ul className="list-disc ml-6">
+                    {subject.lessons.map((lesson, lessonIndex) => (
+                      <li key={lessonIndex}>Lesson: {lesson.name}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="ml-2 text-sm text-gray-500">
+                    No lessons available.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p>No teacher data found.</p>
+      )}
     </>
   );
 }

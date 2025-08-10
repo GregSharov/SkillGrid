@@ -13,6 +13,7 @@ import Contact from "./pages/contact.js";
 import About from "./pages/aboutUs.js";
 import LessonInfoPage from "./pages/lessonInfoPage.js";
 import AcountPage from "./pages/AccountPage.js";
+import DisplayTeachersData from "./displayTeachersData.js";
 
 
 
@@ -31,6 +32,7 @@ function App() {
           <Route path="add-subject" element={<AddSubject />} />
           <Route path="lesson-info" element={<LessonInfoPage />} />
           <Route path="account" element={<AcountPage />} />
+          <Route path="teacher-info" element={<DisplayTeachersData />} />
         </Route>
       </Routes>
     </BrowserRouter>
