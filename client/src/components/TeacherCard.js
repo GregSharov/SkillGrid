@@ -4,6 +4,7 @@ import makeAnimated from "react-select/animated";
 import fetchData from "../services/fetchData";
 
 const animatedComponents = makeAnimated();
+const defaultUserImage = "http://localhost:3000/images/user.png";
 
 function TeacherCard({ teacher }) {
   const [subjectData, setSubjectData] = useState([]);
@@ -57,92 +58,106 @@ function TeacherCard({ teacher }) {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-md bg-white my-4">
-      <h1 className="text-xl font-bold">
-        Name: {teacher.firstName} {teacher.lastName}
-      </h1>
-      <p>Email: {teacher.email}</p>
-      <p>Phone: {teacher.phone}</p>
-      <p>
-        Date of Birth:{" "}
-        {new Date(teacher.dateOfBirth)
-          .toLocaleDateString("en-GB")
-          .replaceAll("/", "-")}
-      </p>
+    <div className="flex">
+      <div className="p-4 border rounded-lg shadow-md bg-white my-4">
+        <h1 className="text-xl font-bold">
+          Name: {teacher.firstName} {teacher.lastName}
+        </h1>
+        <p>Email: {teacher.email}</p>
+        <p>Phone: {teacher.phone}</p>
+        <p>
+          Date of Birth:{" "}
+          {new Date(teacher.dateOfBirth)
+            .toLocaleDateString("en-GB")
+            .replaceAll("/", "-")}
+        </p>
 
-      {/* Subjects Multi-select */}
-      <div className="mt-4">
-        <h2 className="text-lg font-semibold">Select Subjects:</h2>
-        <Select
-          closeMenuOnSelect={false}
-          components={animatedComponents}
-          isMulti
-          options={subjectSelectOptions}
-          value={selectedSubjects}
-          onChange={handleSubjectChange}
-          placeholder="Choose subjects..."
-        />
+        {/* Subjects Multi-select */}
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold">Select Subjects:</h2>
+          <Select
+            closeMenuOnSelect={false}
+            components={animatedComponents}
+            isMulti
+            options={subjectSelectOptions}
+            value={selectedSubjects}
+            onChange={handleSubjectChange}
+            placeholder="Choose subjects..."
+          />
+        </div>
+
+        {/* Lessons Multi-select dropdowns for each selected subject */}
+        {selectedSubjects.map((subject) => {
+          const fullSubject = subjectData.find((s) => s._id === subject.value);
+
+          const lessonOptions = (fullSubject?.lessons || []).map((lesson) => ({
+            value: lesson._id,
+            label: lesson.name,
+          }));
+
+          return (
+            <div key={subject.value} className="mt-4 ml-4">
+              <h3 className="text-md font-medium">
+                Lessons for: {subject.label}
+              </h3>
+              <Select
+                closeMenuOnSelect={false}
+                components={animatedComponents}
+                isMulti
+                options={lessonOptions}
+                value={selectedLessonsBySubject[subject.value] || []}
+                onChange={(selected) =>
+                  handleLessonChange(subject.value, selected)
+                }
+                placeholder="Choose lessons..."
+              />
+            </div>
+          );
+        })}
+
+        {/* Save button to commit selections to backend */}
+        <button
+          onClick={() => {
+            console.log(
+              "Saving data...",
+              teacher._id,
+              selectedSubjects,
+              selectedLessonsBySubject
+            );
+          }}
+          className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Save to Database
+        </button>
+
+        {/* Display current assigned subjects and lessons */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold">Assigned Subjects:</h2>
+          {teacher.subjects.length === 0 && <p>No subjects assigned.</p>}
+          {teacher.subjects.map((subject, index) => (
+            <div key={index} className="ml-4 mt-2">
+              <h3 className="font-medium">Subject: {subject.name}</h3>
+              {subject.lessons && subject.lessons.length > 0 ? (
+                <ul className="list-disc ml-6">
+                  {subject.lessons.map((lesson, lessonIndex) => (
+                    <li key={lessonIndex}>Lesson: {lesson.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="ml-2 text-sm text-gray-500">
+                  No lessons available.
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-
-      {/* Lessons Multi-select dropdowns for each selected subject */}
-      {selectedSubjects.map((subject) => {
-        const fullSubject = subjectData.find((s) => s._id === subject.value);
-
-        const lessonOptions = (fullSubject?.lessons || []).map((lesson) => ({
-          value: lesson._id,
-          label: lesson.name,
-        }));
-
-        return (
-          <div key={subject.value} className="mt-4 ml-4">
-            <h3 className="text-md font-medium">
-              Lessons for: {subject.label}
-            </h3>
-            <Select
-              closeMenuOnSelect={false}
-              components={animatedComponents}
-              isMulti
-              options={lessonOptions}
-              value={selectedLessonsBySubject[subject.value] || []}
-              onChange={(selected) =>
-                handleLessonChange(subject.value, selected)
-              }
-              placeholder="Choose lessons..."
-            />
-          </div>
-        );
-      })}
-
-      {/* Save button to commit selections to backend */}
-      <button
-        onClick={() => {
-          console.log("Saving data...", teacher._id, selectedSubjects, selectedLessonsBySubject);
-        }}
-        className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Save to Database
-      </button>
-
-      {/* Display current assigned subjects and lessons */}
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold">Assigned Subjects:</h2>
-        {teacher.subjects.length === 0 && <p>No subjects assigned.</p>}
-        {teacher.subjects.map((subject, index) => (
-          <div key={index} className="ml-4 mt-2">
-            <h3 className="font-medium">Subject: {subject.name}</h3>
-            {subject.lessons && subject.lessons.length > 0 ? (
-              <ul className="list-disc ml-6">
-                {subject.lessons.map((lesson, lessonIndex) => (
-                  <li key={lessonIndex}>Lesson: {lesson.name}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="ml-2 text-sm text-gray-500">
-                No lessons available.
-              </p>
-            )}
-          </div>
-        ))}
+      <div className="p-4 border w-1/4 rounded-lg shadow-md bg-white m-4">
+        <img
+          src={teacher.image || defaultUserImage}
+          alt={`${teacher.firstName} ${teacher.lastName}`}
+          className="mt-2 rounded-md w-full h-96 object-cover transition-transform duration-300"
+        />
       </div>
     </div>
   );
