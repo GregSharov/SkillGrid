@@ -12,14 +12,14 @@ const AccountPage = () => {
 
   useEffect(() => {
     const userType = isTeacher ? "teachers" : "students";
-    
+
     fetchData(userType)
       .then((data) => {
         const filteredData = filterData(data, userId);
         setUserData(filteredData[0]);
       })
       .catch((err) => console.error("Error fetching user data:", err));
-  }, [userId]);
+  }, [userId, isTeacher]);
 
   if (isTeacher) {
     return (
