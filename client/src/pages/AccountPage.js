@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import fetchData from "../services/fetchData";
 import filterData from "../services/filterData";
-import TeacherCard from "../components/TeacherCard";
-import StudentCard from "../components/StudentCard";
+// import TeacherCard from "../components/TeacherCard";
+// import StudentCard from "../components/StudentCard";
+import UserCard from "../components/UserCard";
 
 const AccountPage = () => {
   const location = useLocation();
@@ -21,28 +22,40 @@ const AccountPage = () => {
       .catch((err) => console.error("Error fetching user data:", err));
   }, [userId, isTeacher]);
 
-  if (isTeacher) {
-    return (
-      <div className="p-4">
-        <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
-        {userData ? (
-          <TeacherCard teacher={userData} />
-        ) : (
-          <p>Loading user data...</p>
-        )}
-      </div>
-    );
-  } else {
-    return (
-      <div className="p-4">
-        <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
-        {userData ? (
-          <StudentCard student={userData} />
+  return (
+    <div className="p-4">
+         <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
+         {userData ? (
+          <UserCard user={userData} />
         ) : (
           <p>Loading user data...</p>
         )}
       </div>
     );
   }
-};
+
+  // if (isTeacher) {
+  //   return (
+  //     <div className="p-4">
+  //       <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
+  //       {userData ? (
+  //         <TeacherCard teacher={userData} />
+  //       ) : (
+  //         <p>Loading user data...</p>
+  //       )}
+  //     </div>
+  //   );
+  // } else {
+  //   return (
+  //     <div className="p-4">
+  //       <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
+  //       {userData ? (
+  //         <StudentCard student={userData} />
+  //       ) : (
+  //         <p>Loading user data...</p>
+  //       )}
+  //     </div>
+  //   );
+  // }
+// };
 export default AccountPage;
