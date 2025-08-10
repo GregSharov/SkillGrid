@@ -24,7 +24,7 @@ const AccountPage = () => {
   if (isTeacher) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold">This is Account page</h1>
+        <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
         {userData ? (
           <TeacherCard teacher={userData} />
         ) : (
@@ -35,7 +35,7 @@ const AccountPage = () => {
   } else {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold">This is Account page</h1>
+        <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
         {userData ? (
           <StudentCard student={userData} />
         ) : (
