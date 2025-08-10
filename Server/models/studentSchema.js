@@ -28,6 +28,10 @@ const studentSchema = new Schema({
     required: true,
   },
   subjects: [Subject.schema],
+  image: {
+    type: String,
+    // required: true,
+  },
 });
 
 // Export both the schema and the model

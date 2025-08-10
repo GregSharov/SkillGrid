@@ -30,7 +30,7 @@ const teacherSchema = new Schema({
   subjects: [Subject.schema],
   image: {
     type: String,
-    required: true,
+    // required: true,
   },
 });
 
