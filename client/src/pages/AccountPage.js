@@ -11,7 +11,9 @@ const AccountPage = () => {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    fetchData("teachers")
+    const userType = isTeacher ? "teachers" : "students";
+    
+    fetchData(userType)
       .then((data) => {
         const filteredData = filterData(data, userId);
         setUserData(filteredData[0]);
@@ -30,16 +32,17 @@ const AccountPage = () => {
         )}
       </div>
     );
+  } else {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold">This is Account page</h1>
+        {userData ? (
+          <StudentCard student={userData} />
+        ) : (
+          <p>Loading user data...</p>
+        )}
+      </div>
+    );
   }
-  return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">This is Account page</h1>
-      {userData ? (
-        <StudentCard student={userData} />
-      ) : (
-        <p>Loading user data...</p>
-      )}
-    </div>
-  );
 };
 export default AccountPage;
