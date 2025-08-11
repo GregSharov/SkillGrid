@@ -20,6 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 var Model = Student;
+var subfolder = "students";
 
 // Add a new user
 router.post("/add", async (req, res) => {
@@ -36,8 +37,10 @@ router.post("/add", async (req, res) => {
 
     if (isTeacher) {
       Model = Teacher;
+      subfolder = "teachers";
     } else {
       Model = Student;
+      subfolder = "students";
     }
 
     const existingUser = await Model.findOne({ email });
@@ -65,7 +68,7 @@ router.post("/add", async (req, res) => {
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     const { userId } = req.body;
-    const imagePath = `/images/${req.file.filename}`;
+    const imagePath = `/images/${subfolder}/${req.file.filename}`;
 
     // Detect correct model (Student or Teacher)
     Model = (await Student.findById(userId)) ? Student : Teacher;
@@ -119,5 +122,6 @@ router.post("/signin", async (req, res) => {
     res.status(500).json({ message: "Error signing in user." });
   }
 });
+
 
 export default router;
