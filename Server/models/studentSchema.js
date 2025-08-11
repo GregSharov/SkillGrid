@@ -30,6 +30,7 @@ const studentSchema = new Schema({
   subjects: [Subject.schema],
   image: {
     type: String,
+    default: "http://localhost:3000/images/user.png"
     // required: true,
   },
 });

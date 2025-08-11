@@ -16,7 +16,7 @@ export default function useUploadImage() {
 
       const response = await fetch("http://localhost:3000/user/upload", {
         method: "POST",
-        body: formData, // No headers for FormData
+        body: formData,
       });
 
       if (!response.ok) throw new Error("Failed to upload image");

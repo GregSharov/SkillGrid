@@ -6,10 +6,10 @@ import path from "path";
 
 const router = express.Router();
 
-// Configure multer to store files in /public/images
+// Configure multer to store files in /images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "images");
+    cb(null, "images/students");
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname); // .png
@@ -68,7 +68,7 @@ router.post("/add", async (req, res) => {
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     const { userId } = req.body;
-    const imagePath = `/images/${subfolder}/${req.file.filename}`;
+    const imagePath = `http://localhost:3000/images/${subfolder}/${req.file.filename}`;
 
     // Detect correct model (Student or Teacher)
     Model = (await Student.findById(userId)) ? Student : Teacher;
