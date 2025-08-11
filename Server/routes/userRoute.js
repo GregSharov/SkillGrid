@@ -12,7 +12,9 @@ const storage = multer.diskStorage({
     cb(null, "images");
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname); // original name
+    const ext = path.extname(file.originalname); // .png
+    const baseName = path.basename(file.originalname, ext); // logo
+    cb(null, `${baseName}-${Date.now()}${ext}`);
   },
 });
 const upload = multer({ storage });
