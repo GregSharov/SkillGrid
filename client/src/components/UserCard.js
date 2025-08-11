@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import fetchData from "../services/fetchData";
+import useUploadImage from "../services/uploadImage";
 
 const animatedComponents = makeAnimated();
 const defaultUserImage = "http://localhost:3000/images/user.png";
@@ -10,6 +11,22 @@ function UserCard({ user }) {
   const [subjectData, setSubjectData] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
+
+  const fileInputRef = useRef(null);
+  const { uploadImage, loading } = useUploadImage();
+
+  const handleImageClick = () => {
+    fileInputRef.current.click(); // Open file dialog
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const result = await uploadImage(user._id, file);
+    if (result?.imageUrl) {
+      user.image = `http://localhost:3000${result.imageUrl}`;
+    }
+  };
 
   // Fetch subjects from backend once on component mount
   useEffect(() => {
@@ -156,9 +173,25 @@ function UserCard({ user }) {
         <img
           src={user.image || defaultUserImage}
           alt={`${user.firstName} ${user.lastName}`}
+          className="mt-2 rounded-md w-full h-96 object-cover cursor-pointer hover:opacity-80"
+          onClick={handleImageClick}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        {loading && <p>Uploading...</p>}
+      </div>
+      {/* <div className="p-4 border w-1/4 rounded-lg shadow-md bg-white m-4">
+        <img
+          src={user.image || defaultUserImage}
+          alt={`${user.firstName} ${user.lastName}`}
           className="mt-2 rounded-md w-full h-96 object-cover transition-transform duration-300"
         />
-      </div>
+      </div> */}
     </div>
   );
 }

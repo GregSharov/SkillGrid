@@ -1,8 +1,21 @@
 import express from "express";
 import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
+import multer from "multer";
+import path from "path";
 
 const router = express.Router();
+
+// Configure multer to store files in /public/images
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname); // original name
+  },
+});
+const upload = multer({ storage });
 
 var Model = Student;
 
@@ -43,6 +56,31 @@ router.post("/add", async (req, res) => {
   } catch (error) {
     console.error("Error saving user:", error);
     res.status(500).json({ message: "Error saving user." });
+  }
+});
+
+// Upload profile image
+router.post("/upload", upload.single("image"), async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const imagePath = `/images/${req.file.filename}`;
+
+    // Detect correct model (Student or Teacher)
+    Model = (await Student.findById(userId)) ? Student : Teacher;
+
+    const user = await Model.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    user.image = imagePath;
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile image uploaded successfully.",
+      imageUrl: imagePath,
+    });
+  } catch (error) {
+    console.error("Error uploading profile image:", error);
+    res.status(500).json({ message: "Error uploading profile image." });
   }
 });
 

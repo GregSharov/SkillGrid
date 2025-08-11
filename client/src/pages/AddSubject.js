@@ -29,7 +29,7 @@ export default function AddSubjectForm() {
     const payload = { ...subject, lessons };
 
     try {
-      const res = await fetch("http://localhost:3000/subject/add", {
+      const res = await fetch("http://localhost:3000/subjects/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
