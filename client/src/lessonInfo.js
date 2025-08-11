@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
-import TeacherCard from "./components/TeacherCard";
+// import TeacherCard from "./components/TeacherCard";
 import { useNavigate } from "react-router-dom";
 import userPicrure from "./user.png";
 
@@ -161,16 +161,6 @@ const DisplayLessonsInfo = ({ lessonId }) => {
         )}
       </div>
 
-
-
-
-
-
-
-
-
-      
-
       <div>
         {/* Display list of teachers teaching this lesson */}
         {teachersData.length === 0 ? (
@@ -180,9 +170,6 @@ const DisplayLessonsInfo = ({ lessonId }) => {
                 </h3>
           </div>
         ) : (
-          // teachersData.map((teacher) => (
-          //   <TeacherCard key={teacher._id} teacher={teacher} />
-          // ))
           <div className="w-full px-4 py-2 bg-gray-50">
                 <div className="max-w-7xl mx-auto relative">
                   <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
