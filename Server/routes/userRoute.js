@@ -9,7 +9,7 @@ const router = express.Router();
 // Configure multer to store files in /images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "images/students");
+    cb(null, "images/");
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname); // .png
@@ -55,6 +55,7 @@ router.post("/add", async (req, res) => {
       email,
       phone,
       password,
+      isTeacher,
     });
     const savedUser = await newUser.save();
     res.status(201).json({ message: `User ${savedUser.email} registered.` });

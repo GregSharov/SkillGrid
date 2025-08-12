@@ -33,6 +33,10 @@ const studentSchema = new Schema({
     default: "http://localhost:3000/images/user.png"
     // required: true,
   },
+  isTeacher: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Export both the schema and the model
