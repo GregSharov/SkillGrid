@@ -3,13 +3,32 @@ import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
 const router = express.Router();
 
+var subfolder = "";
+
 // Configure multer to store files in /images
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "images/");
+  destination: async (req, file, cb) => {
+    const { userId } = req.body;
+    subfolder = (await Student.findById(userId)) ? "students" : "teachers";
+
+    const dir = `./images/${subfolder}`;
+    // Ensure the directory exists
+    fs.access(dir, (err) => {
+      if (err) {
+        fs.mkdir(dir, { recursive: true }, (err) => {
+          if (err) {
+            return cb(err);
+          }
+          cb(null, dir);
+        });
+      } else {
+        cb(null, dir);
+      }
+    });
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname); // .png
@@ -17,10 +36,9 @@ const storage = multer.diskStorage({
     cb(null, `${baseName}-${Date.now()}${ext}`);
   },
 });
-const upload = multer({ storage });
+const upload = multer({ storage: storage });
 
 var Model = Student;
-var subfolder = "students";
 
 // Add a new user
 router.post("/add", async (req, res) => {
@@ -123,6 +141,5 @@ router.post("/signin", async (req, res) => {
     res.status(500).json({ message: "Error signing in user." });
   }
 });
-
 
 export default router;
