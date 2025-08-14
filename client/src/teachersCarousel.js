@@ -5,7 +5,7 @@ import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 import userPicture from "./user.png";
 
-const DisplayTeachersData = ({ lessonId }) => {
+const TeachersCarousel = ({ lessonId }) => {
   const [teacherData, setTeacherData] = useState([]);
 
   const carouselRef = useRef(null);
@@ -225,4 +225,4 @@ const DisplayTeachersData = ({ lessonId }) => {
   );
 };
 
-export default DisplayTeachersData;
+export default TeachersCarousel;
