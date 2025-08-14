@@ -9,9 +9,9 @@ const CarouselSubjects = ({ onSubjectClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
 
-  const handleButtonClick = (id) => {
-    onSubjectClick(id);
-    console.log("Button clicked with ID:", id);
+  const handleButtonClick = (subjectId) => {
+    onSubjectClick(subjectId);
+    // console.log("Button clicked with ID:", subjectId);
   };
 
   useEffect(() => {
@@ -121,7 +121,7 @@ const CarouselSubjects = ({ onSubjectClick }) => {
             className="flex overflow-x-auto scrollbar-hide gap-6 pb-6 scroll-smooth px-2"
             style={{ scrollSnapType: "x mandatory" }}
           >
-            {subjects.map((product, index) => (
+            {subjects.map((product) => (
               <button
                 key={product._id}
                 onClick={() => handleButtonClick(product._id)}

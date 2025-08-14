@@ -11,13 +11,13 @@ const Home = () => {
     <div>
       <CarouselSubjects onSubjectClick={setSelectedSubjectId} />
       <CarouselLessons
-        id={selectedSubjectId}
+        subjectId={selectedSubjectId}
         lessonInfo={setSelectedLessonId}
       />
       <LessonInfoPage id={selectedLessonId} />
 
       <CarouselTeachers
-        id={selectedSubjectId}
+        subjectObject={selectedSubjectId}
         teacherInfo={setSelectedSubjectId}
       />
     </div>
