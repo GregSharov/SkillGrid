@@ -1,8 +1,10 @@
 import { useLocation } from "react-router-dom";
+import CarouselLessons from "./carouselLessons";
 
 function DisplayTeacherData() {
   const location = useLocation();
   const teacher = location.state?.teacher; // Get full object
+  const lessonsArray = teacher.subjects.flatMap((subject) => subject.lessons || []);
 
   return (
     <>
@@ -17,26 +19,8 @@ function DisplayTeacherData() {
             className="mt-4 rounded-lg shadow-md"
           />
           {/* Display current assigned subjects and lessons */}
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold">Assigned Subjects:</h2>
-            {teacher.subjects.length === 0 && <p>No subjects assigned.</p>}
-            {teacher.subjects.map((subject, index) => (
-              <div key={index} className="ml-4 mt-2">
-                <h3 className="font-medium">Subject: {subject.name}</h3>
-                {subject.lessons && subject.lessons.length > 0 ? (
-                  <ul className="list-disc ml-6">
-                    {subject.lessons.map((lesson, lessonIndex) => (
-                      <li key={lessonIndex}>Lesson: {lesson.name}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="ml-2 text-sm text-gray-500">
-                    No lessons available.
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+          <CarouselLessons subjectId={null} lessonsArray={lessonsArray} />
+          {/* {console.log("From teacher info: ", lessonsArray)} */}
         </div>
       ) : (
         <p>No teacher data found.</p>
