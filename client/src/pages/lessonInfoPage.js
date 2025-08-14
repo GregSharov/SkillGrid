@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import DisplayLessonsInfo from "../lessonInfo.js";
+import DisplayLessonsInfo from "../displayLessonInfo.js";
 
 const LessonInfoPage = () => {
   const location = useLocation();
