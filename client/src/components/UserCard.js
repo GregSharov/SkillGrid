@@ -15,6 +15,50 @@ function UserCard({ user }) {
   const fileInputRef = useRef(null);
   const { uploadImage, loading } = useUploadImage();
 
+  // Send to DB selected subjects and lessons
+  const handleSave = async () => {
+    if (!selectedSubjects.length) {
+      console.log("No subjects selected. Nothing to save.");
+      return;
+    }
+
+    const cleanSubjects = selectedSubjects.map((s) => ({
+      value: s.value,
+      label: s.label,
+    }));
+
+    const cleanLessons = {};
+    for (const [subjectId, lessonsArr] of Object.entries(
+      selectedLessonsBySubject
+    )) {
+      cleanLessons[subjectId] = lessonsArr.map((l) => ({
+        value: l.value,
+        label: l.label,
+      }));
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/user/${user._id}/subjects`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subjects: cleanSubjects,
+            lessons: cleanLessons,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to save data");
+
+      const updatedUser = await response.json();
+      console.log("Data saved successfully:", updatedUser);
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  };
+
   const handleImageClick = () => {
     fileInputRef.current.click(); // Open file dialog
   };
@@ -33,9 +77,35 @@ function UserCard({ user }) {
     fetchData("subjects")
       .then((data) => {
         setSubjectData(data);
+
+        // Pre-fill dropdowns from current user subjects in DB
+        if (user.subjects && user.subjects.length > 0) {
+          const preSelectedSubjects = user.subjects.map((s) => ({
+            value: s._id,
+            label: s.name,
+          }));
+          setSelectedSubjects(preSelectedSubjects);
+
+          const preSelectedLessonsBySubject = {};
+          user.subjects.forEach((s) => {
+            preSelectedLessonsBySubject[s._id] = (s.lessons || []).map((l) => ({
+              value: l._id,
+              label: l.name,
+            }));
+          });
+          setSelectedLessonsBySubject(preSelectedLessonsBySubject);
+        }
       })
       .catch((err) => console.log("Error fetching data", err));
-  }, []);
+  }, [user]);
+
+  // useEffect(() => {
+  //   fetchData("subjects")
+  //     .then((data) => {
+  //       setSubjectData(data);
+  //     })
+  //     .catch((err) => console.log("Error fetching data", err));
+  // }, []);
 
   // Prepare react-select options for subjects: {value, label}
   const subjectSelectOptions = subjectData.map((subject) => ({
@@ -134,14 +204,7 @@ function UserCard({ user }) {
 
         {/* Save button to commit selections to backend */}
         <button
-          onClick={() => {
-            console.log(
-              "Saving data...",
-              user._id,
-              selectedSubjects,
-              selectedLessonsBySubject
-            );
-          }}
+          onClick={handleSave}
           className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Save to Database
