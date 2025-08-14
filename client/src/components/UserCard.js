@@ -219,11 +219,11 @@ function UserCard({ user }) {
           {userSubjects.length === 0 && <p>No subjects assigned.</p>}
           {userSubjects.map((subject, index) => (
             <div key={index} className="ml-4 mt-2">
-              <h3 className="font-medium">Subject: {subject.name}</h3>
+              <h3 className="font-medium">{subject.name}</h3>
               {subject.lessons && subject.lessons.length > 0 ? (
                 <ul className="list-disc ml-6">
                   {subject.lessons.map((lesson, lessonIndex) => (
-                    <li key={lessonIndex}>Lesson: {lesson.name}</li>
+                    <li key={lessonIndex}>{lesson.name}</li>
                   ))}
                 </ul>
               ) : (
