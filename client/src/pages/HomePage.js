@@ -2,7 +2,7 @@ import { useState } from "react";
 import DisplaySubjectData from "../displaySubjectsData.js";
 import DisplayLessonData from "../displayLessonsDada.js";
 import LessonInfoPage from "../pages/lessonInfoPage.js";
-import TeachersCarousel from "../displayTeacherList";
+import TeachersCarousel from "../teachersCarousel.js";
 
 const Home = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
