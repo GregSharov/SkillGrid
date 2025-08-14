@@ -2,15 +2,20 @@ import { useLocation } from "react-router-dom";
 
 function DisplayTeacherData() {
   const location = useLocation();
-  const teacher = location.state?.teacher; // full object
+  const teacher = location.state?.teacher; // Get full object
 
   return (
     <>
       {teacher ? (
         <div>
           <p>
-            Name: {teacher.firstName} {teacher.lastName}
+            {teacher.firstName} {teacher.lastName}
           </p>
+          <img
+            src={teacher.image}
+            alt={`${teacher.firstName} ${teacher.lastName}`}
+            className="mt-4 rounded-lg shadow-md"
+          />
           {/* Display current assigned subjects and lessons */}
           <div className="mt-6">
             <h2 className="text-lg font-semibold">Assigned Subjects:</h2>
