@@ -13,6 +13,7 @@ const CarouselLessons = ({ id }) => {
   // Navigate to lesson info page with the lessonId
   const navigate = useNavigate();
   const lessonInfo = (lessonId) => {
+    if (!lessonId) return;
     navigate("/lesson-info", { state: { lessonId } });
   };
 
@@ -41,6 +42,7 @@ const CarouselLessons = ({ id }) => {
     };
 
     updateWidth();
+    
     const resizeObserver = new ResizeObserver(updateWidth);
     if (carouselRef.current) {
       resizeObserver.observe(carouselRef.current);
@@ -125,7 +127,7 @@ const CarouselLessons = ({ id }) => {
             className="flex overflow-x-auto scrollbar-hide gap-6 pb-6 scroll-smooth px-2"
             style={{ scrollSnapType: "x mandatory" }}
           >
-            {lessons.map((product, index) => (
+            {lessons.map((product) => (
               <div
                 key={product._id}
                 className="flex-none w-64"
@@ -150,7 +152,9 @@ const CarouselLessons = ({ id }) => {
                     <div className="flex items-center justify-between mt-auto">
                       <button
                         // more information about the lesson
-                        onClick={() => {lessonInfo(product._id)}}
+                        onClick={() => {
+                          lessonInfo(product._id);
+                        }}
                         className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm"
                         aria-label={`Sign up for ${product.name}`}
                       >

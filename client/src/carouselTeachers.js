@@ -6,11 +6,11 @@ import { useNavigate } from "react-router-dom";
 
 const CarouselTeachers = ({ lessonId }) => {
   const [teacherData, setTeacherData] = useState([]);
-
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [productWidth, setProductWidth] = useState(0);
 
+  // Navigate to lesson info page with the lessonId
   const navigate = useNavigate();
   const teacherInfo = (teacher) => {
     if (!teacher) return;
@@ -21,10 +21,10 @@ const CarouselTeachers = ({ lessonId }) => {
   useEffect(() => {
     fetchData("teachers")
       .then((data) => {
-        const filteredTeachers = filterData(data, lessonId);
-        setTeacherData(filteredTeachers);
+        // Filter data to get teachers for the specific lesson id
+        setTeacherData(filterData(data, lessonId));
       })
-      .catch(console.error);
+      .catch((err) => console.error("Error fetching data", err));
   }, [lessonId]);
 
   // Calculate product width on mount and resize
