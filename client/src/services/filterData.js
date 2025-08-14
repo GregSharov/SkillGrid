@@ -1,6 +1,11 @@
 // Filter data based on the search term.
 function filterData(data, filterTerm = null) {
-  if (!filterTerm) {
+  if (
+    !filterTerm ||
+    filterTerm.trim() === "" ||
+    filterTerm === null ||
+    filterTerm === undefined
+  ) {
     return data;
   }
   return data.filter((item) => item && searchData(item, filterTerm));
