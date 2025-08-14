@@ -12,6 +12,7 @@ function UserCard({ user }) {
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
   const [userSubjects, setUserSubjects] = useState(user.subjects || []);
+  const [userImage, setUserImage] = useState(user.image || "");
 
   const fileInputRef = useRef(null);
   const { uploadImage, loading } = useUploadImage();
@@ -70,7 +71,7 @@ function UserCard({ user }) {
     if (!file) return;
     const result = await uploadImage(user._id, file);
     if (result?.imageUrl) {
-      user.image = `http://localhost:3000${result.imageUrl}`;
+      setUserImage(result.imageUrl);
     }
   };
 
@@ -236,7 +237,7 @@ function UserCard({ user }) {
       </div>
       <div className="p-4 border w-1/4 rounded-lg shadow-md bg-white m-4">
         <img
-          src={user.image}
+          src={userImage}
           alt={`${user.firstName} ${user.lastName}`}
           className="mt-2 rounded-md w-full h-96 object-cover cursor-pointer hover:opacity-80"
           onClick={handleImageClick}
