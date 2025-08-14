@@ -3,7 +3,6 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
-import userPicture from "./user.png";
 
 const TeachersCarousel = ({ lessonId }) => {
   const [teacherData, setTeacherData] = useState([]);
@@ -105,7 +104,9 @@ const TeachersCarousel = ({ lessonId }) => {
         </h2>
 
         {teacherData.length === 0 ? (
-          <div className="text-center"><p className="text-gray-500">Currently here are no teachers.</p></div>
+          <div className="text-center">
+            <p className="text-gray-500">Currently here are no teachers.</p>
+          </div>
         ) : (
           <div className="relative group">
             {/* Previous Button */}
@@ -139,7 +140,7 @@ const TeachersCarousel = ({ lessonId }) => {
                   <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
                     <div className="relative pb-[75%]">
                       <img
-                        src={teacher.image || userPicture}
+                        src={teacher.image}
                         alt={teacher.firstName}
                         className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                         loading="lazy"
