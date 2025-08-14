@@ -11,6 +11,7 @@ function UserCard({ user }) {
   const [subjectData, setSubjectData] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
+  const [userSubjects, setUserSubjects] = useState(user.subjects || []);
 
   const fileInputRef = useRef(null);
   const { uploadImage, loading } = useUploadImage();
@@ -53,6 +54,7 @@ function UserCard({ user }) {
       if (!response.ok) throw new Error("Failed to save data");
 
       const updatedUser = await response.json();
+      setUserSubjects(updatedUser.subjects);
       console.log("Data saved successfully:", updatedUser);
     } catch (error) {
       console.error("Error saving data:", error);
@@ -213,8 +215,8 @@ function UserCard({ user }) {
         {/* Display current assigned subjects and lessons */}
         <div className="mt-6">
           <h2 className="text-lg font-semibold">Assigned Subjects:</h2>
-          {user.subjects.length === 0 && <p>No subjects assigned.</p>}
-          {user.subjects.map((subject, index) => (
+          {userSubjects.length === 0 && <p>No subjects assigned.</p>}
+          {userSubjects.map((subject, index) => (
             <div key={index} className="ml-4 mt-2">
               <h3 className="font-medium">Subject: {subject.name}</h3>
               {subject.lessons && subject.lessons.length > 0 ? (
