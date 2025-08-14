@@ -3,7 +3,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 
 
-const DisplaySubjectData = ({ onSubjectClick }) => {
+const CarouselSubjects = ({ onSubjectClick }) => {
   const [subjectData, setSubjectData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -189,4 +189,4 @@ const DisplaySubjectData = ({ onSubjectClick }) => {
   );
 };
 
-export default DisplaySubjectData;
+export default CarouselSubjects;

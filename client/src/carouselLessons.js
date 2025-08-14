@@ -4,7 +4,7 @@ import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 
-const DisplayLessonsData = ({ id }) => {
+const CarouselLessons = ({ id }) => {
   const [lessonData, setLessonsData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -198,4 +198,4 @@ const DisplayLessonsData = ({ id }) => {
   );
 };
 
-export default DisplayLessonsData;
+export default CarouselLessons;

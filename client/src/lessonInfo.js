@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
-import TeachersCarousel from "./teachersCarousel";
+import CarouselTeachers from "./carouselTeachers";
 
 const DisplayLessonsInfo = ({ lessonId }) => {
   const [lessonData, setLessonData] = useState(null);
@@ -49,7 +49,7 @@ const DisplayLessonsInfo = ({ lessonId }) => {
       </div>
 
       {/* Display Teachers List Carousel */}
-      <TeachersCarousel lessonId={lessonData?._id} />
+      <CarouselTeachers lessonId={lessonData?._id} />
     </div>
   );
 };

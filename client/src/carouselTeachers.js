@@ -4,7 +4,7 @@ import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 
-const TeachersCarousel = ({ lessonId }) => {
+const CarouselTeachers = ({ lessonId }) => {
   const [teacherData, setTeacherData] = useState([]);
 
   const carouselRef = useRef(null);
@@ -226,4 +226,4 @@ const TeachersCarousel = ({ lessonId }) => {
   );
 };
 
-export default TeachersCarousel;
+export default CarouselTeachers;

@@ -1,24 +1,24 @@
 import { useState } from "react";
-import DisplaySubjectData from "../displaySubjectsData.js";
-import DisplayLessonData from "../displayLessonsDada.js";
+import CarouselSubjects from "../carouselSubjects.js";
+import CarouselLessons from "../carouselLessons.js";
 import LessonInfoPage from "../pages/lessonInfoPage.js";
-import TeachersCarousel from "../teachersCarousel.js";
+import CarouselTeachers from "../carouselTeachers.js";
 
 const Home = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
   return (
     <div>
-      <DisplaySubjectData onSubjectClick={setSelectedSubjectId} />
-      <DisplayLessonData
+      <CarouselSubjects onSubjectClick={setSelectedSubjectId} />
+      <CarouselLessons
         id={selectedSubjectId}
         lessonInfo={setSelectedLessonId}
       />
       <LessonInfoPage id={selectedLessonId} />
-      
-      <TeachersCarousel 
+
+      <CarouselTeachers
         id={selectedSubjectId}
-        teacherInfo={setSelectedSubjectId} 
+        teacherInfo={setSelectedSubjectId}
       />
     </div>
   );
