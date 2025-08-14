@@ -4,7 +4,7 @@ import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 
-const CarouselLessons = ({ id }) => {
+const CarouselLessons = ({ subjectId, lessonsArray = null }) => {
   const [lessonData, setLessonsData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,12 +22,13 @@ const CarouselLessons = ({ id }) => {
     fetchData("subjects")
       .then((data) => {
         // Filter data to get lessons for the specific subject id
-        setLessonsData(filterData(data, id));
+        setLessonsData(filterData(data, subjectId));
       })
       .catch((err) => console.error("Error fetching data", err));
-  }, [id]);
+  }, [subjectId]);
 
-  const lessons = lessonData.flatMap((lesson) => lesson.lessons || []);
+  const lessons = lessonsArray ? lessonsArray : lessonData.flatMap((lesson) => lesson.lessons || []);
+  // console.log("Lessons Data:", lessons);
 
   // Calculate product width on mount and resize
   useEffect(() => {
@@ -42,7 +43,7 @@ const CarouselLessons = ({ id }) => {
     };
 
     updateWidth();
-    
+
     const resizeObserver = new ResizeObserver(updateWidth);
     if (carouselRef.current) {
       resizeObserver.observe(carouselRef.current);
