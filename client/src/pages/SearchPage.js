@@ -1,123 +1,69 @@
-// src/pages/SearchPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import fetchData from "../services/fetchData";
-import { useNavigate } from "react-router-dom";
+import filterData from "../services/filterData"; // Import the filter function
 
+export default function SearchPage({ subjectId, lessonsArray = null }) {
+    const [teacherData, setTeacherData] = useState([]);
+    const [lessonData, setLessonsData] = useState([]);
 
-export default function SearchPage() {
-  const { search } = useLocation();
-  const q = (new URLSearchParams(search).get("q") || "").toLowerCase().trim();
-
-  const [teachers, setTeachers] = useState([]);
 
     const navigate = useNavigate();
     // Navigate to teacher info page
-  const teacherInfo = (teacher) => {
-    if (!teacher) return;
-    navigate("/teacher-info", { state: { teacher } });
-  };
-
+    const teacherInfo = (teacher) => {
+        if (!teacher) return;
+        navigate("/teacher-info", { state: { teacher } });
+    }
+    const lessonInfo = (lessonID) => {
+        if (!lessonID) return;
+        navigate("/lesson-info", { state: { lessonID } });
+    }
+    // Fetching data from Subjects database then filtering it to get the lessons data by id
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const data = await fetchData("teachers");
-        if (!alive) return;
-        setTeachers(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error("Search load failed", e);
-        setTeachers([]);
-      }
-    })();
-    return () => { alive = false; };
+    fetchData("subjects")
+      .then((data) => {
+        // Filter data to get lessons for the specific subject id
+        setLessonsData(filterData(data, subjectId));
+      })
+      .catch((err) => console.error("Error fetching data", err));
+  }, [subjectId]);
+    const lessons = lessonsArray ? lessonsArray : lessonData.flatMap((lesson) => lesson.lessons || []);
+
+
+    useEffect(() => {
+    fetchData("teachers")
+      .then((data) => setTeacherData(filterData(data)))
+      .catch((err) => console.error("Error fetching data", err));
   }, []);
 
-  const flatTeachers = useMemo(() => {
-    if (!teachers?.length) return [];
-    const first = teachers[0] || {};
-    return "teachers" in first
-      ? teachers.flatMap((x) => x?.teachers || [])
-      : teachers;
-  }, [teachers]);
-
-  const results = useMemo(() => {
-    if (!q) return flatTeachers;
-
-    return flatTeachers.filter((t) => {
-      const name = `${t.firstName ?? ""} ${t.lastName ?? ""} ${t.name ?? ""}`.toLowerCase();
-
-      // subjects could be strings or objects with .name
-      const subjectsArr = (t.assignedSubjects || t.subjects || []);
-      const subjectsText = Array.isArray(subjectsArr)
-        ? subjectsArr.map((s) => (typeof s === "string" ? s : s?.name || s?.title || ""))
-            .join(" ")
-            .toLowerCase()
-        : "";
-
-      // lessons may live under each subject
-      const lessonsText = Array.isArray(subjectsArr)
-        ? subjectsArr
-            .flatMap((s) => (Array.isArray(s?.lessons) ? s.lessons : []))
-            .map((l) => (typeof l === "string" ? l : l?.name || l?.title || ""))
-            .join(" ")
-            .toLowerCase()
-        : "";
-
-      return (
-        name.includes(q) ||
-        subjectsText.includes(q) ||
-        lessonsText.includes(q)
-      );
-    });
-  }, [flatTeachers, q]);
-
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-xl font-semibold mb-4">
-        Search results{q ? ` for “${q}”` : ""}
-      </h1>
-
-      {!results.length ? (
-        <p>No matches.</p>
-      ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map((t, i) => {
-            const displayName = `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim() || t.name || "Unnamed";
-            return (
-              <li key={t._id ?? t.id ?? i} className="border rounded bg-white p-3">
-                <img
-                  src={t.image || "/images/user.png"}
-                  alt={displayName}
-                  className="w-full h-40 object-cover rounded mb-2"
-                />
-                <div className="font-medium">{displayName}</div>
-                <div className="text-sm text-gray-600">
-                  {(t.assignedSubjects || t.subjects || [])
-                    .map((s) => (typeof s === "string" ? s : s?.name))
-                    .filter(Boolean)
-                    .join(", ") || "—"}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {t.lessons?.length
-                    ? t.lessons.map((l) => (typeof l === "string" ? l : l?.name || l?.title || ""))
-                        .filter(Boolean)
-                        .join(", ")
-                    : ""}
-                </div>
-                <div>
-                    <button
-                      className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      onClick={() => teacherInfo(t)}
-                    >
-                      View Profile
-                    </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+    <div>
+        <h1 className="text-2xl font-bold mb-4">Search Results</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {teacherData.map((teacher) => (
+            <div key={teacher._id} className="border p-4 rounded-lg">
+                <img src={teacher.image || "/images/user.png"} alt={teacher.name} className="w-full h-40 object-cover rounded mb-2" />
+                <h2 className="text-xl font-semibold">{teacher.name}</h2>
+                <p>{teacher.description}</p>
+                <button onClick={() => teacherInfo(teacher)} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">View Profile</button>
+            </div>
+            ))}
+            {lessons.map((lesson) => (
+            <div key={lesson._id} className="border p-4 rounded-lg">
+                <img src={lesson.image || "/images/lesson.png"} alt={lesson.name} className="w-full h-40 object-cover rounded mb-2" />
+                <h3 className="text-lg font-semibold">{lesson.name}</h3>
+                <button onClick={() => lessonInfo(lesson._id)} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">View Lesson</button>
+            </div>
+            ))}
+        </div>
     </div>
-  );
+    );
 }
+
+
+
+
+
+
+
+
