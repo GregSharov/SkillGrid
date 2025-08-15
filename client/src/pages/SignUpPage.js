@@ -1,9 +1,9 @@
-import AddNewUser from "../signUp.js";
+import SignUp from "../signUp.js";
 
 const SignUpPage = () => {
   return (
     <div>
-      <AddNewUser />
+      <SignUp />
     </div>
   );
 };

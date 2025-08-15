@@ -3,7 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Importing components for routing
-import Layout from "./pages/Layout.js";
+import Header from "./pages/Header.js";
 import NoPage from "./pages/NoPage.js";
 import Home from "./pages/HomePage.js";
 import SignIn from "./pages/SignInPage.js";
@@ -22,7 +22,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Header />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
