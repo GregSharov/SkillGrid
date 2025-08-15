@@ -6,7 +6,6 @@ const lessonSchema = new Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
   },
   image: {
     type: String,
@@ -23,7 +22,6 @@ const subjectSchema = new Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
   },
   image: {
     type: String,
