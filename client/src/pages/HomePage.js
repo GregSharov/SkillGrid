@@ -17,7 +17,7 @@ const Home = () => {
       <LessonInfoPage id={selectedLessonId} />
 
       <CarouselTeachers
-        subjectObject={selectedSubjectId}
+        subjectId={selectedSubjectId}
         teacherInfo={setSelectedSubjectId}
       />
     </div>
