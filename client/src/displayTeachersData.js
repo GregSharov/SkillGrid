@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
-import CarouselLessons from "./carouselLessons";
+import CarouselLessons from "./carouselLessons.js";
 
 function DisplayTeacherData() {
   const location = useLocation();

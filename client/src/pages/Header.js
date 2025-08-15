@@ -11,36 +11,67 @@ const Header = () => {
             <img src={logo} className="h-10" alt="Skill Grid Logo" />
           </a>
 
-          {/* Navigation links */}
-          <nav className="hidden md:flex space-x-6">
-            <a
-              href="/"
-              className="text-gray-800 hover:text-indigo-500 font-medium transition-colors"
-            >
-              Home
-            </a>
-            <a
-              href="/about"
-              className="text-gray-800 hover:text-indigo-500 font-medium transition-colors"
-            >
-              About
-            </a>
-            <a
-              href="/contact"
-              className="text-gray-800 hover:text-indigo-500 font-medium transition-colors"
-            >
-              Contact
-            </a>
-            <a
-              href="/sign-in"
-              className="text-white bg-indigo-500 hover:bg-indigo-600 px-4 py-1 rounded-md font-medium transition-colors"
-            >
-              Account
-            </a>
-          </nav>
+          {/* Desktop Navigation + Search */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Navigation links */}
+            <nav className="flex space-x-6">
+              <a
+                href="/"
+                className="text-gray-800 hover:text-indigo-500 font-medium transition-colors"
+              >
+                Home
+              </a>
+              <a
+                href="/about"
+                className="text-gray-800 hover:text-indigo-500 font-medium transition-colors"
+              >
+                About
+              </a>
+              <a
+                href="/contact"
+                className="text-gray-800 hover:text-indigo-500 font-medium transition-colors"
+              >
+                Contact
+              </a>
+              <a
+                href="/sign-in"
+                className="text-white bg-indigo-500 hover:bg-indigo-600 px-4 py-1 rounded-md font-medium transition-colors"
+              >
+                Account
+              </a>
+            </nav>
+
+            {/* Search field */}
+            <div className="relative ml-6">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-64 pl-3 pr-3 py-1 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <svg
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4-4m0-7A7 7 0 111 8a7 7 0 0116 0z"
+                />
+              </svg>
+            </div>
+          </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Mobile search field */}
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-36 pl-2 pr-2 py-1 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
             <button
               type="button"
               className="text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md"
@@ -51,7 +82,6 @@ const Header = () => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
