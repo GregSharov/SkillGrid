@@ -14,7 +14,7 @@ import About from "./pages/aboutUs.js";
 import LessonInfoPage from "./pages/lessonInfoPage.js";
 import AcountPage from "./pages/AccountPage.js";
 import DisplayTeachersData from "./displayTeachersData.js";
-
+import Footer from "./components/footer.js";
 
 
 
@@ -35,6 +35,7 @@ function App() {
           <Route path="teacher-info" element={<DisplayTeachersData />} />
         </Route>
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
