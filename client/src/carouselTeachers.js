@@ -4,7 +4,7 @@ import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 
-const CarouselTeachers = ({ lessonId }) => {
+const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   const [teacherData, setTeacherData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -18,9 +18,18 @@ const CarouselTeachers = ({ lessonId }) => {
 
   useEffect(() => {
     fetchData("teachers")
-      .then((data) => setTeacherData(filterData(data, lessonId)))
+      .then((data) => {
+        // Filter data to get teachers for the specific lesson id
+        setTeacherData(filterData(data, lessonId));
+
+        // If subjectId is provided, filter teachers by subject as well
+        if (subjectId) {
+          const selectedTeachers = filterData(data, subjectId);
+          setTeacherData(selectedTeachers);
+        }
+      })
       .catch((err) => console.error("Error fetching data", err));
-  }, [lessonId]);
+  }, [lessonId, subjectId]);
 
   useEffect(() => {
     const updateWidth = () => {
