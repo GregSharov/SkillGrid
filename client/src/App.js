@@ -35,7 +35,7 @@ function App() {
           <Route path="lesson-info" element={<LessonInfoPage />} />
           <Route path="account" element={<AcountPage />} />
           <Route path="teacher-info" element={<DisplayTeachersData />} />
-          <Route path="/search" element={<SearchPage />} />
+          <Route path="search" element={<SearchPage />} />
         </Route>
       </Routes>
       <Footer />

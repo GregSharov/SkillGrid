@@ -2,12 +2,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import fetchData from "../services/fetchData";
+import { useNavigate } from "react-router-dom";
+
 
 export default function SearchPage() {
   const { search } = useLocation();
   const q = (new URLSearchParams(search).get("q") || "").toLowerCase().trim();
 
   const [teachers, setTeachers] = useState([]);
+
+    const navigate = useNavigate();
+    // Navigate to teacher info page
+  const teacherInfo = (teacher) => {
+    if (!teacher) return;
+    navigate("/teacher-info", { state: { teacher } });
+  };
 
   useEffect(() => {
     let alive = true;
@@ -88,6 +97,21 @@ export default function SearchPage() {
                     .map((s) => (typeof s === "string" ? s : s?.name))
                     .filter(Boolean)
                     .join(", ") || "—"}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {t.lessons?.length
+                    ? t.lessons.map((l) => (typeof l === "string" ? l : l?.name || l?.title || ""))
+                        .filter(Boolean)
+                        .join(", ")
+                    : ""}
+                </div>
+                <div>
+                    <button
+                      className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      onClick={() => teacherInfo(t)}
+                    >
+                      View Profile
+                    </button>
                 </div>
               </li>
             );
