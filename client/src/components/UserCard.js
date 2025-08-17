@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import fetchData from "../services/fetchData";
 import useUploadImage from "../services/uploadImage";
