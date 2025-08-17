@@ -4,7 +4,7 @@ import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
 
-const CarouselLessons = ({ subjectId, lessonsArray = null }) => {
+const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
   const [lessonData, setLessonsData] = useState([]);
   const carouselRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -27,7 +27,9 @@ const CarouselLessons = ({ subjectId, lessonsArray = null }) => {
       .catch((err) => console.error("Error fetching data", err));
   }, [subjectId]);
 
-  const lessons = lessonsArray ? lessonsArray : lessonData.flatMap((lesson) => lesson.lessons || []);
+  const lessons = lessonsArray
+    ? lessonsArray
+    : lessonData.flatMap((lesson) => lesson.lessons || []);
   // console.log("Lessons Data:", lessons);
 
   // Calculate product width on mount and resize
@@ -133,6 +135,7 @@ const CarouselLessons = ({ subjectId, lessonsArray = null }) => {
                 key={product._id}
                 className="flex-none w-64"
                 style={{ scrollSnapAlign: "start" }}
+                onClick={() => onLessonClick?.(product)}
               >
                 <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
                   <div className="relative pb-[75%]">
