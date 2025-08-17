@@ -58,19 +58,36 @@ function DisplayTeacherData() {
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     if (selectedSlots.length === 0) {
       alert("Please select at least one slot.");
       return;
     }
-    const details = selectedSlots
-      .map(
-        (s) =>
-          `${s.day} ${s.date} at ${s.time} (${s.lesson.name}) - ${teacher.firstName} ${teacher.lastName}`
-      )
-      .join("\n");
-    alert(`Enrolled in:\n${details}`);
-    // send selectedSlots to backend here
+
+    // Post data to server
+    try {
+      const response = await fetch("http://localhost:3000/schedule/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teacherId: teacher._id,
+          studentId: "student-id", // Replace with actual student ID
+          lessonId: chosenLesson._id,
+          slots: selectedSlots,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to schedule lessons");
+      }
+      
+      const data = await response.json();
+      console.log("Successfully scheduled lessons:", data);
+    } catch (error) {
+      console.error("Error scheduling lessons:", error);
+    }
   };
 
   return (
