@@ -102,7 +102,13 @@ function DisplayTeacherData() {
               <h2 className="text-2xl font-semibold text-gray-700 mb-3">
                 Lessons Taught
               </h2>
-              <CarouselLessons subjectId={null} lessonsArray={lessonsArray} />
+              <div className="bg-white rounded-xl shadow-lg p-4">
+                <CarouselLessons
+                  subjectId={null}
+                  lessonsArray={lessonsArray}
+                  onLessonClick={(lesson) => setChosenLesson(lesson)}
+                />
+              </div>
             </div>
 
             {/* Choose Lesson */}
