@@ -1,21 +1,22 @@
 import express from "express";
+import { Schedule } from "../models/scheduleSchema.js";
+
 const router = express.Router();
 
 // Post route to schedule a lesson
-router.post("/add", (req, res) => {
-  const { teacherId, studentId, lessonId, slots } = req.body;
+router.post("/add", async (req, res) => {
+  const { teacherId, lessonId } = req.body;
   // Logic to schedule the lesson
   try {
-    // Here you would typically save the lesson to a database
-    // For now, we will just return a success message
-    res.status(200).json({
+    const newScheduledLesson = new Schedule({
+      teacherId,
+      lessonId,
+    });
+
+    const savedScheduledLesson = await newScheduledLesson.save();
+    res.status(201).json({
       message: "Lesson scheduled successfully",
-      data: {
-        teacherId,
-        studentId,
-        lessonId,
-        slots
-      },
+      data: savedScheduledLesson,
     });
   } catch (error) {
     res.status(500).json({ message: "Error scheduling lesson", error });
