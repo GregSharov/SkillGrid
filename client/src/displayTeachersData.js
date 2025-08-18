@@ -14,6 +14,9 @@ function DisplayTeacherData() {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [chosenLesson, setChosenLesson] = useState(lessonsArray[0] || null);
 
+  // State for Response from Server
+  const [response, setResponse] = useState(null);
+
   const daysOfWeek = [
     "Sunday",
     "Monday",
@@ -49,7 +52,7 @@ function DisplayTeacherData() {
       year: "numeric",
     });
 
-    // Cell click handler
+  // Cell click handler
   const handleCellClick = (day, time, date) => {
     const key = `${day}-${time}-${date}`;
     const exists = selectedSlots.find((slot) => slot.key === key);
@@ -83,13 +86,14 @@ function DisplayTeacherData() {
           slots: selectedSlots,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to schedule lessons");
       }
-      
+
       const data = await response.json();
       console.log("Successfully scheduled lessons:", data);
+      setResponse(data);
     } catch (error) {
       console.error("Error scheduling lessons:", error);
     }
@@ -244,6 +248,11 @@ function DisplayTeacherData() {
               >
                 Enroll in Selected Lessons
               </button>
+              {response && (
+                <p className="text-green-500 text-center mt-4">
+                  {response.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
