@@ -3,11 +3,13 @@ import { useState } from "react";
 import CarouselLessons from "./carouselLessons.js";
 
 function DisplayTeacherData() {
+  // Get teacher data from location state
   const location = useLocation();
   const teacher = location.state?.teacher; // Get full object
   const lessonsArray =
     teacher?.subjects.flatMap((subject) => subject.lessons || []) || [];
 
+  // State for managing selected week and slots
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [chosenLesson, setChosenLesson] = useState(lessonsArray[0] || null);
@@ -21,11 +23,13 @@ function DisplayTeacherData() {
     "Friday",
   ];
 
+  // Generate time slots for the day
   const timeSlots = [];
   for (let hour = 7; hour < 20; hour++) {
     timeSlots.push(`${hour.toString().padStart(2, "0")}:00`);
   }
 
+  // Get the start and end dates of the week
   const getWeekDates = (offset) => {
     const today = new Date();
     const currentDay = today.getDay();
@@ -45,6 +49,7 @@ function DisplayTeacherData() {
       year: "numeric",
     });
 
+    // Cell click handler
   const handleCellClick = (day, time, date) => {
     const key = `${day}-${time}-${date}`;
     const exists = selectedSlots.find((slot) => slot.key === key);
