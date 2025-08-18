@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 
 const scheduleSchema = new Schema({
-  teacherId: { type: Schema.Types.ObjectId, ref: "Teacher" },
-  lessonId: { type: Schema.Types.ObjectId, ref: "Lesson" },
+  teacher: { type: Object },
+  slots: [{ type: Object }],
 });
 
 const Schedule = model("Schedule", scheduleSchema, "Schedule");

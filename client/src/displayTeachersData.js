@@ -15,7 +15,9 @@ function DisplayTeacherData() {
   const [chosenLesson, setChosenLesson] = useState(lessonsArray[0] || null);
 
   // State for Response from Server
-  const [response, setResponse] = useState(null);
+  const [responseData, setResponseData] = useState(null);
+  // Response Style Color
+  const [resStyleColor, setResStyleColor] = useState("");
 
   const daysOfWeek = [
     "Sunday",
@@ -80,20 +82,24 @@ function DisplayTeacherData() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          teacherId: teacher._id,
+          teacher: teacher,
           studentId: "student-id", // Replace with actual student ID
-          lessonId: chosenLesson._id,
+          lesson: chosenLesson,
           slots: selectedSlots,
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
+        setResponseData(data);
+        setResStyleColor("text-red-500");
         throw new Error("Failed to schedule lessons");
       }
 
-      const data = await response.json();
       console.log("Successfully scheduled lessons:", data);
-      setResponse(data);
+      setResponseData(data);
+      setResStyleColor("text-green-500");
     } catch (error) {
       console.error("Error scheduling lessons:", error);
     }
@@ -248,9 +254,9 @@ function DisplayTeacherData() {
               >
                 Enroll in Selected Lessons
               </button>
-              {response && (
-                <p className="text-green-500 text-center mt-4">
-                  {response.message}
+              {responseData && (
+                <p className={`${resStyleColor} text-center mt-4`}>
+                  {responseData.message}
                 </p>
               )}
             </div>

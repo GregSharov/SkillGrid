@@ -5,15 +5,23 @@ const router = express.Router();
 
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
-  const { teacherId, lessonId } = req.body;
+  const { teacher, slots } = req.body;
   // Logic to schedule the lesson
   try {
     const newScheduledLesson = new Schedule({
-      teacherId,
-      lessonId,
+      teacher : {
+        _id: teacher._id,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+      },
+      slots,
     });
 
     const savedScheduledLesson = await newScheduledLesson.save();
+    if (!savedScheduledLesson) {
+      return res.status(400).json({ message: "Failed to schedule lesson" });
+    }
+
     res.status(201).json({
       message: "Lesson scheduled successfully",
       data: savedScheduledLesson,
