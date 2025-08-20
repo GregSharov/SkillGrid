@@ -23,7 +23,7 @@ function SignUp() {
     event.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/user/add", {
+      const res = await fetch("http://localhost:3000/user/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

@@ -3,7 +3,9 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
+import session from "express-session";
 
+// Routes
 import userRoutes from "./routes/userRoute.js";
 import studentRoutes from "./routes/studentRoute.js";
 import teacherRoutes from "./routes/teacherRoute.js";
@@ -25,6 +27,16 @@ const PORT = 3000;
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(cors());
 app.use(express.json());
+
+// Session middleware
+app.use(
+  session({
+    secret: "superSecretKey", // required (should be in .env)
+    resave: false, // don't save session if not modified
+    saveUninitialized: false, // don't create empty sessions
+    cookie: { secure: false }, // true if using HTTPS
+  })
+);
 
 // Connect to MongoDB
 mongoose

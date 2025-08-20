@@ -2,6 +2,7 @@ import express from "express";
 import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
 import { Subject } from "../models/subjectSchema.js";
+import { HashPassword, VerifyPassword } from "../middleware/auth.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -41,49 +42,6 @@ const upload = multer({ storage: storage });
 
 var Model = Student;
 
-// Add a new user
-router.post("/add", async (req, res) => {
-  try {
-    const {
-      firstName,
-      lastName,
-      dateOfBirth,
-      email,
-      phone,
-      password,
-      isTeacher,
-    } = req.body;
-
-    if (isTeacher) {
-      Model = Teacher;
-      subfolder = "teachers";
-    } else {
-      Model = Student;
-      subfolder = "students";
-    }
-
-    const existingUser = await Model.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists." });
-    }
-
-    const newUser = new Model({
-      firstName,
-      lastName,
-      dateOfBirth,
-      email,
-      phone,
-      password,
-      isTeacher,
-    });
-    const savedUser = await newUser.save();
-    res.status(201).json({ message: `User ${savedUser.email} registered.` });
-  } catch (error) {
-    console.error("Error saving user:", error);
-    res.status(500).json({ message: "Error saving user." });
-  }
-});
-
 // Upload profile image
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
@@ -109,37 +67,78 @@ router.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-// Sign in user
-router.post("/signin", async (req, res) => {
+// Sign Up user
+router.post("/signup", async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    dateOfBirth,
+    email,
+    phone,
+    password,
+    isTeacher,
+  } = req.body;
   try {
-    const { email, password, isTeacher } = req.body;
+    // Detect correct model (Student or Teacher)
+    const Model = isTeacher ? Teacher : Student;
 
-    if (isTeacher) {
-      Model = Teacher;
-    } else {
-      Model = Student;
+    // Check if user already exists
+    const existingUser = await Model.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists." });
     }
 
-    // Check if the user exists
-    const user = await Model.findOne({ email, password });
+    // Hash the password
+    const hashedPassword = await HashPassword(password);
+
+    // Create new user
+    const newUser = new Model({
+      firstName,
+      lastName,
+      dateOfBirth,
+      email,
+      phone,
+      password: hashedPassword,
+      isTeacher,
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: "User registered successfully." });
+  } catch (error) {
+    console.error("Error signing up user:", error);
+    res.status(500).json({ message: "Error signing up user." });
+  }
+});
+
+// Login user
+router.post("/login", async (req, res) => {
+  const { email, password, isTeacher } = req.body;
+  try {
+    // Detect correct model (Student or Teacher)
+    const Model = isTeacher ? Teacher : Student;
+
+    // Check if email exists in such Model
+    const user = await Model.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password." });
+      return res.status(404).json({ message: "User not found." });
     }
 
-    res.json({
-      message: "User signed in successfully.",
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        isTeacher,
-      },
-    });
+    // Verify password
+    const isValid = await VerifyPassword(user.password, password);
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid password." });
+    }
+
+    // Set user session
+    req.session.user = {
+      id: user._id,
+      role: user.isTeacher,
+    };
+    res.status(200).json({ message: "Login successful." });
   } catch (error) {
-    console.error("Error signing in user:", error);
-    res.status(500).json({ message: "Error signing in user." });
+    console.error("Error logging in user:", error);
+    res.status(500).json({ message: "Error logging in user." });
   }
 });
 
