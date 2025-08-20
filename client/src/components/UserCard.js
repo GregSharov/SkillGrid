@@ -10,24 +10,9 @@ function UserCard({ user }) {
   const [subjectData, setSubjectData] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
-  const [userSubjects, setUserSubjects] = useState(user.subjects || []);
+  // const [userSubjects, setUserSubjects] = useState(user.subjects || []);
   const [userImage, setUserImage] = useState(user.image || "");
-  const [scheduledLessons, setScheduledLessons] = useState([
-    {
-      id: 1,
-      title: "Calculus",
-      date: "2025-08-20 10:00",
-      student: "John Doe",
-      link: "#",
-    },
-    {
-      id: 2,
-      title: "Organic Chemistry",
-      date: "2025-08-21 14:00",
-      student: "Jane Smith",
-      link: "#",
-    },
-  ]);
+  const [scheduledLessons, setScheduledLessons] = useState([]);
 
   const fileInputRef = useRef(null);
   const { uploadImage, loading } = useUploadImage();
@@ -61,8 +46,8 @@ function UserCard({ user }) {
         }
       );
       if (!response.ok) throw new Error("Failed to save data");
-      const updatedUser = await response.json();
-      setUserSubjects(updatedUser.subjects);
+      // const updatedUser = await response.json();
+      // setUserSubjects(updatedUser.subjects);
     } catch (error) {
       console.error(error);
     }
@@ -76,6 +61,7 @@ function UserCard({ user }) {
     if (result?.imageUrl) setUserImage(result.imageUrl);
   };
 
+  // Fetch subjects data
   useEffect(() => {
     fetchData("subjects")
       .then((data) => {
@@ -98,6 +84,25 @@ function UserCard({ user }) {
       })
       .catch(console.error);
   }, [user]);
+
+  // Fetch scheduled lessons
+  useEffect(() => {
+    const fetchScheduledLessons = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/schedule/user/${user._id}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch scheduled lessons");
+        const data = await response.json();
+        console.log("Scheduled Lessons:", data);
+        setScheduledLessons(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchScheduledLessons();
+  }, [user._id]);
 
   const subjectSelectOptions = subjectData.map((subject) => ({
     value: subject._id,
@@ -177,38 +182,51 @@ function UserCard({ user }) {
             {scheduledLessons.length === 0 && (
               <p className="text-gray-500">No lessons scheduled.</p>
             )}
-            {scheduledLessons.map((lesson) => (
-              <div
-                key={lesson.id}
-                className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl transition flex flex-col justify-between"
-              >
-                <div className="space-y-1">
-                  <p className="font-bold text-gray-800 text-lg">
-                    {lesson.title}
-                  </p>
-                  <p className="text-gray-600 text-sm">{lesson.date}</p>
-                  <p className="text-gray-600 text-sm">
-                    Student: {lesson.student}
-                  </p>
+            {scheduledLessons.map((items) =>
+              items.slots.map((slot) => (
+                <div
+                  key={slot.id}
+                  className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl transition flex flex-col justify-between"
+                >
+                  <div className="space-y-1">
+                    <p className="font-bold text-gray-800 text-lg">
+                      {slot.lesson.name}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      {slot.date} {slot.time}
+                    </p>
+                    {!user.isTeacher && (
+                      <p className="text-gray-600 text-sm">
+                        Teacher: {items.teacher.firstName}{" "}
+                        {items.teacher.lastName}
+                      </p>
+                    )}
+                    {user.isTeacher && (
+                      <p className="text-gray-600 text-sm">
+                        Student: {items.student.firstName}{" "}
+                        {items.student.lastName}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href={items.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+                    >
+                      Join Lesson
+                    </a>
+                    <button
+                      className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
+                      onClick={() => alert("Edit functionality TBD")}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  <a
-                    href={lesson.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
-                  >
-                    Join Lesson
-                  </a>
-                  <button
-                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
-                    onClick={() => alert("Edit functionality TBD")}
-                  >
-                    Edit
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ const { Schema, model } = mongoose;
 
 const scheduleSchema = new Schema({
   teacher: { type: Object },
+  student: { type: Object },
   slots: [{ type: Object }],
 });
 

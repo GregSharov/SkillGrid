@@ -3,16 +3,47 @@ import { Schedule } from "../models/scheduleSchema.js";
 
 const router = express.Router();
 
+// Get scheduled lessons from db to User
+router.get("/user/:id", async (req, res) => {
+  const userId = req.params.id;
+  console.log("Fetching scheduled lessons for user ID:", userId);
+
+  try {
+    const scheduledLessons = await Schedule.find({
+      $or: [
+        { "teacher._id": { $in: [userId] } },
+        { "student._id": { $in: [userId] } },
+      ],
+    });
+    console.log("Scheduled Lessons:", scheduledLessons.toString());
+    if (!scheduledLessons || scheduledLessons.length === 0) {
+      return res.status(404).json({ message: "No scheduled lessons found" });
+    }
+    res.status(200).json(scheduledLessons);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching scheduled lessons", error });
+  }
+});
+
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
-  const { teacher, slots } = req.body;
+  const { teacher, student, slots } = req.body;
+  console.log("Student:", student);
+  console.log("Teacher:", teacher);
   // Logic to schedule the lesson
   try {
     const newScheduledLesson = new Schedule({
-      teacher : {
+      teacher: {
         _id: teacher._id,
         firstName: teacher.firstName,
         lastName: teacher.lastName,
+      },
+      student: {
+        _id: student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
       },
       slots,
     });

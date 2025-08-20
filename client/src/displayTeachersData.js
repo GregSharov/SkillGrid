@@ -6,6 +6,7 @@ function DisplayTeacherData() {
   // Get teacher data from location state
   const location = useLocation();
   const teacher = location.state?.teacher; // Get full object
+  const student = location.state?.student; // Get full object
   const lessonsArray =
     teacher?.subjects.flatMap((subject) => subject.lessons || []) || [];
 
@@ -83,7 +84,7 @@ function DisplayTeacherData() {
         },
         body: JSON.stringify({
           teacher: teacher,
-          studentId: "student-id", // Replace with actual student ID
+          student: {_id: "68a2344739259fc06d0c7f26", firstName: "Gregory", lastName: "Sharov"}, // Mock student data
           lesson: chosenLesson,
           slots: selectedSlots,
         }),
