@@ -130,16 +130,77 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid password." });
     }
 
-    // Set user session
-    req.session.user = {
-      id: user._id,
-      role: user.isTeacher,
-    };
-    res.status(200).json({ message: "Login successful." });
+    // Regenerate session
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error("Error regenerating session:", err);
+        return res.status(500).json({ message: "Error logging in user." });
+      }
+      // Set user session
+      req.session.user = {
+        id: user._id,
+        role: user.isTeacher ? "teacher" : "student",
+      };
+
+      // Save session
+      req.session.save((err) => {
+        if (err) {
+          console.error("Error saving session:", err);
+          return res.status(500).json({ message: "Session save failed." });
+        }
+      });
+
+      // Return user data
+      res
+        .status(200)
+        .json({ message: "Login successful.", user: req.session.user });
+    });
   } catch (error) {
     console.error("Error logging in user:", error);
     res.status(500).json({ message: "Error logging in user." });
   }
+});
+
+// Get current logged in user (id, role)
+router.get("/me", async (req, res) => {
+  try {
+    const user = req.session.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    return res.status(200).json({ user: user });
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    res.status(500).json({ message: "Error fetching user data." });
+  }
+});
+
+// Get full object user by id
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = (await Student.findById(id)) || (await Teacher.findById(id));
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching user by ID:", error);
+    res.status(500).json({ message: "Error fetching user by ID." });
+  }
+});
+
+// Logout
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error logging out:", err);
+      return res.status(500).json({ message: "Error logging out." });
+    }
+    res.clearCookie("sid", { path: "/" });
+    res.status(200).json({ message: "Logout successful." });
+  });
 });
 
 // Put subjects and lessons to account

@@ -6,7 +6,6 @@ const router = express.Router();
 // Get scheduled lessons from db to User
 router.get("/user/:id", async (req, res) => {
   const userId = req.params.id;
-  console.log("Fetching scheduled lessons for user ID:", userId);
 
   try {
     const scheduledLessons = await Schedule.find({
@@ -15,7 +14,7 @@ router.get("/user/:id", async (req, res) => {
         { "student._id": { $in: [userId] } },
       ],
     });
-    console.log("Scheduled Lessons:", scheduledLessons.toString());
+
     if (!scheduledLessons || scheduledLessons.length === 0) {
       return res.status(404).json({ message: "No scheduled lessons found" });
     }
@@ -30,8 +29,7 @@ router.get("/user/:id", async (req, res) => {
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
   const { teacher, student, slots } = req.body;
-  console.log("Student:", student);
-  console.log("Teacher:", teacher);
+  
   // Logic to schedule the lesson
   try {
     const newScheduledLesson = new Schedule({

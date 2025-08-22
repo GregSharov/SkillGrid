@@ -1,14 +1,20 @@
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
 import CarouselLessons from "./carouselLessons.js";
+import { useEffect } from "react";
 
 function DisplayTeacherData() {
   // Get teacher data from location state
   const location = useLocation();
   const teacher = location.state?.teacher; // Get full object
-  const student = location.state?.student; // Get full object
   const lessonsArray =
     teacher?.subjects.flatMap((subject) => subject.lessons || []) || [];
+
+  // State for student data (id, role)
+  const [student, setStudent] = useState();
+
+  // State for student profile
+  const [studentProfile, setStudentProfile] = useState();
 
   // State for managing selected week and slots
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
@@ -84,7 +90,7 @@ function DisplayTeacherData() {
         },
         body: JSON.stringify({
           teacher: teacher,
-          student: {_id: "68a2344739259fc06d0c7f26", firstName: "Gregory", lastName: "Sharov"}, // Mock student data
+          student: studentProfile,
           lesson: chosenLesson,
           slots: selectedSlots,
         }),
@@ -105,6 +111,54 @@ function DisplayTeacherData() {
       console.error("Error scheduling lessons:", error);
     }
   };
+
+  // Fetch student ID
+  useEffect(() => {
+    const fetchStudentId = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/user/me", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await response.json();
+        console.log("Fetched student data:", data);
+        if (response.ok) {
+          setStudent(data.user);
+        } else {
+          console.error("Error fetching student data:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching student data:", error);
+      }
+    };
+
+    fetchStudentId();
+  }, []);
+
+  // Fetch student profile
+  useEffect(() => {
+    const fetchStudentProfile = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/user/${student?.id}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await response.json();
+        // console.log("Fetched student profile:", data);
+        if (response.ok) {
+          setStudentProfile(data.user);
+        } else {
+          console.error("Error fetching student profile:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching student profile:", error);
+      }
+    };
+
+    if (student) {
+      fetchStudentProfile();
+    }
+  }, [student]);
 
   return (
     <>

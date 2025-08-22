@@ -15,10 +15,10 @@ async function HashPassword(password) {
 async function VerifyPassword(hash, password) {
   try {
     if (await argon2.verify(hash, password)) {
-      console.log("Password is valid!");
+      // console.log("Password is valid!");
       return true;
     } else {
-      console.log("Invalid password.");
+      // console.log("Invalid password.");
         return false;
     }
   } catch (err) {

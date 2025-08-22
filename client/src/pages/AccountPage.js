@@ -1,61 +1,32 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import fetchData from "../services/fetchData";
-import filterData from "../services/filterData";
-// import TeacherCard from "../components/TeacherCard";
-// import StudentCard from "../components/StudentCard";
+import { useNavigate } from "react-router-dom";
 import UserCard from "../components/UserCard";
 
 const AccountPage = () => {
-  const location = useLocation();
-  const { userId, isTeacher } = location.state || {};
-  const [userData, setUserData] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const navigate = useNavigate();
 
+  // Ensure that user is authenticated
   useEffect(() => {
-    const userType = isTeacher ? "teachers" : "students";
+    (async () => {
+      const res = await fetch("http://localhost:3000/user/me", {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        console.error("Not logged in");
+        navigate("/sign-in");
+        return;
+      }
 
-    fetchData(userType)
-      .then((data) => {
-        const filteredData = filterData(data, userId);
-        setUserData(filteredData[0]);
-      })
-      .catch((err) => console.error("Error fetching user data:", err));
-  }, [userId, isTeacher]);
+      const data = await res.json();
+      setAuthUser(data.user);
+    })();
+  }, [navigate]);
 
   return (
     <div className="p-4">
-         <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
-         {userData ? (
-          <UserCard user={userData} />
-        ) : (
-          <p>Loading user data...</p>
-        )}
-      </div>
-    );
-  }
-
-  // if (isTeacher) {
-  //   return (
-  //     <div className="p-4">
-  //       <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
-  //       {userData ? (
-  //         <TeacherCard teacher={userData} />
-  //       ) : (
-  //         <p>Loading user data...</p>
-  //       )}
-  //     </div>
-  //   );
-  // } else {
-  //   return (
-  //     <div className="p-4">
-  //       <h1 className="text-2xl font-bold">Welcome {userData?.firstName}!</h1>
-  //       {userData ? (
-  //         <StudentCard student={userData} />
-  //       ) : (
-  //         <p>Loading user data...</p>
-  //       )}
-  //     </div>
-  //   );
-  // }
-// };
+      <UserCard authUser={authUser} />
+    </div>
+  );
+};
 export default AccountPage;

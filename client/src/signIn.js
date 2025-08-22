@@ -7,6 +7,7 @@ function SignIn() {
     password: "",
     isTeacher: false,
   });
+
   const [error, setError] = useState(false);
   const navigate = useNavigate();
 
@@ -25,45 +26,42 @@ function SignIn() {
       const res = await fetch("http://localhost:3000/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setError(false);
-        console.log("Login successful");
-        const userId = data.user.id;
-        const isTeacher = data.user.isTeacher;
-        navigate("/account", { state: { userId, isTeacher } });
-      } else {
+      if (!res.ok) {
         setError(true);
+        const data = await res.json();
         console.error("Login failed:", data.message);
+        return;
       }
+
+      navigate("/account");
     } catch (err) {
       console.error("Error during login:", err);
     }
   };
 
   return (
-    <main className="min-h-screen bg-white py-16 px-6">
+    <main className="min-h-screen bg-white py-16 px-6 dark:bg-gray-800">
       <div className="max-w-3xl mx-auto text-center mb-12">
-        <h1 className="text-5xl font-extrabold text-gray-800">Log In</h1>
-        <p className="mt-4 text-lg text-gray-600">
+        <h1 className="text-5xl font-extrabold text-gray-800 dark:text-gray-100">
+          Log In
+        </h1>
+        <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
           Welcome back! Please log in to continue to your account.
         </p>
       </div>
 
-      <div className="max-w-md mx-auto bg-gray-50 shadow-md rounded-lg p-8">
+      <div className="max-w-md mx-auto bg-gray-50 shadow-md rounded-lg p-8 dark:bg-gray-700">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
-          <div className="text-left">
+          <div className="text-left dark:text-gray-100">
             <label
               htmlFor="email"
               className="block text-sm font-semibold text-gray-700 mb-1"
-            >
-              Email Address
-            </label>
+            />
             <input
               type="email"
               id="email"
@@ -81,9 +79,8 @@ function SignIn() {
             <label
               htmlFor="password"
               className="block text-sm font-semibold text-gray-700 mb-1"
-            >
-              Password
-            </label>
+            />
+
             <input
               type="password"
               id="password"
@@ -106,7 +103,10 @@ function SignIn() {
               onChange={handleChange}
               className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             />
-            <label htmlFor="isTeacher" className="ml-2 text-sm text-gray-700">
+            <label
+              htmlFor="isTeacher"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-100"
+            >
               I am a teacher
             </label>
           </div>
