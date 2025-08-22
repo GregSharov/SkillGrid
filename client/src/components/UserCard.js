@@ -195,6 +195,7 @@ function UserCard({ authUser }) {
 
   // Handle Delete lesson slot
   const handleDeleteLesson = async (slotId) => {
+    console.log("Deleting slot with ID:", slotId);
     try {
       const response = await fetch(`http://localhost:3000/schedule/delete/${slotId}`, {
         method: "DELETE",
@@ -313,7 +314,7 @@ function UserCard({ authUser }) {
                       </a>
                       <button
                         className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
-                        onClick={() => handleDeleteLesson(slot.id)}
+                        onClick={() => handleDeleteLesson(slot._id)}
                       >
                         Delete
                       </button>

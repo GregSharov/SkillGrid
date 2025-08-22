@@ -63,6 +63,7 @@ router.post("/add", async (req, res) => {
 // Delete scheduled lesson
 router.delete("/delete/:id", async (req, res) => {
   const lessonId = req.params.id;
+  console.log("Deleting lesson with ID:", lessonId);
 
   try {
     const deletedLesson = await Schedule.findByIdAndDelete(lessonId);
