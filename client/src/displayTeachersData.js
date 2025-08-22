@@ -6,7 +6,7 @@ function DisplayTeacherData() {
   // Get teacher data from location state
   const location = useLocation();
   const teacher = location.state?.teacher; // Get full object
-  const student = location.state?.student; // Get full object
+  // const student = location.state?.student; // Get full object
   const lessonsArray =
     teacher?.subjects.flatMap((subject) => subject.lessons || []) || [];
 
