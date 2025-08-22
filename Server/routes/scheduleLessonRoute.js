@@ -29,7 +29,7 @@ router.get("/user/:id", async (req, res) => {
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
   const { teacher, student, slots } = req.body;
-  
+
   // Logic to schedule the lesson
   try {
     const newScheduledLesson = new Schedule({
@@ -57,6 +57,26 @@ router.post("/add", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Error scheduling lesson", error });
+  }
+});
+
+// Delete scheduled lesson
+router.delete("/delete/:id", async (req, res) => {
+  const lessonId = req.params.id;
+
+  try {
+    const deletedLesson = await Schedule.findByIdAndDelete(lessonId);
+
+    if (!deletedLesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    res.status(200).json({
+      message: "Lesson deleted successfully",
+      data: deletedLesson,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting lesson", error });
   }
 });
 

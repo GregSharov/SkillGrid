@@ -176,6 +176,7 @@ function UserCard({ authUser }) {
     }));
   };
 
+
   const handleLogout = async () => {
     try {
       const response = await fetch("http://localhost:3000/user/logout", {
@@ -187,6 +188,30 @@ function UserCard({ authUser }) {
       }
       // Redirect to login page
       navigate("/sign-in");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Handle Delete lesson slot
+  const handleDeleteLesson = async (slotId) => {
+    try {
+      const response = await fetch(`http://localhost:3000/schedule/delete/${slotId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete lesson");
+      }
+
+      // Remove the deleted lesson from the state
+      setScheduledLessons((prev) =>
+        prev.map((lesson) => ({
+          ...lesson,
+          slots: lesson.slots.filter((slot) => slot.id !== slotId),
+        }))
+      );
     } catch (error) {
       console.error(error);
     }
@@ -288,9 +313,9 @@ function UserCard({ authUser }) {
                       </a>
                       <button
                         className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
-                        onClick={() => alert("Edit functionality TBD")}
+                        onClick={() => handleDeleteLesson(slot.id)}
                       >
-                        Edit
+                        Delete
                       </button>
                     </div>
                   </div>
