@@ -90,6 +90,7 @@ export default function SearchPage() {
     if (!lesson) return;
     navigate("/lesson-info", { state: { lesson } });
   };
+ 
 
   //  fetch teachers + subjects once 
   useEffect(() => {
@@ -219,6 +220,7 @@ export default function SearchPage() {
                   <button
                     className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     onClick={() => openTeacher(t)}
+                    aria-label={`View profile of ${displayName}`}
                   >
                     View Profile
                   </button>
@@ -256,8 +258,9 @@ export default function SearchPage() {
                   </div>
 
                   <button
+                    type="button"
                     className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    onClick={() => openLesson(l)}
+                    onClick={() => {openLesson(l);}}
                   >
                     View Lesson
                   </button>
