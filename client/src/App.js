@@ -16,6 +16,8 @@ import AcountPage from "./pages/AccountPage.js";
 import DisplayTeachersData from "./displayTeachersData.js";
 import Footer from "./components/footer.js";
 import SearchPage from "./pages/SearchPage";
+import CallPage from "./pages/CallPage";
+import JoinCall from "./pages/JoinCall";
 
 
 
@@ -36,6 +38,8 @@ function App() {
           <Route path="account" element={<AcountPage />} />
           <Route path="teacher-info" element={<DisplayTeachersData />} />
           <Route path="search" element={<SearchPage />} />
+          <Route path="join" element={<JoinCall />} />
+          <Route path="call/:roomId" element={<CallPage />} />
         </Route>
       </Routes>
       <Footer />
