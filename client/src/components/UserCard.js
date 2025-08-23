@@ -16,6 +16,23 @@ function UserCard({ authUser }) {
   const [userImage, setUserImage] = useState();
 
   const navigate = useNavigate();
+  // When the user logs in
+  localStorage.setItem("role", "teacher"); // or "student"
+    const role = localStorage.getItem("role"); // or get it from context
+
+  const generateLessonCode = () => Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
+
+  const openVideoManager = () => {
+    const code = generateLessonCode();
+
+    if (role === "teacher") {
+      navigate(`/call/${code}`);
+    } else if (role === "student") {
+      navigate(`/join/${code}`);
+    } else {
+      alert("Unknown role. Please sign in again.");
+    }
+  };
 
   // Fetch full profile by id
   useEffect(() => {
@@ -304,14 +321,13 @@ function UserCard({ authUser }) {
                       )}
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <a
-                        href={items.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
                         className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+                        type="button" // important if inside a form
+                        onClick={openVideoManager} // open the video call page
                       >
                         Join Lesson
-                      </a>
+                      </button>
                       <button
                         className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
                         onClick={() => handleDeleteLesson(slot._id)}

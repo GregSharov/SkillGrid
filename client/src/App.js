@@ -38,8 +38,8 @@ function App() {
           <Route path="account" element={<AcountPage />} />
           <Route path="teacher-info" element={<DisplayTeachersData />} />
           <Route path="search" element={<SearchPage />} />
-          <Route path="join" element={<JoinCall />} />
-          <Route path="call/:roomId" element={<CallPage />} />
+          <Route path="join/:code" element={<JoinCall />} />
+          <Route path="call/:code" element={<CallPage />} />
         </Route>
       </Routes>
       <Footer />
