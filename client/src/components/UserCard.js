@@ -16,9 +16,9 @@ function UserCard({ authUser }) {
   const [userImage, setUserImage] = useState();
 
   const navigate = useNavigate();
-  // When the user logs in
-  localStorage.setItem("role", "teacher"); // or "student"
-  const role = localStorage.getItem("role"); // or get it from context
+  // // When the user logs in
+  // localStorage.setItem("role", "teacher"); // or "student"
+  // const role = localStorage.getItem("role"); // or get it from context
 
   const generateLessonCode = () =>
     Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
@@ -26,12 +26,21 @@ function UserCard({ authUser }) {
   const openVideoManager = () => {
     const code = generateLessonCode();
 
-    if (role === "teacher") {
+    //   if (role === "teacher") {
+    //     navigate(`/call/${code}`);
+    //   } else if (role === "student") {
+    //     navigate(`/join/${code}`);
+    //   } else {
+    //     alert("Unknown role. Please sign in again.");
+    //   }
+    // };
+
+    if (authUser?.role === "teacher") {
       navigate(`/call/${code}`);
-    } else if (role === "student") {
+    } else if (authUser?.role === "student") {
       navigate(`/join/${code}`);
     } else {
-      alert("Unknown role. Please sign in again.");
+      alert("Unregistered user. Please sign in again.");
     }
   };
 
