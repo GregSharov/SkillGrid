@@ -18,9 +18,10 @@ function UserCard({ authUser }) {
   const navigate = useNavigate();
   // When the user logs in
   localStorage.setItem("role", "teacher"); // or "student"
-    const role = localStorage.getItem("role"); // or get it from context
+  const role = localStorage.getItem("role"); // or get it from context
 
-  const generateLessonCode = () => Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
+  const generateLessonCode = () =>
+    Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
 
   const openVideoManager = () => {
     const code = generateLessonCode();
@@ -193,7 +194,7 @@ function UserCard({ authUser }) {
     }));
   };
 
-
+  // Handle Logout
   const handleLogout = async () => {
     try {
       const response = await fetch("http://localhost:3000/user/logout", {
@@ -214,10 +215,13 @@ function UserCard({ authUser }) {
   const handleDeleteLesson = async (slotId) => {
     console.log("Deleting slot with ID:", slotId);
     try {
-      const response = await fetch(`http://localhost:3000/schedule/delete/${slotId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:3000/schedule/delete/${slotId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete lesson");
@@ -225,10 +229,12 @@ function UserCard({ authUser }) {
 
       // Remove the deleted lesson from the state
       setScheduledLessons((prev) =>
-        prev.map((lesson) => ({
-          ...lesson,
-          slots: lesson.slots.filter((slot) => slot.id !== slotId),
-        }))
+        prev
+          .map((doc) => ({
+            ...doc,
+            slots: (doc.slots || []).filter((s) => s?._id !== slotId),
+          }))
+          .filter((doc) => (doc.slots || []).length > 0)
       );
     } catch (error) {
       console.error(error);
@@ -239,7 +245,10 @@ function UserCard({ authUser }) {
     <div className="">
       <div className="flex justify-between items-center p-4 border-b">
         <h1 className="text-2xl font-bold">Welcome {profile?.firstName}!</h1>
-        <button className="text-blue-500 hover:underline" onClick={handleLogout}>
+        <button
+          className="text-blue-500 hover:underline"
+          onClick={handleLogout}
+        >
           Logout
         </button>
       </div>
@@ -297,7 +306,7 @@ function UserCard({ authUser }) {
               {scheduledLessons.map((items) =>
                 items.slots.map((slot) => (
                   <div
-                    key={slot.id}
+                    key={slot?._id}
                     className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl transition flex flex-col justify-between"
                   >
                     <div className="space-y-1">
@@ -330,7 +339,7 @@ function UserCard({ authUser }) {
                       </button>
                       <button
                         className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
-                        onClick={() => handleDeleteLesson(slot._id)}
+                        onClick={() => handleDeleteLesson(slot?._id)}
                       >
                         Delete
                       </button>

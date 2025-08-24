@@ -43,7 +43,16 @@ router.post("/add", async (req, res) => {
         firstName: student.firstName,
         lastName: student.lastName,
       },
-      slots,
+      slots: slots.map((slot) => ({
+        time: slot.time,
+        date: slot.date,
+        day: slot.day,
+        lesson: {
+          _id: slot.lesson._id,
+          name: slot.lesson.name,
+          description: slot.lesson.description,
+        },
+      })),
     });
 
     const savedScheduledLesson = await newScheduledLesson.save();
@@ -62,19 +71,29 @@ router.post("/add", async (req, res) => {
 
 // Delete scheduled lesson
 router.delete("/delete/:id", async (req, res) => {
-  const lessonId = req.params.id;
-  console.log("Deleting lesson with ID:", lessonId);
-
   try {
-    const deletedLesson = await Schedule.findByIdAndDelete(lessonId);
+    const slotId = req.params.id;
+    console.log("Deleting SLOT WITH ID:", slotId);
 
-    if (!deletedLesson) {
+    const updatedLesson = await Schedule.findOneAndUpdate(
+      { "slots._id": slotId },
+      { $pull: { slots: { _id: slotId } } },
+      { new: true }
+    );
+
+    console.log("Deleted LESSON:", updatedLesson);
+    if (!updatedLesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
-    res.status(200).json({
-      message: "Lesson deleted successfully",
-      data: deletedLesson,
+    // Clean up schedules with no slots left
+    await Schedule.deleteMany({ slots: { $size: 0 } });
+
+    return res.status(200).json({
+      message: "Slot deleted successfully",
+      slotId,
+      scheduleId: updatedLesson._id,
+      data: updatedLesson,
     });
   } catch (error) {
     res.status(500).json({ message: "Error deleting lesson", error });

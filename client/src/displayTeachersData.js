@@ -63,6 +63,7 @@ function DisplayTeacherData() {
 
   // Cell click handler
   const handleCellClick = (day, time, date) => {
+    console.log("Selected Slots:", selectedSlots);
     const key = `${day}-${time}-${date}`;
     const exists = selectedSlots.find((slot) => slot.key === key);
     if (exists) {
@@ -75,6 +76,7 @@ function DisplayTeacherData() {
     }
   };
 
+  // Enroll in selected slots
   const handleEnroll = async () => {
     if (selectedSlots.length === 0) {
       alert("Please select at least one slot.");
@@ -91,7 +93,6 @@ function DisplayTeacherData() {
         body: JSON.stringify({
           teacher: teacher,
           student: studentProfile,
-          lesson: chosenLesson,
           slots: selectedSlots,
         }),
       });
@@ -121,7 +122,7 @@ function DisplayTeacherData() {
           credentials: "include",
         });
         const data = await response.json();
-        console.log("Fetched student data:", data);
+        // console.log("Fetched student data:", data);
         if (response.ok) {
           setStudent(data.user);
         } else {
