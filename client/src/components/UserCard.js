@@ -270,7 +270,7 @@ function UserCard({ authUser }) {
               <img
                 src={userImage}
                 alt={`${profile?.firstName} ${profile?.lastName}`}
-                className="w-full h-full object-cover object-center transition-transform duration-300 transform hover:scale-105"
+                className="w-full h-full object-cover object-[80%_20%] transition-transform duration-300 transform hover:scale-105"
                 onClick={handleImageClick}
               />
               <div className="absolute bottom-0 left-0 w-full h-12 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white font-semibold text-sm">

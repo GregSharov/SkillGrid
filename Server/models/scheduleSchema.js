@@ -13,6 +13,7 @@ const slotSchema = new Schema({
 const scheduleSchema = new Schema({
   teacher: { type: Object },
   student: { type: Object },
+  roomId: { type: String, required: true },
   slots: [slotSchema],
 });
 
