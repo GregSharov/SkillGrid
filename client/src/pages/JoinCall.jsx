@@ -6,10 +6,9 @@ export default function AutoJoin() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
-  console.log("this is a join call page", roomId);
-
   useEffect(() => {
     if (roomId) {
+      console.log("this is a join call page", roomId);
       navigate(`/call/${encodeURIComponent(roomId)}`, { replace: true });
     }
   }, [roomId, navigate]);

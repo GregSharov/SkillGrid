@@ -18,7 +18,7 @@ import Footer from "./components/footer.js";
 import SearchPage from "./pages/SearchPage";
 import CallPage from "./pages/CallPage";
 import JoinCall from "./pages/JoinCall";
-
+import LessonInfoWrapper from "./pages/LessonInfoWrapper";
 
 
 
@@ -40,6 +40,8 @@ function App() {
           <Route path="search" element={<SearchPage />} />
           <Route path="join/:roomId" element={<JoinCall />} />
           <Route path="call/:roomId" element={<CallPage />} />
+          <Route path="lesson-info-search" element={<LessonInfoWrapper />} />
+
         </Route>
       </Routes>
       <Footer />
