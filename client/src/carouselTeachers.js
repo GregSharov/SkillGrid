@@ -87,7 +87,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   }, [currentIndex, productWidth]);
 
   return (
-    <div className="w-full px-4 py-8 bg-gray-50">
+    <div className="w-full px-4 py-2 bg-gray-50">
       <div className="max-w-7xl mx-auto relative">
         <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center tracking-wide">
           T e a c h e r s
@@ -101,6 +101,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
           </div>
         ) : (
           <div className="relative group">
+            {/* Previous Button */}
             <button
               onClick={handlePrev}
               onKeyDown={(e) => handleKeyPress(e, "left")}
@@ -115,31 +116,33 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
               <FaChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
 
+            {/* Carousel Container */}
             <div
               ref={carouselRef}
               className="flex overflow-x-auto gap-6 pb-6 scroll-smooth px-2"
               style={{ scrollSnapType: "x mandatory" }}
             >
               {teacherData.map((teacher) => (
+                // Teacher's Card
                 <div
                   key={teacher._id}
                   className="flex-none w-64"
                   style={{ scrollSnapAlign: "start" }}
                 >
-                  <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 h-[28rem] flex flex-col">
+                  <div className="bg-white overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 h-[28rem] flex flex-col">
                     {/* Larger Image */}
-                    <div className="relative h-1/3 overflow-hidden rounded-t-lg">
+                    <div className="relative h-1/2 w-full">
                       <img
                         src={teacher.image}
                         alt={teacher.firstName}
-                        className="w-full h-full object-cover"
+                        className="absolute h-full w-full object-[95%_5%] object-cover"
                         loading="lazy"
                       />
                     </div>
 
                     {/* Smaller scrollable subjects/lessons */}
                     <div className="flex flex-col h-1/3 flex-grow p-4 gap-2">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
                         {teacher.firstName} {teacher.lastName}
                       </h3>
 
