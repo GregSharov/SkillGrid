@@ -92,15 +92,8 @@ function DisplayTeacherData() {
     }
   };
 
-  // Generate video room ID
-  const generateRoomId = () =>
-    Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
-
   // Enroll in selected slots
   const handleEnroll = async () => {
-    const roomId = generateRoomId();
-    // console.log("Generated Room ID:", roomId);
-
     if (selectedSlots.length === 0) {
       alert("Please select at least one slot.");
       return;
@@ -116,7 +109,6 @@ function DisplayTeacherData() {
         body: JSON.stringify({
           teacher: teacher,
           student: studentProfile,
-          roomId: roomId,
           slots: selectedSlots,
         }),
       });

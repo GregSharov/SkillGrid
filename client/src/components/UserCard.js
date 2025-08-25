@@ -12,18 +12,12 @@ function UserCard({ authUser }) {
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
   const [scheduledLessons, setScheduledLessons] = useState([]);
-  // const [slotDate, setSlotDate] = useState("");
   const [profile, setProfile] = useState(null);
   const [userImage, setUserImage] = useState();
 
   const navigate = useNavigate();
-  // // When the user logs in
-  // localStorage.setItem("role", "teacher"); // or "student"
-  // const role = localStorage.getItem("role"); // or get it from context
 
-  // const generateLessonCode = () =>
-  //   Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
-
+  // Open video call page based on role and roomId
   const openVideoManager = async (roomId) => {
     try {
       console.log("Room ID function", roomId);

@@ -28,7 +28,7 @@ router.get("/user/:id", async (req, res) => {
 
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
-  const { teacher, student, roomId, slots } = req.body;
+  const { teacher, student, slots } = req.body;
 
   // Logic to schedule the lesson
   try {
@@ -43,7 +43,6 @@ router.post("/add", async (req, res) => {
         firstName: student.firstName,
         lastName: student.lastName,
       },
-      roomId: roomId,
       slots: slots.map((slot) => ({
         time: slot.time,
         date: slot.date,
