@@ -12,6 +12,7 @@ function UserCard({ authUser }) {
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
   const [scheduledLessons, setScheduledLessons] = useState([]);
+  // const [slotDate, setSlotDate] = useState("");
   const [profile, setProfile] = useState(null);
   const [userImage, setUserImage] = useState();
 
@@ -168,7 +169,7 @@ function UserCard({ authUser }) {
         }
 
         const data = await response.json();
-        setScheduledLessons(data);
+        setScheduledLessons(data.data);
       } catch (error) {
         console.error(error);
       }
@@ -338,14 +339,28 @@ function UserCard({ authUser }) {
                         </p>
                       )}
                     </div>
+                    
+                    {/* Join/Complete button logic */}
                     <div className="mt-3 flex gap-2">
-                      <button
-                        className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
-                        type="button" // important if inside a form
-                        onClick={openVideoManager} // open the video call page
-                      >
-                        Join Lesson
-                      </button>
+                      {new Date(slot.date).setHours(
+                        slot.time.split(":")[0],
+                        0,
+                        0,
+                        0
+                      ) < new Date() ? (
+                        <span className="px-3 py-1 bg-red-600 text-white rounded-lg transition text-sm font-medium">
+                          Completed
+                        </span>
+                      ) : (
+                        <button
+                          className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+                          type="button" // important if inside a form
+                          onClick={openVideoManager} // open the video call page
+                        >
+                          Join Lesson
+                        </button>
+                      )}
+
                       <button
                         className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
                         onClick={() => handleDeleteLesson(slot?._id)}

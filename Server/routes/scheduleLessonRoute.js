@@ -18,7 +18,7 @@ router.get("/user/:id", async (req, res) => {
     if (!scheduledLessons || scheduledLessons.length === 0) {
       return res.status(404).json({ message: "No scheduled lessons found" });
     }
-    res.status(200).json(scheduledLessons);
+    res.status(200).json({ data: scheduledLessons, message: "Scheduled lessons fetched successfully" });
   } catch (error) {
     res
       .status(500)

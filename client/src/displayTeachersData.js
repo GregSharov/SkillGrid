@@ -16,6 +16,9 @@ function DisplayTeacherData() {
   // State for student profile
   const [studentProfile, setStudentProfile] = useState();
 
+  // State teacher's scheduled lessons
+  const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
+
   // State for managing selected week and slots
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   const [selectedSlots, setSelectedSlots] = useState([]);
@@ -63,12 +66,25 @@ function DisplayTeacherData() {
 
   // Cell click handler
   const handleCellClick = (day, time, date) => {
-    console.log("Selected Slots:", selectedSlots);
     const key = `${day}-${time}-${date}`;
+
+    // Check if the slot is already selected
     const exists = selectedSlots.find((slot) => slot.key === key);
+
+    // If the slot is already selected, unselect it
     if (exists) {
       setSelectedSlots(selectedSlots.filter((slot) => slot.key !== key));
     } else {
+      // Check if the slot is in the future
+      const slotDate = new Date(date).setHours(time.split(":")[0], 0, 0, 0);
+      const now = new Date();
+
+      if (slotDate < now) {
+        alert("You cannot select a past slot.");
+        return;
+      }
+
+      // Add new slot with lesson details
       setSelectedSlots([
         ...selectedSlots,
         { key, day, time, date, lesson: { ...chosenLesson } }, // copy of lesson
@@ -113,6 +129,33 @@ function DisplayTeacherData() {
     }
   };
 
+  // Fetch teacher's scheduled lessons
+  useEffect(() => {
+    const fetchTeacherScheduledLessons = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/schedule/user/${teacher?._id}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setTeacherScheduledLessons(data.data);
+        } else {
+          console.error("Error fetching teacher's scheduled lessons:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching teacher's scheduled lessons:", error);
+      }
+    };
+
+    if (teacher) {
+      fetchTeacherScheduledLessons();
+    }
+  }, [teacher]);
+
   // Fetch student ID
   useEffect(() => {
     const fetchStudentId = async () => {
@@ -140,10 +183,13 @@ function DisplayTeacherData() {
   useEffect(() => {
     const fetchStudentProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/user/${student?.id}`, {
-          method: "GET",
-          credentials: "include",
-        });
+        const response = await fetch(
+          `http://localhost:3000/user/${student?.id}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
         const data = await response.json();
         // console.log("Fetched student profile:", data);
         if (response.ok) {
@@ -280,7 +326,9 @@ function DisplayTeacherData() {
                         const selected = selectedSlots.find(
                           (s) => s.key === key
                         );
+
                         return (
+                          // <td> for each day
                           <td
                             key={day}
                             className={`border border-gray-200 p-2 text-center cursor-pointer transition-colors rounded-lg ${
@@ -301,7 +349,7 @@ function DisplayTeacherData() {
                 </tbody>
               </table>
             </div>
-
+            
             {/* Enroll Button */}
             <div className="mt-8 text-center">
               <button
