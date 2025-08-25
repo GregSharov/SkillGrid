@@ -21,6 +21,9 @@ export default function CallPage() {
   const [status, setStatus] = useState("Idle");
   const [isInitiator, setIsInitiator] = useState(false);
 
+  console.log("this is a call page", roomId);
+
+
   useEffect(() => {
     socketRef.current = io(SIGNALING_URL, { transports: ["websocket"] });
 
