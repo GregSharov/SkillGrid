@@ -21,27 +21,22 @@ function UserCard({ authUser }) {
   // localStorage.setItem("role", "teacher"); // or "student"
   // const role = localStorage.getItem("role"); // or get it from context
 
-  const generateLessonCode = () =>
-    Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
+  // const generateLessonCode = () =>
+  //   Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random 6-character code
 
-  const openVideoManager = () => {
-    const code = generateLessonCode();
+  const openVideoManager = async (roomId) => {
+    try {
+      console.log("Room ID function", roomId);
 
-    //   if (role === "teacher") {
-    //     navigate(`/call/${code}`);
-    //   } else if (role === "student") {
-    //     navigate(`/join/${code}`);
-    //   } else {
-    //     alert("Unknown role. Please sign in again.");
-    //   }
-    // };
-
-    if (authUser?.role === "teacher") {
-      navigate(`/call/${code}`);
-    } else if (authUser?.role === "student") {
-      navigate(`/join/${code}`);
-    } else {
-      alert("Unregistered user. Please sign in again.");
+      if (authUser?.role === "teacher") {
+        navigate(`/call/${roomId}`);
+      } else if (authUser?.role === "student") {
+        navigate(`/join/${roomId}`);
+      } else {
+        alert("Unregistered user. Please sign in again.");
+      }
+    } catch (error) {
+      console.error("Error opening video manager:", error);
     }
   };
 
@@ -339,7 +334,7 @@ function UserCard({ authUser }) {
                         </p>
                       )}
                     </div>
-                    
+
                     {/* Join/Complete button logic */}
                     <div className="mt-3 flex gap-2">
                       {new Date(slot.date).setHours(
@@ -355,7 +350,7 @@ function UserCard({ authUser }) {
                         <button
                           className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
                           type="button" // important if inside a form
-                          onClick={openVideoManager} // open the video call page
+                          onClick={() => openVideoManager(slot?._id)} // open the video call page
                         >
                           Join Lesson
                         </button>
