@@ -1,5 +1,5 @@
 
-import { Outlet, useNavigate, Link } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logo from "../logo.png";
 
