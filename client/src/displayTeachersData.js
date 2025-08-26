@@ -19,21 +19,19 @@ function DisplayTeacherData() {
   const [lessonsArray, setLessonsArray] = useState([]);
 
   // State for teacher's scheduled lessons
-  const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
-  console.log("Teacher's Scheduled Lessons:", teacherScheduledLessons);
+  // const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
 
   // Function to check if chosen slot's time and date match teacher's scheduled lessons
-  const isSlotConflicting = (day, time, date) => {
-    return teacherScheduledLessons.some((lesson) => {
-      const lessonDate = new Date(lesson.date);
-      return (
-        lessonDate.toDateString() === date.toDateString() &&
-        lesson.time === time &&
-        lesson.day === day
-      );
-    });
-  };
-  console.log("isSlotConflicting:", isSlotConflicting);
+  // const isSlotConflicting = (day, time, date) => {
+  //   return teacherScheduledLessons.some((lesson) => {
+  //     const lessonDate = new Date(lesson.date);
+  //     return (
+  //       lessonDate.toDateString() === date.toDateString() &&
+  //       lesson.time === time &&
+  //       lesson.day === day
+  //     );
+  //   });
+  // };
 
   // State for managing selected week and slots
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
@@ -150,31 +148,31 @@ function DisplayTeacherData() {
   };
 
   // Fetch teacher's scheduled lessons
-  useEffect(() => {
-    const fetchTeacherScheduledLessons = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:3000/schedule/user/${teacherProfile?._id}`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        const data = await response.json();
-        if (response.ok) {
-          setTeacherScheduledLessons(data.data);
-        } else {
-          console.error("Error fetching teacher's scheduled lessons:", data);
-        }
-      } catch (error) {
-        console.error("Error fetching teacher's scheduled lessons:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchTeacherScheduledLessons = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `http://localhost:3000/schedule/user/${teacherProfile?._id}`,
+  //         {
+  //           method: "GET",
+  //           credentials: "include",
+  //         }
+  //       );
+  //       const data = await response.json();
+  //       if (response.ok) {
+  //         setTeacherScheduledLessons(data.data);
+  //       } else {
+  //         console.error("Error fetching teacher's scheduled lessons:", data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching teacher's scheduled lessons:", error);
+  //     }
+  //   };
 
-    if (teacherProfile) {
-      fetchTeacherScheduledLessons();
-    }
-  }, [teacherProfile]);
+  //   if (teacherProfile) {
+  //     fetchTeacherScheduledLessons();
+  //   }
+  // }, [teacherProfile]);
 
   // Fetch student ID
   useEffect(() => {
