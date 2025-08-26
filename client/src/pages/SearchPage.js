@@ -14,9 +14,9 @@ export default function SearchPage() {
   const [subjects, setSubjects] = useState([]); // lessons live under subjects
 
   //  navigation helpers 
-  const openTeacher = (teacher) => {
-    if (!teacher) return;
-    navigate("/teacher-info", { state: { teacher } });
+  const openTeacher = (teacherId) => {
+    if (!teacherId) return;
+    navigate(`/teacher-info/${teacherId}`);
   };
   // const openLesson = (lesson) => {
   //   if (!lesson) return;
@@ -156,7 +156,7 @@ export default function SearchPage() {
 
                   <button
                     className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    onClick={() => openTeacher(t)}
+                    onClick={() => openTeacher(t?._id)}
                     aria-label={`View profile of ${displayName}`}
                   >
                     View Profile

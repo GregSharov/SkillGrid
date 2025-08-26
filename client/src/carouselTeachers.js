@@ -186,7 +186,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
                         onClick={() => teacherInfo(teacher?._id)}
                         className="mt-2 bg-blue-500 text-white text-sm font-medium py-2 px-3 rounded-md hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1"
                       >
-                        More Information
+                        View Profile
                       </button>
                     </div>
                   </div>
