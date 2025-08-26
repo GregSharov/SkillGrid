@@ -1,14 +1,10 @@
-import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import CarouselLessons from "./carouselLessons.js";
-import { useEffect } from "react";
 
 function DisplayTeacherData() {
-  // Get teacher data from location state
-  const location = useLocation();
-  const teacher = location.state?.teacher; // Get full object
-  const lessonsArray =
-    teacher?.subjects.flatMap((subject) => subject.lessons || []) || [];
+  // Get teacher ID from URL parameters
+  const { teacherId } = useParams();
 
   // State for student data (id, role)
   const [student, setStudent] = useState();
@@ -16,13 +12,33 @@ function DisplayTeacherData() {
   // State for student profile
   const [studentProfile, setStudentProfile] = useState();
 
-  // State teacher's scheduled lessons
+  // State for teacher profile
+  const [teacherProfile, setTeacherProfile] = useState();
+
+  // State teacher's lessons
+  const [lessonsArray, setLessonsArray] = useState([]);
+
+  // State for teacher's scheduled lessons
   const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
+  console.log("Teacher's Scheduled Lessons:", teacherScheduledLessons);
+
+  // Function to check if chosen slot's time and date match teacher's scheduled lessons
+  const isSlotConflicting = (day, time, date) => {
+    return teacherScheduledLessons.some((lesson) => {
+      const lessonDate = new Date(lesson.date);
+      return (
+        lessonDate.toDateString() === date.toDateString() &&
+        lesson.time === time &&
+        lesson.day === day
+      );
+    });
+  };
+  console.log("isSlotConflicting:", isSlotConflicting);
 
   // State for managing selected week and slots
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   const [selectedSlots, setSelectedSlots] = useState([]);
-  const [chosenLesson, setChosenLesson] = useState(lessonsArray[0] || null);
+  const [chosenLesson, setChosenLesson] = useState(null);
 
   // State for Response from Server
   const [responseData, setResponseData] = useState(null);
@@ -107,7 +123,7 @@ function DisplayTeacherData() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          teacher: teacher,
+          teacher: teacherProfile,
           student: studentProfile,
           slots: selectedSlots,
         }),
@@ -138,7 +154,7 @@ function DisplayTeacherData() {
     const fetchTeacherScheduledLessons = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/schedule/user/${teacher?._id}`,
+          `http://localhost:3000/schedule/user/${teacherProfile?._id}`,
           {
             method: "GET",
             credentials: "include",
@@ -155,10 +171,10 @@ function DisplayTeacherData() {
       }
     };
 
-    if (teacher) {
+    if (teacherProfile) {
       fetchTeacherScheduledLessons();
     }
-  }, [teacher]);
+  }, [teacherProfile]);
 
   // Fetch student ID
   useEffect(() => {
@@ -211,21 +227,63 @@ function DisplayTeacherData() {
     }
   }, [student]);
 
+  // Fetch teacher profile
+  useEffect(() => {
+    const fetchTeacherProfile = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/user/${teacherId}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setTeacherProfile(data.user);
+        } else {
+          console.error("Error fetching teacher profile:");
+        }
+      } catch (error) {
+        console.error("Error fetching teacher profile:", error);
+      }
+    };
+
+    if (teacherId) {
+      fetchTeacherProfile();
+    }
+  }, [teacherId]);
+
+  // Set lessons from teacher profile
+  useEffect(() => {
+    try {
+      const lessonsArray =
+        teacherProfile?.subjects.flatMap((subject) => subject.lessons || []) ||
+        [];
+      setLessonsArray(lessonsArray);
+
+      // Set choosen lesson as first from teacher's lesson array
+      setChosenLesson(lessonsArray[0] || null);
+    } catch (error) {
+      console.error("Error setting teacher lessons:", error);
+    }
+  }, [teacherProfile]);
+
   return (
     <>
-      {teacher ? (
+      {teacherProfile ? (
         <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-50 py-12 px-4">
           <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-10">
             {/* Teacher Info */}
             <div className="flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-blue-100 to-blue-50 p-6 rounded-2xl shadow-inner">
               <img
-                src={teacher.image}
-                alt={`${teacher.firstName} ${teacher.lastName}`}
+                src={teacherProfile.image}
+                alt={`${teacherProfile.firstName} ${teacherProfile.lastName}`}
                 className="w-44 h-44 object-cover rounded-full shadow-xl border-4 border-white"
               />
               <div className="text-center md:text-left">
                 <p className="text-4xl font-bold text-gray-800">
-                  {teacher.firstName} {teacher.lastName}
+                  {teacherProfile.firstName} {teacherProfile.lastName}
                 </p>
                 <p className="text-gray-600 text-lg mt-2">
                   Experienced Teacher
@@ -240,13 +298,17 @@ function DisplayTeacherData() {
               <h2 className="text-2xl font-semibold text-gray-700 mb-3">
                 Lessons Taught
               </h2>
-              <div className="bg-white rounded-xl shadow-lg p-4">
-                <CarouselLessons
-                  subjectId={null}
-                  lessonsArray={lessonsArray}
-                  onLessonClick={(lesson) => setChosenLesson(lesson)}
-                />
-              </div>
+              {lessonsArray.length > 0 ? (
+                <div className="bg-white rounded-xl shadow-lg p-4">
+                  <CarouselLessons
+                    subjectId={null}
+                    lessonsArray={lessonsArray}
+                    onLessonClick={(lesson) => setChosenLesson(lesson)}
+                  />
+                </div>
+              ) : (
+                <p className="text-gray-500">No lessons available</p>
+              )}
             </div>
 
             {/* Choose Lesson */}
@@ -322,6 +384,8 @@ function DisplayTeacherData() {
                       <td className="border border-gray-200 p-2 font-medium">
                         {time}
                       </td>
+
+                      {/* Day Cells */}
                       {daysOfWeek.map((day, idx) => {
                         const date = new Date(start);
                         date.setDate(start.getDate() + idx);

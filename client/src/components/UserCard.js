@@ -17,6 +17,12 @@ function UserCard({ authUser }) {
 
   const navigate = useNavigate();
 
+  // Navigate to teacher info page
+  const teacherInfo = (teacherId) => {
+    if (!teacherId) return;
+    navigate(`/teacher-info/${teacherId}`);
+  };
+
   // Open video call page based on role and roomId
   const openVideoManager = async (roomId) => {
     try {
@@ -316,10 +322,13 @@ function UserCard({ authUser }) {
                         {slot.date} {slot.time}
                       </p>
                       {!profile?.isTeacher && (
-                        <p className="text-gray-600 text-sm">
-                          Teacher: {items.teacher.firstName}{" "}
-                          {items.teacher.lastName}
-                        </p>
+                        <button
+                          className="bg-transparent hover:bg-blue-500 text-blue-700 text-sm font-medium hover:text-white py-1 px-3 border border-blue-500 hover:border-transparent rounded"
+                          onClick={() => teacherInfo(items.teacher._id)}
+                        >
+                          {`Teacher: ${items.teacher.firstName}
+                          ${items.teacher.lastName}`}
+                        </button>
                       )}
                       {profile?.isTeacher && (
                         <p className="text-gray-600 text-sm">
@@ -336,7 +345,7 @@ function UserCard({ authUser }) {
                         0,
                         0,
                         0
-                      ) < new Date() ? (
+                      ) < new Date().setHours(new Date().getHours() + 1) ? (
                         <span className="px-3 py-1 bg-red-600 text-white rounded-lg transition text-sm font-medium">
                           Completed
                         </span>

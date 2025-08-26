@@ -11,16 +11,21 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   const [productWidth, setProductWidth] = useState(0);
 
   const navigate = useNavigate();
-  const teacherInfo = (teacher) => {
-    if (!teacher) return;
-    navigate("/teacher-info", { state: { teacher } });
+  const teacherInfo = (teacherId) => {
+    if (!teacherId) return;
+    navigate(`/teacher-info/${teacherId}`);
   };
 
+  // Fetch teacher data
   useEffect(() => {
     fetchData("teachers")
       .then((data) => {
-        // Filter data to get teachers for the specific lesson id
-        setTeacherData(filterData(data, lessonId));
+        // Filter data to get teachers for the specific lesson id (only teachers where subjects.length > 0)
+        setTeacherData(
+          filterData(data, lessonId).filter(
+            (teacher) => teacher.subjects.length > 0
+          )
+        );
 
         // If subjectId is provided, filter teachers by subject as well
         if (subjectId) {
@@ -31,6 +36,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
       .catch((err) => console.error("Error fetching data", err));
   }, [lessonId, subjectId]);
 
+  // Calculate product width including margin
   useEffect(() => {
     const updateWidth = () => {
       if (carouselRef.current?.firstChild) {
@@ -42,11 +48,14 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
       }
     };
     updateWidth();
+
+    // Observe changes to the carousel container
     const resizeObserver = new ResizeObserver(updateWidth);
     if (carouselRef.current) resizeObserver.observe(carouselRef.current);
     return () => resizeObserver.disconnect();
   }, [teacherData.length]);
 
+  // Scroll to the selected teacher
   const scrollToTeachers = (index) => {
     if (carouselRef.current && productWidth > 0) {
       carouselRef.current.scrollTo({
@@ -57,15 +66,16 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
     }
   };
 
+  // Handle previous and next buttons
   const handlePrev = () => {
     if (currentIndex > 0) scrollToTeachers(currentIndex - 1);
   };
-
   const handleNext = () => {
     if (currentIndex < teacherData.length - 1)
       scrollToTeachers(currentIndex + 1);
   };
 
+  // Handle keyboard navigation
   const handleKeyPress = (e, direction) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -73,6 +83,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
     }
   };
 
+  // Update current index on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (carouselRef.current && productWidth > 0) {
@@ -122,8 +133,9 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
               className="flex overflow-x-auto gap-6 pb-6 scroll-smooth px-2"
               style={{ scrollSnapType: "x mandatory" }}
             >
+              {/* Teacher's Card */}
+              {/* Filter and hide teachers with empty subjects */}
               {teacherData.map((teacher) => (
-                // Teacher's Card
                 <div
                   key={teacher._id}
                   className="flex-none w-64"
@@ -171,7 +183,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
                       </div>
 
                       <button
-                        onClick={() => teacherInfo(teacher)}
+                        onClick={() => teacherInfo(teacher?._id)}
                         className="mt-2 bg-blue-500 text-white text-sm font-medium py-2 px-3 rounded-md hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1"
                       >
                         More Information

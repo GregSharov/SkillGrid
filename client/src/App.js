@@ -36,7 +36,7 @@ function App() {
           <Route path="add-subject" element={<AddSubject />} />
           <Route path="lesson-info" element={<LessonInfoPage />} />
           <Route path="account" element={<AcountPage />} />
-          <Route path="teacher-info" element={<DisplayTeachersData />} />
+          <Route path="teacher-info/:teacherId" element={<DisplayTeachersData />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="join/:roomId" element={<JoinCall />} />
           <Route path="call/:roomId" element={<CallPage />} />
