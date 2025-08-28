@@ -16,9 +16,17 @@ router.get("/user/:id", async (req, res) => {
     });
 
     if (!scheduledLessons || scheduledLessons.length === 0) {
-      return res.status(404).json({ message: "No scheduled lessons found" });
+      return res
+        .status(200)
+        .json({ data: [], message: "No scheduled lessons" });
     }
-    res.status(200).json({ data: scheduledLessons, message: "Scheduled lessons fetched successfully" });
+
+    res
+      .status(200)
+      .json({
+        data: scheduledLessons,
+        message: "Scheduled lessons fetched successfully",
+      });
   } catch (error) {
     res
       .status(500)
@@ -73,7 +81,6 @@ router.post("/add", async (req, res) => {
 router.delete("/delete/:id", async (req, res) => {
   try {
     const slotId = req.params.id;
-    console.log("Deleting SLOT WITH ID:", slotId);
 
     const updatedLesson = await Schedule.findOneAndUpdate(
       { "slots._id": slotId },
@@ -81,7 +88,6 @@ router.delete("/delete/:id", async (req, res) => {
       { new: true }
     );
 
-    console.log("Deleted LESSON:", updatedLesson);
     if (!updatedLesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }

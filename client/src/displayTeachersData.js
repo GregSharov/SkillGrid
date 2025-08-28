@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import CarouselLessons from "./carouselLessons.js";
 
 function DisplayTeacherData() {
+  // State for managing booking status
+  const [isBooking, setIsBooking] = useState(false);
+  const inFlightRef = useRef(false);
+
   // Get teacher ID from URL parameters
   const { teacherId } = useParams();
 
@@ -110,13 +114,16 @@ function DisplayTeacherData() {
       return;
     }
 
-    // Post data to server
+    // guard against double-clicks
+    if (isBooking || inFlightRef.current) return;
+
+    setIsBooking(true);
+    inFlightRef.current = true;
+
     try {
       const response = await fetch("http://localhost:3000/schedule/add", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           teacher: teacherProfile,
           student: studentProfile,
@@ -132,45 +139,46 @@ function DisplayTeacherData() {
         throw new Error("Failed to schedule lessons");
       }
 
-      // Reset chosen lesson and selected slots
+      // Reset UI
       setChosenLesson(lessonsArray[0] || null);
       setSelectedSlots([]);
-
-      console.log("Successfully scheduled lessons:", data);
       setResponseData(data);
       setResStyleColor("text-green-500");
+
+      // Refetch booked slots so the table updates immediately
+      await fetchTeacherScheduledLessons();
     } catch (error) {
       console.error("Error scheduling lessons:", error);
+    } finally {
+      setIsBooking(false);
+      inFlightRef.current = false;
     }
   };
 
   // Fetch teacher's scheduled lessons
-  useEffect(() => {
-    const fetchTeacherScheduledLessons = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:3000/schedule/user/${teacherProfile?._id}`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        const data = await response.json();
-        if (response.ok) {
-          const lessons = data.data.flatMap((slots) => slots.slots);
-          setTeacherScheduledLessons(lessons);
-        } else {
-          console.error("Error fetching teacher's scheduled lessons:", data);
-        }
-      } catch (error) {
-        console.error("Error fetching teacher's scheduled lessons:", error);
+  const fetchTeacherScheduledLessons = useCallback(async () => {
+    if (!teacherId) return;
+    try {
+      const response = await fetch(
+        `http://localhost:3000/schedule/user/${teacherId}`,
+        { method: "GET", credentials: "include" }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        const lessons = (data.data || []).flatMap((doc) => doc.slots || []);
+        setTeacherScheduledLessons(lessons);
+      } else {
+        console.error("Error fetching teacher's scheduled lessons:", data);
       }
-    };
-
-    if (teacherProfile) {
-      fetchTeacherScheduledLessons();
+    } catch (error) {
+      console.error("Error fetching teacher's scheduled lessons:", error);
     }
-  }, [teacherProfile]);
+  }, [teacherId]);
+
+  // Call fetchTeacherScheduledLessons when teacherId changes
+  useEffect(() => {
+    fetchTeacherScheduledLessons();
+  }, [fetchTeacherScheduledLessons]);
 
   // Fetch student ID
   useEffect(() => {
@@ -395,7 +403,7 @@ function DisplayTeacherData() {
                         slotDate.setHours(Number(time.split(":")[0]), 0, 0, 0);
 
                         const isPast = slotDate < new Date();
-                        
+
                         if (isSlotConflicting(time, date)) {
                           return (
                             <td
@@ -439,10 +447,18 @@ function DisplayTeacherData() {
             <div className="mt-8 text-center">
               <button
                 onClick={handleEnroll}
-                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-2xl shadow-lg hover:bg-blue-700 transition transform hover:scale-105"
+                disabled={isBooking}
+                aria-busy={isBooking}
+                className={`px-8 py-3 font-semibold rounded-2xl shadow-lg transition transform
+    ${
+      isBooking
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105"
+    }`}
               >
-                Book Selected Lessons
+                {isBooking ? "Booking..." : "Book Selected Lessons"}
               </button>
+
               {responseData && (
                 <p className={`${resStyleColor} text-center mt-4`}>
                   {responseData.message}
