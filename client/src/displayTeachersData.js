@@ -90,13 +90,13 @@ function DisplayTeacherData() {
       setSelectedSlots(selectedSlots.filter((slot) => slot.key !== key));
     } else {
       // Check if the slot is in the future
-      const slotDate = new Date(date).setHours(time.split(":")[0], 0, 0, 0);
-      const now = new Date();
+      // const slotDate = new Date(date).setHours(time.split(":")[0], 0, 0, 0);
+      // const now = new Date();
 
-      if (slotDate < now) {
-        alert("You cannot select a past slot.");
-        return;
-      }
+      // if (slotDate < now) {
+      //   alert("You cannot select a past slot.");
+      //   return;
+      // }
 
       // Add new slot with lesson details
       setSelectedSlots([
@@ -393,10 +393,19 @@ function DisplayTeacherData() {
                           (s) => s.key === key
                         );
 
-                        return (
-                          // <td> for each day
+                        const slotDate = new Date(date);
+                        slotDate.setHours(Number(time.split(":")[0]), 0, 0, 0);
+
+                        const isPast = slotDate < new Date();
+
+                        return isPast ? (
                           <td
-                            key={day}
+                            key={key}
+                            className="border border-gray-300 p-2 text-center rounded-lg bg-gray-100 cursor-not-allowed"
+                          />
+                        ) : (
+                          <td
+                            key={key}
                             className={`border border-gray-200 p-2 text-center cursor-pointer transition-colors rounded-lg ${
                               selected
                                 ? "bg-blue-500 text-white font-semibold"
