@@ -19,19 +19,25 @@ function DisplayTeacherData() {
   const [lessonsArray, setLessonsArray] = useState([]);
 
   // State for teacher's scheduled lessons
-  // const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
+  const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
 
   // Function to check if chosen slot's time and date match teacher's scheduled lessons
-  // const isSlotConflicting = (day, time, date) => {
-  //   return teacherScheduledLessons.some((lesson) => {
-  //     const lessonDate = new Date(lesson.date);
-  //     return (
-  //       lessonDate.toDateString() === date.toDateString() &&
-  //       lesson.time === time &&
-  //       lesson.day === day
-  //     );
-  //   });
-  // };
+  const isSlotConflicting = (time, dateObj) => {
+    const hour = Number(String(time).split(":")[0]);
+
+    // clone and normalize the chosen date to the selected hour, zeroing minutes/seconds/ms
+    const chosen = new Date(dateObj);
+    chosen.setHours(hour, 0, 0, 0);
+
+    return teacherScheduledLessons.some((slot) => {
+      const slotHour = Number(String(slot.time).split(":")[0]);
+
+      const slotDate = new Date(slot.date);
+      slotDate.setHours(slotHour, 0, 0, 0);
+
+      return slotDate.getTime() === chosen.getTime();
+    });
+  };
 
   // State for managing selected week and slots
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
@@ -89,15 +95,6 @@ function DisplayTeacherData() {
     if (exists) {
       setSelectedSlots(selectedSlots.filter((slot) => slot.key !== key));
     } else {
-      // Check if the slot is in the future
-      // const slotDate = new Date(date).setHours(time.split(":")[0], 0, 0, 0);
-      // const now = new Date();
-
-      // if (slotDate < now) {
-      //   alert("You cannot select a past slot.");
-      //   return;
-      // }
-
       // Add new slot with lesson details
       setSelectedSlots([
         ...selectedSlots,
@@ -148,31 +145,32 @@ function DisplayTeacherData() {
   };
 
   // Fetch teacher's scheduled lessons
-  // useEffect(() => {
-  //   const fetchTeacherScheduledLessons = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         `http://localhost:3000/schedule/user/${teacherProfile?._id}`,
-  //         {
-  //           method: "GET",
-  //           credentials: "include",
-  //         }
-  //       );
-  //       const data = await response.json();
-  //       if (response.ok) {
-  //         setTeacherScheduledLessons(data.data);
-  //       } else {
-  //         console.error("Error fetching teacher's scheduled lessons:", data);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching teacher's scheduled lessons:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchTeacherScheduledLessons = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/schedule/user/${teacherProfile?._id}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          const lessons = data.data.flatMap((slots) => slots.slots);
+          setTeacherScheduledLessons(lessons);
+        } else {
+          console.error("Error fetching teacher's scheduled lessons:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching teacher's scheduled lessons:", error);
+      }
+    };
 
-  //   if (teacherProfile) {
-  //     fetchTeacherScheduledLessons();
-  //   }
-  // }, [teacherProfile]);
+    if (teacherProfile) {
+      fetchTeacherScheduledLessons();
+    }
+  }, [teacherProfile]);
 
   // Fetch student ID
   useEffect(() => {
@@ -397,6 +395,18 @@ function DisplayTeacherData() {
                         slotDate.setHours(Number(time.split(":")[0]), 0, 0, 0);
 
                         const isPast = slotDate < new Date();
+                        
+                        if (isSlotConflicting(time, date)) {
+                          return (
+                            <td
+                              key={key}
+                              className="border border-gray-300 p-2 text-center rounded-lg bg-red-100 text-gray-500 cursor-not-allowed"
+                              title="Slot unavailable"
+                            >
+                              Booked
+                            </td>
+                          );
+                        }
 
                         return isPast ? (
                           <td
@@ -431,7 +441,7 @@ function DisplayTeacherData() {
                 onClick={handleEnroll}
                 className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-2xl shadow-lg hover:bg-blue-700 transition transform hover:scale-105"
               >
-                Enroll in Selected Lessons
+                Book Selected Lessons
               </button>
               {responseData && (
                 <p className={`${resStyleColor} text-center mt-4`}>
