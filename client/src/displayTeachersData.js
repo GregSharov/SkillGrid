@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import CarouselLessons from "./carouselLessons.js";
 
+// NEW: reviews UI
+import RatingStars from "./components/RatingStars.js";
+import ReviewsList from "./components/ReviewList.js";
+import ReviewForm from "./components/ReviewForm.js";
+
 function DisplayTeacherData() {
   // State for managing booking status
   const [isBooking, setIsBooking] = useState(false);
@@ -12,6 +17,9 @@ function DisplayTeacherData() {
 
   // State for student data (id, role)
   const [student, setStudent] = useState();
+
+  // convenience flag
+  const isStudent = student?.role === "student";
 
   // State for student profile
   const [studentProfile, setStudentProfile] = useState();
@@ -24,6 +32,9 @@ function DisplayTeacherData() {
 
   // State for teacher's scheduled lessons
   const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
+
+  // State for Reviews refresh trigger
+  const [reviewsRefreshKey, setReviewsRefreshKey] = useState(0);
 
   // Function to check if chosen slot's time and date match teacher's scheduled lessons
   const isSlotConflicting = (time, dateObj) => {
@@ -170,7 +181,7 @@ function DisplayTeacherData() {
     fetchTeacherScheduledLessons();
   }, [fetchTeacherScheduledLessons]);
 
-  // Fetch student ID
+  // Fetch student ID (session)
   useEffect(() => {
     const fetchStudentId = async () => {
       try {
@@ -234,7 +245,7 @@ function DisplayTeacherData() {
   useEffect(() => {
     try {
       const la =
-        teacherProfile?.subjects.flatMap((subject) => subject.lessons || []) ||
+        teacherProfile?.subjects?.flatMap((subject) => subject.lessons || []) ||
         [];
       setLessonsArray(la);
       setChosenLesson(la[0] || null);
@@ -267,12 +278,32 @@ function DisplayTeacherData() {
                   </div>
 
                   <div className="flex-1">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-                      {teacherProfile.firstName} {teacherProfile.lastName}
-                    </h1>
-                    <p className="mt-1 text-slate-600">
-                      Experienced Teacher • Personalized 1-on-1 sessions
-                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                      <div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                          {teacherProfile.firstName} {teacherProfile.lastName}
+                        </h1>
+                        <p className="mt-1 text-slate-600">
+                          Experienced Teacher • Personalized 1-on-1 sessions
+                        </p>
+                      </div>
+
+                      {/* NEW: rating summary (if saved on Teacher) */}
+                      <div className="flex items-center gap-2">
+                        <RatingStars
+                          value={Number(teacherProfile.ratingAverage) || 0}
+                          size="text-xl"
+                        />
+                        <span className="text-lg font-semibold text-slate-800">
+                          {teacherProfile.ratingAverage
+                            ? Number(teacherProfile.ratingAverage).toFixed(1)
+                            : "0.0"}
+                        </span>
+                        <span className="text-sm text-slate-500">
+                          ({teacherProfile.ratingCount || 0})
+                        </span>
+                      </div>
+                    </div>
 
                     {/* Quick stats */}
                     <div className="mt-4 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
@@ -484,6 +515,34 @@ function DisplayTeacherData() {
                     </p>
                   )}
                 </div>
+
+                {/* Divider */}
+                <div className="mt-10 h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+                {/* NEW: Reviews Section */}
+                <section className="mt-8 space-y-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
+                    Reviews
+                  </h2>
+
+                  {/* Public list (avg, count, comments) */}
+                  <ReviewsList
+                    teacherId={teacherId}
+                    refreshKey={reviewsRefreshKey}
+                  />
+
+                  {/* Student-only form */}
+                  {isStudent ? (
+                    <ReviewForm
+                      teacherId={teacherId}
+                      onSaved={() => setReviewsRefreshKey((k) => k + 1)}
+                    />
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">
+                      Log in as a student to leave a review after your lesson.
+                    </div>
+                  )}
+                </section>
               </div>
             </div>
           </div>

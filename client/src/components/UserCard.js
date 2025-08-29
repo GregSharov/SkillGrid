@@ -281,13 +281,11 @@ function UserCard({ authUser }) {
                           className="mt-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
                           onClick={() => teacherInfo(items.teacher._id)}
                         >
-                          Teacher: {items.teacher.firstName}{" "}
-                          {items.teacher.lastName}
+                          Teacher: {items.teacher.firstName} {items.teacher.lastName}
                         </button>
                       ) : (
                         <p className="text-slate-600 text-sm">
-                          Student: {items.student.firstName}{" "}
-                          {items.student.lastName}
+                          Student: {items.student.firstName} {items.student.lastName}
                         </p>
                       )}
                     </div>

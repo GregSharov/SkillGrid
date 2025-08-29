@@ -2,7 +2,7 @@ import express from "express";
 import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
 import { Subject } from "../models/subjectSchema.js";
-import { HashPassword, VerifyPassword } from "../middleware/auth.js";
+import { HashPassword, VerifyPassword } from "../utils/auth.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";

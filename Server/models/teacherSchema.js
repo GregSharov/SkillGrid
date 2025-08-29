@@ -37,6 +37,8 @@ const teacherSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  ratingAverage: { type: Number, default: 0 },
+  ratingCount: { type: Number, default: 0 },
 });
 
 // Export both the schema and the model

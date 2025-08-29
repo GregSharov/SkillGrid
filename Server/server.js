@@ -11,6 +11,7 @@ import studentRoutes from "./routes/studentRoute.js";
 import teacherRoutes from "./routes/teacherRoute.js";
 import subjectRoutes from "./routes/subjectRoute.js";
 import scheduleLessonRoutes from "./routes/scheduleLessonRoute.js";
+import reviews from "./routes/reviews.js";
 // import addSubjectRoutes from "./routes/addSubject.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -59,6 +60,7 @@ app.use("/students", studentRoutes);
 app.use("/teachers", teacherRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/schedule", scheduleLessonRoutes);
+app.use("/reviews", reviews);
 // app.use("/subject", addSubjectRoutes);
 
 // Listen to a Server

@@ -88,16 +88,6 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   return (
     <div className="w-full px-4 py-10">
       <div className="mx-auto max-w-7xl">
-        {/* Title */}
-        {/* <div className="mb-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Meet the <span className="text-indigo-600">Teachers</span>
-          </h2>
-          <p className="mt-1 text-slate-600 text-sm">
-            Browse mentors and open profiles to learn more.
-          </p>
-        </div> */}
-
         {teacherData.length === 0 ? (
           <div className="grid place-items-center py-16">
             <div className="text-center">
@@ -131,8 +121,25 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
             >
               {teacherData.map((teacher) => {
                 const subjectsCount = (teacher.subjects || []).length;
-                const rating =
-                  typeof teacher.rating === "number" ? teacher.rating : null; // use if provided
+
+                // --- NEW: robust rating detection ---
+                // Prefer ratingAverage/ratingCount from backend aggregation,
+                // fallback to teacher.rating when present, otherwise "New".
+                const ratingAvg =
+                  typeof teacher.ratingAverage === "number"
+                    ? teacher.ratingAverage
+                    : typeof teacher.rating === "number"
+                    ? teacher.rating
+                    : null;
+                const ratingCount =
+                  typeof teacher.ratingCount === "number"
+                    ? teacher.ratingCount
+                    : 0;
+                const badgeText =
+                  ratingCount > 0 && ratingAvg !== null
+                    ? ratingAvg.toFixed(1)
+                    : "New";
+                // ------------------------------------
 
                 return (
                   <div
@@ -153,7 +160,16 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/10 to-transparent" />
 
                         {/* Rating badge (top-left) */}
-                        <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow">
+                        <div
+                          className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow"
+                          title={
+                            ratingCount > 0 && ratingAvg !== null
+                              ? `${badgeText} average from ${ratingCount} review${
+                                  ratingCount === 1 ? "" : "s"
+                                }`
+                              : "New teacher — no reviews yet"
+                          }
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"
@@ -163,11 +179,11 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
                           >
                             <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.402 8.167L12 18.896l-7.336 3.868 1.402-8.167L.132 9.21l8.2-1.192L12 .587z" />
                           </svg>
-                          {rating !== null ? `${rating.toFixed(1)}` : "New"}
+                          {badgeText}
                         </div>
                       </div>
 
-                      {/* Content (restored proportions) */}
+                      {/* Content */}
                       <div className="flex flex-col h-1/2 p-4 gap-2">
                         <h3 className="text-lg font-semibold text-slate-900">
                           {teacher.firstName} {teacher.lastName}

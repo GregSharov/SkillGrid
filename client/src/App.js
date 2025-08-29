@@ -19,6 +19,7 @@ import SearchPage from "./pages/SearchPage";
 import CallPage from "./pages/CallPage";
 import JoinCall from "./pages/JoinCall";
 import LessonInfoWrapper from "./pages/LessonInfoWrapper";
+import Admin from "./pages/AdminDashboard.js";
 
 
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="join/:roomId" element={<JoinCall />} />
           <Route path="call/:roomId" element={<CallPage />} />
           <Route path="lesson-info-search" element={<LessonInfoWrapper />} />
+          <Route path="admin" element={<Admin />} />
 
         </Route>
       </Routes>
