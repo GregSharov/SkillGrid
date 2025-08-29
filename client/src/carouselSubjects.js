@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 
-
 const CarouselSubjects = ({ onSubjectClick }) => {
   const [subjectData, setSubjectData] = useState([]);
   const carouselRef = useRef(null);
@@ -11,14 +10,11 @@ const CarouselSubjects = ({ onSubjectClick }) => {
 
   const handleButtonClick = (subjectId) => {
     onSubjectClick(subjectId);
-    // console.log("Button clicked with ID:", subjectId);
   };
 
   useEffect(() => {
     fetchData("subjects")
-      .then((data) => {
-        setSubjectData(data);
-      })
+      .then((data) => setSubjectData(data))
       .catch((err) => console.log("Error fetching data", err));
   }, []);
 
@@ -38,10 +34,7 @@ const CarouselSubjects = ({ onSubjectClick }) => {
 
     updateWidth();
     const resizeObserver = new ResizeObserver(updateWidth);
-    if (carouselRef.current) {
-      resizeObserver.observe(carouselRef.current);
-    }
-
+    if (carouselRef.current) resizeObserver.observe(carouselRef.current);
     return () => resizeObserver.disconnect();
   }, []);
 
@@ -55,17 +48,10 @@ const CarouselSubjects = ({ onSubjectClick }) => {
     }
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      scrollToLessons(currentIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < subjects.length - 1) {
-      scrollToLessons(currentIndex + 1);
-    }
-  };
+  const handlePrev = () =>
+    currentIndex > 0 && scrollToLessons(currentIndex - 1);
+  const handleNext = () =>
+    currentIndex < subjects.length - 1 && scrollToLessons(currentIndex + 1);
 
   const handleKeyPress = (e, direction) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -80,75 +66,78 @@ const CarouselSubjects = ({ onSubjectClick }) => {
       if (carouselRef.current && productWidth > 0) {
         const scrollPosition = carouselRef.current.scrollLeft;
         const newIndex = Math.round(scrollPosition / productWidth);
-        if (newIndex !== currentIndex) {
-          setCurrentIndex(newIndex);
-        }
+        if (newIndex !== currentIndex) setCurrentIndex(newIndex);
       }
     };
-
     const carousel = carouselRef.current;
     carousel?.addEventListener("scroll", handleScroll);
     return () => carousel?.removeEventListener("scroll", handleScroll);
   }, [currentIndex, productWidth]);
 
   return (
-    <div className="w-full px-4 py-2 bg-gray-50">
-      <div className="max-w-7xl mx-auto relative">
-        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-          S u b j e c t s
-        </h2>
+    <div className="w-full px-4 py-10">
+      <div className="mx-auto max-w-7xl">
+        {/* Title */}
+        {/* <div className="mb-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Browse <span className="text-indigo-600">Subjects</span>
+          </h2>
+          <p className="mt-1 text-slate-600 text-sm">
+            Pick a subject to explore lessons and teachers.
+          </p>
+        </div> */}
 
-        {/* Subject section */}
-        <div className="relative group">
+        {/* Carousel wrapper */}
+        <div className="relative">
           {/* Previous Button */}
           <button
             onClick={handlePrev}
             onKeyDown={(e) => handleKeyPress(e, "left")}
             disabled={currentIndex === 0}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              currentIndex === 0
-                ? "opacity-50 cursor-not-allowed"
-                : "opacity-90 hover:opacity-100"
-            }`}
-            aria-label="Previous lessons"
+            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10
+              inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 shadow
+              hover:shadow-md hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition
+              ${currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+            aria-label="Previous subjects"
           >
-            <FaChevronLeft className="w-4 h-4 text-gray-700" />
+            <FaChevronLeft className="h-4 w-4 text-slate-700" />
           </button>
 
-          {/* Carousel Container */}
+          {/* Track */}
           <div
             ref={carouselRef}
-            className="flex overflow-x-auto scrollbar-hide gap-6 pb-6 scroll-smooth px-2"
+            className="flex gap-6 overflow-x-auto scroll-smooth pb-6 px-2 scrollbar-hide"
             style={{ scrollSnapType: "x mandatory" }}
           >
-            {subjects.map((product) => (
+            {subjects.map((subject) => (
               <button
-                key={product._id}
-                onClick={() => handleButtonClick(product._id)}
+                key={subject._id}
+                onClick={() => handleButtonClick(subject._id)}
+                className="flex-none w-64 focus:outline-none"
+                style={{ scrollSnapAlign: "start" }}
+                aria-label={`Open ${subject.name}`}
               >
-                <div
-                  key={product._id}
-                  className="flex-none w-64"
-                  style={{ scrollSnapAlign: "start" }}
-                >
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-                    <div className="relative pb-[75%]">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="p-4 flex-grow flex flex-col">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {product.name}
-                      </h3>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
-                        {product.description}
-                      </p>
-                      <div className="flex items-center justify-between mt-auto"></div>
-                    </div>
+                <div className="h-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200 transition hover:shadow-xl">
+                  {/* Image */}
+                  <div className="relative pb-[66%]">
+                    <img
+                      src={subject.image}
+                      alt={subject.name}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
+                    />
+                    {/* subtle gradient at bottom for title legibility if needed */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/10 to-transparent" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {subject.name}
+                    </h3>
+                    <p className="mt-1 text-slate-600 text-sm line-clamp-2">
+                      {subject.description}
+                    </p>
                   </div>
                 </div>
               </button>
@@ -160,29 +149,38 @@ const CarouselSubjects = ({ onSubjectClick }) => {
             onClick={handleNext}
             onKeyDown={(e) => handleKeyPress(e, "right")}
             disabled={currentIndex === subjects.length - 1}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              currentIndex === subjects.length - 1
-                ? "opacity-50 cursor-not-allowed"
-                : "opacity-90 hover:opacity-100"
-            }`}
-            aria-label="Next lesson"
+            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10
+              inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 shadow
+              hover:shadow-md hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition
+              ${
+                currentIndex === subjects.length - 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            aria-label="Next subjects"
           >
-            <FaChevronRight className="w-4 h-4 text-gray-700" />
+            <FaChevronRight className="h-4 w-4 text-slate-700" />
           </button>
         </div>
 
-        {/* Navigation Indicators */}
-        <div className="flex justify-center mt-4 gap-2">
-          {subjects.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => scrollToLessons(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? "bg-blue-600 w-4" : "bg-gray-300"
-              }`}
-              aria-label={`Go to lesson ${index + 1}`}
-            />
-          ))}
+        {/* Dots */}
+        <div className="mt-4 flex justify-center gap-2">
+          {subjects.map((_, index) => {
+            const active = index === currentIndex;
+            return (
+              <button
+                key={index}
+                onClick={() => scrollToLessons(index)}
+                className={`h-2 rounded-full transition-all
+                  ${
+                    active
+                      ? "w-6 bg-indigo-600"
+                      : "w-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                aria-label={`Go to subject ${index + 1}`}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

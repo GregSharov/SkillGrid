@@ -17,53 +17,37 @@ function UserCard({ authUser }) {
 
   const navigate = useNavigate();
 
-  // Navigate to teacher info page
   const teacherInfo = (teacherId) => {
     if (!teacherId) return;
     navigate(`/teacher-info/${teacherId}`);
   };
 
-  // Open video call page based on role and roomId
   const openVideoManager = async (roomId) => {
     try {
-      console.log("Room ID function", roomId);
-
-      if (authUser?.role === "teacher") {
-        navigate(`/call/${roomId}`);
-      } else if (authUser?.role === "student") {
-        navigate(`/join/${roomId}`);
-      } else {
-        alert("Unregistered user. Please sign in again.");
-      }
+      if (authUser?.role === "teacher") navigate(`/call/${roomId}`);
+      else if (authUser?.role === "student") navigate(`/join/${roomId}`);
+      else alert("Unregistered user. Please sign in again.");
     } catch (error) {
       console.error("Error opening video manager:", error);
     }
   };
 
-  // Fetch full profile by id
   useEffect(() => {
     if (!authUser?.id) return;
-    // console.log("Auth User:", authUser);
     (async () => {
       const res = await fetch(`http://localhost:3000/user/${authUser?.id}`, {
         credentials: "include",
       });
-
-      if (!res.ok) {
-        console.error("Failed to fetch user profile");
-        return;
-      }
+      if (!res.ok) return console.error("Failed to fetch user profile");
       const data = await res.json();
       setProfile(data.user);
       setUserImage(data.user?.image || "");
     })();
   }, [authUser]);
 
-  // Image input reference
   const fileInputRef = useRef(null);
   const { uploadImage, loading } = useUploadImage();
 
-  // Save user data
   const handleSave = async () => {
     if (!selectedSubjects.length) return;
     const cleanSubjects = selectedSubjects.map((s) => ({
@@ -81,23 +65,15 @@ function UserCard({ authUser }) {
     }
 
     try {
-      const response = await fetch(
-        `http://localhost:3000/user/${authUser?.id}/subjects`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            subjects: cleanSubjects,
-            lessons: cleanLessons,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        console.error("Failed to save data:", response.statusText);
-        // return;
-      }
+      await fetch(`http://localhost:3000/user/${authUser?.id}/subjects`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          subjects: cleanSubjects,
+          lessons: cleanLessons,
+        }),
+      });
     } catch (error) {
       console.error(error);
     }
@@ -111,7 +87,6 @@ function UserCard({ authUser }) {
     if (result?.imageUrl) setUserImage(result.imageUrl);
   };
 
-  // Fetch subjects data
   useEffect(() => {
     fetchData("subjects")
       .then((data) => {
@@ -132,44 +107,26 @@ function UserCard({ authUser }) {
           setSelectedLessonsBySubject(preSelectedLessonsBySubject);
         }
       })
-      .catch((error) => {
-        console.error("Error fetching subjects:", error);
-      });
+      .catch(console.error);
   }, [profile]);
 
-  // Fetch scheduled lessons
   useEffect(() => {
     const fetchScheduledLessons = async () => {
       try {
         if (!authUser?.id) return;
-
         const response = await fetch(
           `http://localhost:3000/schedule/user/${authUser.id}`,
-          {
-            credentials: "include",
-          }
+          { credentials: "include" }
         );
-
-        if (response.status === 401) {
-          console.error("Session expired. Not logged in.");
-          return navigate("/sign-in");
-        }
-
-        if (!response.ok) {
-          console.error(
-            "Failed to fetch scheduled lessons:",
-            response.statusText
-          );
-          return;
-        }
-
+        if (response.status === 401) return navigate("/sign-in");
+        if (!response.ok)
+          return console.error("Failed to fetch scheduled lessons");
         const data = await response.json();
         setScheduledLessons(data.data);
       } catch (error) {
         console.error(error);
       }
     };
-
     fetchScheduledLessons();
   }, [authUser, navigate]);
 
@@ -199,40 +156,27 @@ function UserCard({ authUser }) {
     }));
   };
 
-  // Handle Logout
   const handleLogout = async () => {
     try {
       const response = await fetch("http://localhost:3000/user/logout", {
         method: "POST",
         credentials: "include",
       });
-      if (!response.ok) {
-        throw new Error("Logout failed");
-      }
-      // Redirect to login page
+      if (!response.ok) throw new Error("Logout failed");
       navigate("/sign-in");
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Handle Delete lesson slot
   const handleDeleteLesson = async (slotId) => {
-    console.log("Deleting slot with ID:", slotId);
     try {
       const response = await fetch(
         `http://localhost:3000/schedule/delete/${slotId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
+        { method: "DELETE", credentials: "include" }
       );
+      if (!response.ok) throw new Error("Failed to delete lesson");
 
-      if (!response.ok) {
-        throw new Error("Failed to delete lesson");
-      }
-
-      // Remove the deleted lesson from the state
       setScheduledLessons((prev) =>
         prev
           .map((doc) => ({
@@ -247,98 +191,107 @@ function UserCard({ authUser }) {
   };
 
   return (
-    <div className="">
-      <div className="flex justify-between items-center p-4 border-b">
-        <h1 className="text-2xl font-bold">Welcome {profile?.firstName}!</h1>
-        <button
-          className="text-blue-500 hover:underline"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
-      </div>
-      <div className="bg-gray-100 min-h-screen p-6 flex justify-center">
-        <div className="w-full max-w-7xl grid lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-8">
+        {/* Top bar */}
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow px-6 py-4 ring-1 ring-slate-200">
+          <h1 className="text-2xl font-bold text-slate-800">
+            Welcome {profile?.firstName}!
+          </h1>
+          <button
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Profile Card */}
-          <div className="lg:col-span-1 bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center">
-            <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-gray-200 shadow-lg cursor-pointer">
+          <div className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 flex flex-col items-center">
+            <div
+              className="relative w-44 h-44 rounded-full overflow-hidden border-4 border-slate-100 shadow cursor-pointer group"
+              onClick={handleImageClick}
+            >
               <img
                 src={userImage}
                 alt={`${profile?.firstName} ${profile?.lastName}`}
-                className="w-full h-full object-cover object-[80%_20%] transition-transform duration-300 transform hover:scale-105"
-                onClick={handleImageClick}
+                className="w-full h-full object-cover object-[80%_20%] transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute bottom-0 left-0 w-full h-12 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white font-semibold text-sm">
+              <div className="absolute bottom-0 left-0 w-full h-12 bg-slate-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white font-medium text-sm">
                 Change Image
               </div>
             </div>
-            <h2 className="mt-4 text-2xl font-bold text-gray-800 text-center">
+
+            <h2 className="mt-4 text-xl font-bold text-slate-900 text-center">
               {profile?.firstName} {profile?.lastName}
             </h2>
-            <p className="text-gray-600 text-center">{profile?.email}</p>
-            <p className="text-gray-600 text-center">{profile?.phone}</p>
-            <p className="text-gray-600 text-center">
+            <p className="text-slate-600 text-center">{profile?.email}</p>
+            <p className="text-slate-600 text-center">{profile?.phone}</p>
+            <p className="text-slate-600 text-center">
               DOB:{" "}
               {new Date(profile?.dateOfBirth)
                 .toLocaleDateString("en-GB")
                 .replaceAll("/", "-")}
             </p>
 
-            {/* Select Subjects and Lessons Form */}
             {authUser?.role === "teacher" && (
-              <SelectSubjectsForm
-                animatedComponents={animatedComponents}
-                subjectSelectOptions={subjectSelectOptions}
-                selectedSubjects={selectedSubjects}
-                handleSubjectChange={handleSubjectChange}
-                selectedLessonsBySubject={selectedLessonsBySubject}
-                handleLessonChange={handleLessonChange}
-                handleSave={handleSave}
-                subjectData={subjectData}
-              />
+              <div className="mt-6 w-full">
+                <SelectSubjectsForm
+                  animatedComponents={animatedComponents}
+                  subjectSelectOptions={subjectSelectOptions}
+                  selectedSubjects={selectedSubjects}
+                  handleSubjectChange={handleSubjectChange}
+                  selectedLessonsBySubject={selectedLessonsBySubject}
+                  handleLessonChange={handleLessonChange}
+                  handleSave={handleSave}
+                  subjectData={subjectData}
+                />
+              </div>
             )}
           </div>
 
-          {/* Display Scheduled Lessons */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          {/* Scheduled Lessons */}
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">
               Scheduled Lessons
             </h2>
+
+            {scheduledLessons.length === 0 && (
+              <p className="text-slate-500">No lessons scheduled.</p>
+            )}
+
             <div className="grid md:grid-cols-2 gap-6">
-              {scheduledLessons.length === 0 && (
-                <p className="text-gray-500">No lessons scheduled.</p>
-              )}
               {scheduledLessons.map((items) =>
                 items.slots.map((slot) => (
                   <div
                     key={slot?._id}
-                    className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl transition flex flex-col justify-between"
+                    className="bg-white rounded-2xl shadow-md ring-1 ring-slate-200 p-5 flex flex-col justify-between hover:shadow-lg transition"
                   >
                     <div className="space-y-1">
-                      <p className="font-bold text-gray-800 text-lg">
+                      <p className="font-semibold text-lg text-slate-900">
                         {slot.lesson.name}
                       </p>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-slate-600 text-sm">
                         {slot.date} {slot.time}
                       </p>
-                      {!profile?.isTeacher && (
+
+                      {!profile?.isTeacher ? (
                         <button
-                          className="bg-transparent hover:bg-blue-500 text-blue-700 text-sm font-medium hover:text-white py-1 px-3 border border-blue-500 hover:border-transparent rounded"
+                          className="mt-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
                           onClick={() => teacherInfo(items.teacher._id)}
                         >
-                          {`Teacher: ${items.teacher.firstName}
-                          ${items.teacher.lastName}`}
+                          Teacher: {items.teacher.firstName}{" "}
+                          {items.teacher.lastName}
                         </button>
-                      )}
-                      {profile?.isTeacher && (
-                        <p className="text-gray-600 text-sm">
+                      ) : (
+                        <p className="text-slate-600 text-sm">
                           Student: {items.student.firstName}{" "}
                           {items.student.lastName}
                         </p>
                       )}
                     </div>
 
-                    {/* Join/Complete button logic */}
                     <div className="mt-3 flex gap-2">
                       {new Date(slot.date).setHours(
                         slot.time.split(":")[0],
@@ -346,21 +299,20 @@ function UserCard({ authUser }) {
                         0,
                         0
                       ) < new Date().setHours(new Date().getHours() + 1) ? (
-                        <span className="px-3 py-1 bg-red-600 text-white rounded-lg transition text-sm font-medium">
+                        <span className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium">
                           Completed
                         </span>
                       ) : (
                         <button
-                          className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
-                          type="button" // important if inside a form
-                          onClick={() => openVideoManager(slot?._id)} // open the video call page
+                          className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition"
+                          onClick={() => openVideoManager(slot?._id)}
                         >
                           Join Lesson
                         </button>
                       )}
 
                       <button
-                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
+                        className="px-3 py-1 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition"
                         onClick={() => handleDeleteLesson(slot?._id)}
                       >
                         Delete
@@ -372,6 +324,7 @@ function UserCard({ authUser }) {
             </div>
           </div>
         </div>
+
         <input
           type="file"
           accept="image/*"
@@ -379,8 +332,9 @@ function UserCard({ authUser }) {
           className="hidden"
           onChange={handleFileChange}
         />
+
         {loading && (
-          <p className="mt-2 text-gray-500 font-medium">Uploading...</p>
+          <p className="mt-2 text-slate-500 font-medium">Uploading...</p>
         )}
       </div>
     </div>

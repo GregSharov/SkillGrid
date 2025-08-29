@@ -20,18 +20,13 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   useEffect(() => {
     fetchData("teachers")
       .then((data) => {
-        // Filter data to get teachers for the specific lesson id (only teachers where subjects.length > 0)
-        setTeacherData(
-          filterData(data, lessonId).filter(
-            (teacher) => teacher.subjects.length > 0
-          )
+        let initial = filterData(data, lessonId).filter(
+          (t) => (t.subjects || []).length > 0
         );
-
-        // If subjectId is provided, filter teachers by subject as well
         if (subjectId) {
-          const selectedTeachers = filterData(data, subjectId);
-          setTeacherData(selectedTeachers);
+          initial = filterData(data, subjectId);
         }
+        setTeacherData(initial);
       })
       .catch((err) => console.error("Error fetching data", err));
   }, [lessonId, subjectId]);
@@ -40,22 +35,20 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   useEffect(() => {
     const updateWidth = () => {
       if (carouselRef.current?.firstChild) {
-        const productElement = carouselRef.current.firstChild;
-        const style = window.getComputedStyle(productElement);
-        const width = productElement.offsetWidth;
+        const el = carouselRef.current.firstChild;
+        const style = window.getComputedStyle(el);
+        const width = el.offsetWidth;
         const margin = parseFloat(style.marginRight);
         setProductWidth(width + margin);
       }
     };
     updateWidth();
-
-    // Observe changes to the carousel container
-    const resizeObserver = new ResizeObserver(updateWidth);
-    if (carouselRef.current) resizeObserver.observe(carouselRef.current);
-    return () => resizeObserver.disconnect();
+    const ro = new ResizeObserver(updateWidth);
+    if (carouselRef.current) ro.observe(carouselRef.current);
+    return () => ro.disconnect();
   }, [teacherData.length]);
 
-  // Scroll to the selected teacher
+  // Scroll helpers
   const scrollToTeachers = (index) => {
     if (carouselRef.current && productWidth > 0) {
       carouselRef.current.scrollTo({
@@ -65,162 +58,210 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
       setCurrentIndex(index);
     }
   };
+  const handlePrev = () =>
+    currentIndex > 0 && scrollToTeachers(currentIndex - 1);
+  const handleNext = () =>
+    currentIndex < teacherData.length - 1 && scrollToTeachers(currentIndex + 1);
 
-  // Handle previous and next buttons
-  const handlePrev = () => {
-    if (currentIndex > 0) scrollToTeachers(currentIndex - 1);
-  };
-  const handleNext = () => {
-    if (currentIndex < teacherData.length - 1)
-      scrollToTeachers(currentIndex + 1);
-  };
-
-  // Handle keyboard navigation
-  const handleKeyPress = (e, direction) => {
+  const handleKeyPress = (e, dir) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      direction === "left" ? handlePrev() : handleNext();
+      dir === "left" ? handlePrev() : handleNext();
     }
   };
 
-  // Update current index on scroll
+  // Sync index on scroll
   useEffect(() => {
-    const handleScroll = () => {
+    const onScroll = () => {
       if (carouselRef.current && productWidth > 0) {
-        const scrollPosition = carouselRef.current.scrollLeft;
-        const newIndex = Math.round(scrollPosition / productWidth);
+        const newIndex = Math.round(
+          carouselRef.current.scrollLeft / productWidth
+        );
         if (newIndex !== currentIndex) setCurrentIndex(newIndex);
       }
     };
-    const carousel = carouselRef.current;
-    carousel?.addEventListener("scroll", handleScroll);
-    return () => carousel?.removeEventListener("scroll", handleScroll);
+    const el = carouselRef.current;
+    el?.addEventListener("scroll", onScroll);
+    return () => el?.removeEventListener("scroll", onScroll);
   }, [currentIndex, productWidth]);
 
   return (
-    <div className="w-full px-4 py-2 bg-gray-50">
-      <div className="max-w-7xl mx-auto relative">
-        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center tracking-wide">
-          T e a c h e r s
-        </h2>
+    <div className="w-full px-4 py-10">
+      <div className="mx-auto max-w-7xl">
+        {/* Title */}
+        {/* <div className="mb-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Meet the <span className="text-indigo-600">Teachers</span>
+          </h2>
+          <p className="mt-1 text-slate-600 text-sm">
+            Browse mentors and open profiles to learn more.
+          </p>
+        </div> */}
 
         {teacherData.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No teachers available at the moment.
-            </p>
+          <div className="grid place-items-center py-16">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-slate-100 ring-1 ring-slate-200" />
+              <p className="text-slate-600 text-lg">
+                No teachers available at the moment.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="relative group">
-            {/* Previous Button */}
+          <div className="relative">
+            {/* Prev */}
             <button
               onClick={handlePrev}
               onKeyDown={(e) => handleKeyPress(e, "left")}
               disabled={currentIndex === 0}
-              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                currentIndex === 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : "opacity-90 hover:opacity-100"
-              }`}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10
+                inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 shadow
+                hover:shadow-md hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition
+                ${currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Previous teachers"
             >
-              <FaChevronLeft className="w-5 h-5 text-gray-700" />
+              <FaChevronLeft className="h-4 w-4 text-slate-700" />
             </button>
 
-            {/* Carousel Container */}
+            {/* Track */}
             <div
               ref={carouselRef}
-              className="flex overflow-x-auto gap-6 pb-6 scroll-smooth px-2"
+              className="flex gap-6 overflow-x-auto scroll-smooth pb-6 px-2 scrollbar-hide"
               style={{ scrollSnapType: "x mandatory" }}
             >
-              {/* Teacher's Card */}
-              {/* Filter and hide teachers with empty subjects */}
-              {teacherData.map((teacher) => (
-                <div
-                  key={teacher._id}
-                  className="flex-none w-64"
-                  style={{ scrollSnapAlign: "start" }}
-                >
-                  <div className="bg-white overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 h-[28rem] flex flex-col">
-                    {/* Larger Image */}
-                    <div className="relative h-1/2 w-full">
-                      <img
-                        src={teacher.image}
-                        alt={teacher.firstName}
-                        className="absolute h-full w-full object-[95%_5%] object-cover"
-                        loading="lazy"
-                      />
-                    </div>
+              {teacherData.map((teacher) => {
+                const subjectsCount = (teacher.subjects || []).length;
+                const rating =
+                  typeof teacher.rating === "number" ? teacher.rating : null; // use if provided
 
-                    {/* Smaller scrollable subjects/lessons */}
-                    <div className="flex flex-col h-1/3 flex-grow p-4 gap-2">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {teacher.firstName} {teacher.lastName}
-                      </h3>
+                return (
+                  <div
+                    key={teacher._id}
+                    className="flex-none w-64"
+                    style={{ scrollSnapAlign: "start" }}
+                  >
+                    <div className="h-[28rem] overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200 transition hover:shadow-xl flex flex-col">
+                      {/* Restored image dimensions */}
+                      <div className="relative h-1/2 w-full">
+                        <img
+                          src={teacher.image}
+                          alt={`${teacher.firstName} ${teacher.lastName}`}
+                          className="absolute h-full w-full object-cover object-[95%_5%]"
+                          loading="lazy"
+                        />
+                        {/* gradient for legibility */}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/10 to-transparent" />
 
-                      <div className="flex flex-col gap-1 flex-grow overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300">
-                        {teacher.subjects.length === 0 ? (
-                          <p className="text-gray-500 text-sm">
-                            No subjects assigned
-                          </p>
-                        ) : (
-                          teacher.subjects.map((subject, idx) => (
-                            <div key={idx}>
-                              <h4 className="font-medium text-gray-800 truncate">
-                                {subject.name}
-                              </h4>
-                              {subject.lessons &&
-                                subject.lessons.length > 0 && (
-                                  <ul className="list-disc ml-5 text-gray-600 text-sm truncate">
-                                    {subject.lessons.map((lesson, lidx) => (
-                                      <li key={lidx}>{lesson.name}</li>
-                                    ))}
-                                  </ul>
-                                )}
-                            </div>
-                          ))
-                        )}
+                        {/* Rating badge (top-left) */}
+                        <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="h-3.5 w-3.5 text-amber-500"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.402 8.167L12 18.896l-7.336 3.868 1.402-8.167L.132 9.21l8.2-1.192L12 .587z" />
+                          </svg>
+                          {rating !== null ? `${rating.toFixed(1)}` : "New"}
+                        </div>
                       </div>
 
-                      <button
-                        onClick={() => teacherInfo(teacher?._id)}
-                        className="mt-2 bg-blue-500 text-white text-sm font-medium py-2 px-3 rounded-md hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1"
-                      >
-                        View Profile
-                      </button>
+                      {/* Content (restored proportions) */}
+                      <div className="flex flex-col h-1/2 p-4 gap-2">
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          {teacher.firstName} {teacher.lastName}
+                        </h3>
+
+                        {/* Chips */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">
+                            Teacher
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                            {subjectsCount}{" "}
+                            {subjectsCount === 1 ? "Subject" : "Subjects"}
+                          </span>
+                        </div>
+
+                        {/* Scrollable subjects/lessons */}
+                        <div className="mt-1 flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300">
+                          {subjectsCount === 0 ? (
+                            <p className="text-slate-500 text-sm">
+                              No subjects assigned
+                            </p>
+                          ) : (
+                            teacher.subjects.map((subject, idx) => (
+                              <div key={idx} className="mb-2">
+                                <h4 className="font-medium text-slate-800 truncate">
+                                  {subject.name}
+                                </h4>
+                                {Array.isArray(subject.lessons) &&
+                                  subject.lessons.length > 0 && (
+                                    <ul className="list-disc ml-5 text-slate-600 text-sm">
+                                      {subject.lessons.map((lesson, lidx) => (
+                                        <li key={lidx} className="truncate">
+                                          {lesson.name}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => teacherInfo(teacher?._id)}
+                          className="mt-2 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition"
+                        >
+                          View Profile
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
+            {/* Next */}
             <button
               onClick={handleNext}
               onKeyDown={(e) => handleKeyPress(e, "right")}
               disabled={currentIndex === teacherData.length - 1}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                currentIndex === teacherData.length - 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "opacity-90 hover:opacity-100"
-              }`}
-              aria-label="Next teacher"
+              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10
+                inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 shadow
+                hover:shadow-md hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition
+                ${
+                  currentIndex === teacherData.length - 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+              aria-label="Next teachers"
             >
-              <FaChevronRight className="w-5 h-5 text-gray-700" />
+              <FaChevronRight className="h-4 w-4 text-slate-700" />
             </button>
           </div>
         )}
 
-        <div className="flex justify-center mt-6 gap-2">
-          {teacherData.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => scrollToTeachers(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? "bg-blue-600 w-4" : "bg-gray-300"
-              }`}
-              aria-label={`Go to teacher ${index + 1}`}
-            />
-          ))}
+        {/* Dots */}
+        <div className="mt-4 flex justify-center gap-2">
+          {teacherData.map((_, index) => {
+            const active = index === currentIndex;
+            return (
+              <button
+                key={index}
+                onClick={() => scrollToTeachers(index)}
+                className={`h-2 rounded-full transition-all
+                  ${
+                    active
+                      ? "w-6 bg-indigo-600"
+                      : "w-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                aria-label={`Go to teacher ${index + 1}`}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

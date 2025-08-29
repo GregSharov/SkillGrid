@@ -20,17 +20,13 @@ const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
   // Fetching data from Subjects database then filtering it to get the lessons data by id
   useEffect(() => {
     fetchData("subjects")
-      .then((data) => {
-        // Filter data to get lessons for the specific subject id
-        setLessonsData(filterData(data, subjectId));
-      })
+      .then((data) => setLessonsData(filterData(data, subjectId)))
       .catch((err) => console.error("Error fetching data", err));
   }, [subjectId]);
 
   const lessons = lessonsArray
     ? lessonsArray
     : lessonData.flatMap((lesson) => lesson.lessons || []);
-  // console.log("Lessons Data:", lessons);
 
   // Calculate product width on mount and resize
   useEffect(() => {
@@ -45,12 +41,8 @@ const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
     };
 
     updateWidth();
-
     const resizeObserver = new ResizeObserver(updateWidth);
-    if (carouselRef.current) {
-      resizeObserver.observe(carouselRef.current);
-    }
-
+    if (carouselRef.current) resizeObserver.observe(carouselRef.current);
     return () => resizeObserver.disconnect();
   }, []);
 
@@ -64,17 +56,10 @@ const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
     }
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      scrollToLessons(currentIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < lessons.length - 1) {
-      scrollToLessons(currentIndex + 1);
-    }
-  };
+  const handlePrev = () =>
+    currentIndex > 0 && scrollToLessons(currentIndex - 1);
+  const handleNext = () =>
+    currentIndex < lessons.length - 1 && scrollToLessons(currentIndex + 1);
 
   const handleKeyPress = (e, direction) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -89,81 +74,87 @@ const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
       if (carouselRef.current && productWidth > 0) {
         const scrollPosition = carouselRef.current.scrollLeft;
         const newIndex = Math.round(scrollPosition / productWidth);
-        if (newIndex !== currentIndex) {
-          setCurrentIndex(newIndex);
-        }
+        if (newIndex !== currentIndex) setCurrentIndex(newIndex);
       }
     };
-
     const carousel = carouselRef.current;
     carousel?.addEventListener("scroll", handleScroll);
     return () => carousel?.removeEventListener("scroll", handleScroll);
   }, [currentIndex, productWidth]);
 
   return (
-    <div className="w-full px-4 py-2 bg-gray-50">
-      <div className="max-w-7xl mx-auto relative">
-        {/* Lesson section */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-          L e s s o n s
-        </h2>
+    <div className="w-full px-4 py-10">
+      <div className="mx-auto max-w-7xl">
+        {/* Title */}
+        {/* <div className="mb-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            Featured <span className="text-indigo-600">Lessons</span>
+          </h2>
+          <p className="mt-1 text-slate-600 text-sm">
+            Explore lessons and open details to book your session.
+          </p>
+        </div> */}
 
-        <div className="relative group">
+        {/* Carousel wrapper */}
+        <div className="relative">
           {/* Previous Button */}
           <button
             onClick={handlePrev}
             onKeyDown={(e) => handleKeyPress(e, "left")}
             disabled={currentIndex === 0}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              currentIndex === 0
-                ? "opacity-50 cursor-not-allowed"
-                : "opacity-90 hover:opacity-100"
-            }`}
+            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10
+              inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 shadow
+              hover:shadow-md hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition
+              ${currentIndex === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
             aria-label="Previous lessons"
           >
-            <FaChevronLeft className="w-4 h-4 text-gray-700" />
+            <FaChevronLeft className="h-4 w-4 text-slate-700" />
           </button>
 
-          {/* Carousel Container */}
+          {/* Track */}
           <div
             ref={carouselRef}
-            className="flex overflow-x-auto scrollbar-hide gap-6 pb-6 scroll-smooth px-2"
+            className="flex gap-6 overflow-x-auto scroll-smooth pb-6 px-2 scrollbar-hide"
             style={{ scrollSnapType: "x mandatory" }}
           >
-            {lessons.map((product) => (
+            {lessons.map((lesson) => (
               <div
-                key={product._id}
+                key={lesson._id}
                 className="flex-none w-64"
                 style={{ scrollSnapAlign: "start" }}
-                onClick={() => onLessonClick?.(product)}
+                onClick={() => onLessonClick?.(lesson)}
               >
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-                  <div className="relative pb-[75%]">
+                <div className="h-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200 transition hover:shadow-xl flex flex-col">
+                  {/* Image */}
+                  <div className="relative pb-[66%]">
                     <img
-                      src={product.image}
-                      alt={product.name}
-                      className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      src={lesson.image}
+                      alt={lesson.name}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                       loading="lazy"
                     />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/10 to-transparent" />
                   </div>
-                  <div className="p-4 flex-grow flex flex-col">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {product.name}
+
+                  {/* Content */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {lesson.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
-                      {product.description}
+                    <p className="mt-1 text-slate-600 text-sm line-clamp-2 flex-1">
+                      {lesson.description}
                     </p>
-                    <div className="flex items-center justify-between mt-auto">
+
+                    <div className="mt-3">
                       <button
-                        // more information about the lesson
-                        onClick={() => {
-                          lessonInfo(product._id);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          lessonInfo(lesson._id);
                         }}
-                        className="flex items-center gap-1 bg-blue-400 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 text-sm"
-                        aria-label={`Sign up for ${product.name}`}
+                        className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition"
+                        aria-label={`More information about ${lesson.name}`}
                       >
-                        {/* <BsCart3 className="w-4 h-4" /> */}
-                        <span>More information</span>
+                        More information
                       </button>
                     </div>
                   </div>
@@ -177,29 +168,38 @@ const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
             onClick={handleNext}
             onKeyDown={(e) => handleKeyPress(e, "right")}
             disabled={currentIndex === lessons.length - 1}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white p-1.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              currentIndex === lessons.length - 1
-                ? "opacity-50 cursor-not-allowed"
-                : "opacity-90 hover:opacity-100"
-            }`}
-            aria-label="Next lesson"
+            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10
+              inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 shadow
+              hover:shadow-md hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition
+              ${
+                currentIndex === lessons.length - 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            aria-label="Next lessons"
           >
-            <FaChevronRight className="w-4 h-4 text-gray-700" />
+            <FaChevronRight className="h-4 w-4 text-slate-700" />
           </button>
         </div>
 
-        {/* Navigation Indicators */}
-        <div className="flex justify-center mt-4 gap-2">
-          {lessons.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => scrollToLessons(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? "bg-blue-600 w-4" : "bg-gray-300"
-              }`}
-              aria-label={`Go to lesson ${index + 1}`}
-            />
-          ))}
+        {/* Dots */}
+        <div className="mt-4 flex justify-center gap-2">
+          {lessons.map((_, index) => {
+            const active = index === currentIndex;
+            return (
+              <button
+                key={index}
+                onClick={() => scrollToLessons(index)}
+                className={`h-2 rounded-full transition-all
+                  ${
+                    active
+                      ? "w-6 bg-indigo-600"
+                      : "w-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                aria-label={`Go to lesson ${index + 1}`}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

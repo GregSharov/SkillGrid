@@ -29,16 +29,13 @@ function DisplayTeacherData() {
   const isSlotConflicting = (time, dateObj) => {
     const hour = Number(String(time).split(":")[0]);
 
-    // clone and normalize the chosen date to the selected hour, zeroing minutes/seconds/ms
     const chosen = new Date(dateObj);
     chosen.setHours(hour, 0, 0, 0);
 
     return teacherScheduledLessons.some((slot) => {
       const slotHour = Number(String(slot.time).split(":")[0]);
-
       const slotDate = new Date(slot.date);
       slotDate.setHours(slotHour, 0, 0, 0);
-
       return slotDate.getTime() === chosen.getTime();
     });
   };
@@ -64,9 +61,8 @@ function DisplayTeacherData() {
 
   // Generate time slots for the day
   const timeSlots = [];
-  for (let hour = 7; hour < 20; hour++) {
+  for (let hour = 7; hour < 20; hour++)
     timeSlots.push(`${hour.toString().padStart(2, "0")}:00`);
-  }
 
   // Get the start and end dates of the week
   const getWeekDates = (offset) => {
@@ -91,18 +87,14 @@ function DisplayTeacherData() {
   // Cell click handler
   const handleCellClick = (day, time, date) => {
     const key = `${day}-${time}-${date}`;
-
-    // Check if the slot is already selected
     const exists = selectedSlots.find((slot) => slot.key === key);
 
-    // If the slot is already selected, unselect it
     if (exists) {
-      setSelectedSlots(selectedSlots.filter((slot) => slot.key !== key));
+      setSelectedSlots((s) => s.filter((slot) => slot.key !== key));
     } else {
-      // Add new slot with lesson details
-      setSelectedSlots([
-        ...selectedSlots,
-        { key, day, time, date, lesson: { ...chosenLesson } }, // copy of lesson
+      setSelectedSlots((s) => [
+        ...s,
+        { key, day, time, date, lesson: { ...chosenLesson } },
       ]);
     }
   };
@@ -113,8 +105,6 @@ function DisplayTeacherData() {
       alert("Please select at least one slot.");
       return;
     }
-
-    // guard against double-clicks
     if (isBooking || inFlightRef.current) return;
 
     setIsBooking(true);
@@ -135,17 +125,15 @@ function DisplayTeacherData() {
 
       if (!response.ok) {
         setResponseData(data);
-        setResStyleColor("text-red-500");
+        setResStyleColor("text-red-600");
         throw new Error("Failed to schedule lessons");
       }
 
-      // Reset UI
       setChosenLesson(lessonsArray[0] || null);
       setSelectedSlots([]);
       setResponseData(data);
-      setResStyleColor("text-green-500");
+      setResStyleColor("text-emerald-600");
 
-      // Refetch booked slots so the table updates immediately
       await fetchTeacherScheduledLessons();
     } catch (error) {
       console.error("Error scheduling lessons:", error);
@@ -161,7 +149,10 @@ function DisplayTeacherData() {
     try {
       const response = await fetch(
         `http://localhost:3000/schedule/user/${teacherId}`,
-        { method: "GET", credentials: "include" }
+        {
+          method: "GET",
+          credentials: "include",
+        }
       );
       const data = await response.json();
       if (response.ok) {
@@ -175,7 +166,6 @@ function DisplayTeacherData() {
     }
   }, [teacherId]);
 
-  // Call fetchTeacherScheduledLessons when teacherId changes
   useEffect(() => {
     fetchTeacherScheduledLessons();
   }, [fetchTeacherScheduledLessons]);
@@ -189,17 +179,12 @@ function DisplayTeacherData() {
           credentials: "include",
         });
         const data = await response.json();
-        // console.log("Fetched student data:", data);
-        if (response.ok) {
-          setStudent(data.user);
-        } else {
-          console.error("Error fetching student data:", data);
-        }
+        if (response.ok) setStudent(data.user);
+        else console.error("Error fetching student data:", data);
       } catch (error) {
         console.error("Error fetching student data:", error);
       }
     };
-
     fetchStudentId();
   }, []);
 
@@ -215,20 +200,13 @@ function DisplayTeacherData() {
           }
         );
         const data = await response.json();
-        // console.log("Fetched student profile:", data);
-        if (response.ok) {
-          setStudentProfile(data.user);
-        } else {
-          console.error("Error fetching student profile:", data);
-        }
+        if (response.ok) setStudentProfile(data.user);
+        else console.error("Error fetching student profile:", data);
       } catch (error) {
         console.error("Error fetching student profile:", error);
       }
     };
-
-    if (student) {
-      fetchStudentProfile();
-    }
+    if (student) fetchStudentProfile();
   }, [student]);
 
   // Fetch teacher profile
@@ -243,31 +221,23 @@ function DisplayTeacherData() {
           }
         );
         const data = await response.json();
-        if (response.ok) {
-          setTeacherProfile(data.user);
-        } else {
-          console.error("Error fetching teacher profile:");
-        }
+        if (response.ok) setTeacherProfile(data.user);
+        else console.error("Error fetching teacher profile:");
       } catch (error) {
         console.error("Error fetching teacher profile:", error);
       }
     };
-
-    if (teacherId) {
-      fetchTeacherProfile();
-    }
+    if (teacherId) fetchTeacherProfile();
   }, [teacherId]);
 
   // Set lessons from teacher profile
   useEffect(() => {
     try {
-      const lessonsArray =
+      const la =
         teacherProfile?.subjects.flatMap((subject) => subject.lessons || []) ||
         [];
-      setLessonsArray(lessonsArray);
-
-      // Set choosen lesson as first from teacher's lesson array
-      setChosenLesson(lessonsArray[0] || null);
+      setLessonsArray(la);
+      setChosenLesson(la[0] || null);
     } catch (error) {
       console.error("Error setting teacher lessons:", error);
     }
@@ -276,201 +246,261 @@ function DisplayTeacherData() {
   return (
     <>
       {teacherProfile ? (
-        <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-50 py-12 px-4">
-          <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-10">
-            {/* Teacher Info */}
-            <div className="flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-blue-100 to-blue-50 p-6 rounded-2xl shadow-inner">
-              <img
-                src={teacherProfile.image}
-                alt={`${teacherProfile.firstName} ${teacherProfile.lastName}`}
-                className="w-44 h-44 object-cover rounded-full shadow-xl border-4 border-white"
-              />
-              <div className="text-center md:text-left">
-                <p className="text-4xl font-bold text-gray-800">
-                  {teacherProfile.firstName} {teacherProfile.lastName}
-                </p>
-                <p className="text-gray-600 text-lg mt-2">
-                  Experienced Teacher
-                </p>
-              </div>
-            </div>
+        <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-10 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            {/* Header Card */}
+            <div className="relative overflow-hidden rounded-3xl bg-white shadow-[0_10px_35px_-10px_rgba(30,58,138,0.25)] ring-1 ring-indigo-100">
+              {/* Decorative top border */}
+              <div className="h-1 w-full bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500" />
+              <div className="p-8 sm:p-10">
+                {/* Teacher Info */}
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="relative shrink-0">
+                    <img
+                      src={teacherProfile.image}
+                      alt={`${teacherProfile.firstName} ${teacherProfile.lastName}`}
+                      className="h-28 w-28 sm:h-32 sm:w-32 rounded-full object-cover ring-4 ring-white shadow-xl"
+                    />
+                    <span className="absolute -bottom-1 -right-1 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                      Verified
+                    </span>
+                  </div>
 
-            <div className="my-8 border-t border-gray-200" />
+                  <div className="flex-1">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                      {teacherProfile.firstName} {teacherProfile.lastName}
+                    </h1>
+                    <p className="mt-1 text-slate-600">
+                      Experienced Teacher • Personalized 1-on-1 sessions
+                    </p>
 
-            {/* Lessons Carousel */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-700 mb-3">
-                Lessons Taught
-              </h2>
-              {lessonsArray.length > 0 ? (
-                <div className="bg-white rounded-xl shadow-lg p-4">
-                  <CarouselLessons
-                    subjectId={null}
-                    lessonsArray={lessonsArray}
-                    onLessonClick={(lesson) => setChosenLesson(lesson)}
-                  />
+                    {/* Quick stats */}
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                      <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 font-medium text-indigo-700 ring-1 ring-indigo-200">
+                        Lessons: {lessonsArray.length}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 font-medium text-sky-700 ring-1 ring-sky-200">
+                        Week: {formatDate(start)} – {formatDate(end)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-gray-500">No lessons available</p>
-              )}
-            </div>
 
-            {/* Choose Lesson */}
-            <div className="mb-6 flex flex-wrap items-center gap-4">
-              <label className="font-medium text-gray-700">
-                Select Lesson:
-              </label>
-              <select
-                className="px-4 py-2 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-300 focus:outline-none transition"
-                value={chosenLesson?.name || ""}
-                onChange={(e) => {
-                  const lesson = lessonsArray.find(
-                    (l) => l.name === e.target.value
-                  );
-                  setChosenLesson(lesson);
-                }}
-              >
-                {lessonsArray.map((lesson) => (
-                  <option key={lesson._id} value={lesson.name}>
-                    {lesson.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {/* Divider */}
+                <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
-            {/* Week Selector */}
-            <div className="mb-6 flex items-center gap-4 justify-center flex-wrap">
-              <button
-                className="px-5 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
-                onClick={() => setSelectedWeekOffset((w) => w - 1)}
-              >
-                ← Previous Week
-              </button>
-              <span className="text-lg font-semibold text-gray-700">
-                {formatDate(start)} – {formatDate(end)}
-              </span>
-              <button
-                className="px-5 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
-                onClick={() => setSelectedWeekOffset((w) => w + 1)}
-              >
-                Next Week →
-              </button>
-            </div>
+                {/* Lessons Carousel */}
+                <section className="mt-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-3">
+                    Lessons Taught
+                  </h2>
+                  {lessonsArray.length > 0 ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-3 sm:p-4">
+                      <CarouselLessons
+                        subjectId={null}
+                        lessonsArray={lessonsArray}
+                        onLessonClick={(lesson) => setChosenLesson(lesson)}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-slate-500">No lessons available.</p>
+                  )}
+                </section>
 
-            {/* Schedule Table */}
-            <div className="overflow-x-auto rounded-xl shadow-inner">
-              <table className="w-full border-collapse border border-gray-200 text-sm">
-                <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
-                  <tr>
-                    <th className="border border-gray-200 p-2">Time</th>
-                    {daysOfWeek.map((day, idx) => {
-                      const date = new Date(start);
-                      date.setDate(start.getDate() + idx);
-                      return (
-                        <th key={day} className="border border-gray-200 p-2">
-                          {day}
-                          <div className="text-xs text-gray-500">
-                            {formatDate(date)}
-                          </div>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {timeSlots.map((time, rowIndex) => (
-                    <tr
-                      key={time}
-                      className={`${
-                        rowIndex % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      } hover:bg-blue-50 transition`}
-                    >
-                      <td className="border border-gray-200 p-2 font-medium">
-                        {time}
-                      </td>
-
-                      {/* Day Cells */}
-                      {daysOfWeek.map((day, idx) => {
-                        const date = new Date(start);
-                        date.setDate(start.getDate() + idx);
-                        const formattedDate = formatDate(date);
-                        const key = `${day}-${time}-${formattedDate}`;
-                        const selected = selectedSlots.find(
-                          (s) => s.key === key
+                {/* Select Lesson */}
+                <section className="mt-6">
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Select Lesson
+                  </label>
+                  <div className="relative w-full max-w-sm">
+                    <select
+                      className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm transition focus:outline-none focus:ring-4 focus:ring-sky-100"
+                      value={chosenLesson?.name || ""}
+                      onChange={(e) => {
+                        const lesson = lessonsArray.find(
+                          (l) => l.name === e.target.value
                         );
+                        setChosenLesson(lesson);
+                      }}
+                    >
+                      {lessonsArray.map((lesson) => (
+                        <option key={lesson._id} value={lesson.name}>
+                          {lesson.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                      ▾
+                    </span>
+                  </div>
+                </section>
 
-                        const slotDate = new Date(date);
-                        slotDate.setHours(Number(time.split(":")[0]), 0, 0, 0);
+                {/* Week Selector */}
+                <section className="mt-6 flex flex-wrap items-center gap-3">
+                  <button
+                    className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-sky-100"
+                    onClick={() => setSelectedWeekOffset((w) => w - 1)}
+                  >
+                    ← Previous Week
+                  </button>
+                  <span className="text-sm sm:text-base font-semibold text-slate-800">
+                    {formatDate(start)} – {formatDate(end)}
+                  </span>
+                  <button
+                    className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-sky-100"
+                    onClick={() => setSelectedWeekOffset((w) => w + 1)}
+                  >
+                    Next Week →
+                  </button>
+                </section>
 
-                        const isPast = slotDate < new Date();
-
-                        if (isSlotConflicting(time, date)) {
-                          return (
-                            <td
-                              key={key}
-                              className="border border-gray-300 p-2 text-center rounded-lg bg-red-100 text-gray-500 cursor-not-allowed"
-                              title="Slot unavailable"
-                            >
-                              Booked
-                            </td>
-                          );
-                        }
-
-                        return isPast ? (
-                          <td
-                            key={key}
-                            className="border border-gray-300 p-2 text-center rounded-lg bg-gray-100 cursor-not-allowed"
-                          />
-                        ) : (
-                          <td
-                            key={key}
-                            className={`border border-gray-200 p-2 text-center cursor-pointer transition-colors rounded-lg ${
-                              selected
-                                ? "bg-blue-500 text-white font-semibold"
-                                : "hover:bg-blue-100"
-                            }`}
-                            onClick={() =>
-                              handleCellClick(day, time, formattedDate)
+                {/* Schedule Table */}
+                <section className="mt-8">
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                    <table className="w-full border-collapse text-sm">
+                      <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-50 to-sky-50">
+                        <tr className="text-left text-slate-700">
+                          <th className="border-b border-slate-200 p-3 font-semibold">
+                            Time
+                          </th>
+                          {daysOfWeek.map((day, idx) => {
+                            const date = new Date(start);
+                            date.setDate(start.getDate() + idx);
+                            return (
+                              <th
+                                key={day}
+                                className="border-b border-slate-200 p-3 font-semibold"
+                              >
+                                <div>{day}</div>
+                                <div className="text-xs text-slate-500">
+                                  {formatDate(date)}
+                                </div>
+                              </th>
+                            );
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {timeSlots.map((time, rowIndex) => (
+                          <tr
+                            key={time}
+                            className={
+                              rowIndex % 2 === 0 ? "bg-slate-50/40" : "bg-white"
                             }
                           >
-                            {selected ? selected.lesson.name : ""}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                            <td className="border-t border-slate-200 p-3 font-medium text-slate-800">
+                              {time}
+                            </td>
+                            {daysOfWeek.map((day, idx) => {
+                              const date = new Date(start);
+                              date.setDate(start.getDate() + idx);
+                              const formattedDate = formatDate(date);
+                              const key = `${day}-${time}-${formattedDate}`;
+                              const selected = selectedSlots.find(
+                                (s) => s.key === key
+                              );
 
-            {/* Enroll Button */}
-            <div className="mt-8 text-center">
-              <button
-                onClick={handleEnroll}
-                disabled={isBooking}
-                aria-busy={isBooking}
-                className={`px-8 py-3 font-semibold rounded-2xl shadow-lg transition transform
-    ${
-      isBooking
-        ? "bg-gray-400 text-white cursor-not-allowed"
-        : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105"
-    }`}
-              >
-                {isBooking ? "Booking..." : "Book Selected Lessons"}
-              </button>
+                              const slotDate = new Date(date);
+                              slotDate.setHours(
+                                Number(time.split(":")[0]),
+                                0,
+                                0,
+                                0
+                              );
+                              const isPast = slotDate < new Date();
 
-              {responseData && (
-                <p className={`${resStyleColor} text-center mt-4`}>
-                  {responseData.message}
-                </p>
-              )}
+                              if (isSlotConflicting(time, date)) {
+                                return (
+                                  <td
+                                    key={key}
+                                    className="border-t border-slate-200 p-3 text-center"
+                                    title="Slot unavailable"
+                                  >
+                                    <span className="inline-flex items-center rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
+                                      Booked
+                                    </span>
+                                  </td>
+                                );
+                              }
+
+                              return isPast ? (
+                                <td
+                                  key={key}
+                                  className="border-t border-slate-200 p-3 text-center"
+                                  title="Past time"
+                                >
+                                  <span className="inline-flex h-7 w-full items-center justify-center rounded-lg bg-slate-100 text-slate-400 ring-1 ring-slate-200">
+                                    —
+                                  </span>
+                                </td>
+                              ) : (
+                                <td
+                                  key={key}
+                                  className="border-t border-slate-200 p-0 text-center"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleCellClick(day, time, formattedDate)
+                                    }
+                                    className={`m-1 inline-flex h-9 w-[96%] items-center justify-center rounded-xl border text-xs font-semibold transition
+                                      ${
+                                        selected
+                                          ? "border-transparent bg-indigo-600 text-white shadow hover:bg-indigo-700 active:scale-[0.98]"
+                                          : "border-slate-200 bg-white text-slate-700 hover:bg-indigo-50 hover:border-indigo-200 active:scale-[0.98]"
+                                      }`}
+                                  >
+                                    {selected ? selected.lesson.name : "Choose"}
+                                  </button>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* Footer Actions */}
+                <div className="mt-8 flex flex-col items-center gap-4">
+                  <button
+                    onClick={handleEnroll}
+                    disabled={isBooking}
+                    aria-busy={isBooking}
+                    className={`inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-lg transition
+                      ${
+                        isBooking
+                          ? "bg-slate-300 text-white"
+                          : "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98]"
+                      }`}
+                  >
+                    {isBooking ? "Booking..." : "Book Selected Lessons"}
+                  </button>
+
+                  {responseData && (
+                    <p className={`${resStyleColor} text-center text-sm`}>
+                      {responseData.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <p className="text-center text-gray-500 mt-20 text-lg">
-          No teacher data found.
-        </p>
+        // Empty state (no teacher loaded)
+        <div className="min-h-[60vh] grid place-items-center px-4">
+          <div className="max-w-md text-center">
+            <div className="mx-auto mb-4 h-14 w-14 rounded-2xl bg-slate-100 ring-1 ring-slate-200" />
+            <h3 className="text-xl font-semibold text-slate-800">
+              No teacher data found
+            </h3>
+            <p className="mt-1 text-slate-600">
+              Please return to the teachers list and select a profile.
+            </p>
+          </div>
+        </div>
       )}
     </>
   );
