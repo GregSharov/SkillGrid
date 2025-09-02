@@ -1,12 +1,18 @@
+// client/src/pages/CallPage.jsx
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 
-const SIGNALING_URL = "http://localhost:4000"; // your signaling server
+// ----- Dynamic signaling URL (no hard-coded localhost, no mixed content) -----
+const PROTO = window.location.protocol === "https:" ? "https" : "http";
+const HOST = window.location.hostname; // works for localhost, LAN hostnames, tunnels
+const PORT = 4000; // your signaling port
+const SIGNALING_URL = `${PROTO}://${HOST}:${PORT}`;
 
+// ----- ICE servers (add your TURN here for production/NAT traversal) -----
 const iceServers = [
   { urls: "stun:stun.l.google.com:19302" },
-  // For production/NAT traversal reliability add your TURN server here.
+  // { urls: "turn:YOUR_TURN_HOST:3478", username: "user", credential: "pass" },
 ];
 
 export default function CallPage() {
@@ -21,13 +27,25 @@ export default function CallPage() {
   const screenTrackRef = useRef(null);
 
   const [status, setStatus] = useState("Idle");
-  const [isInitiator, setIsInitiator] = useState(false);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [sharing, setSharing] = useState(false);
 
+  // Initiator state + ref (avoid stale closure inside socket handlers)
+  const [isInitiator, setIsInitiator] = useState(false);
+  const isInitiatorRef = useRef(false);
   useEffect(() => {
-    socketRef.current = io(SIGNALING_URL, { transports: ["websocket"] });
+    isInitiatorRef.current = isInitiator;
+  }, [isInitiator]);
+
+  // ---- Socket wiring + lifecycle ----
+  useEffect(() => {
+    // Create socket (allow polling fallback)
+    socketRef.current = io(SIGNALING_URL, {
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      path: "/socket.io",
+    });
 
     socketRef.current.on("connect", () => {
       setStatus("Connected to signaling");
@@ -36,11 +54,13 @@ export default function CallPage() {
 
     socketRef.current.on("created", async () => {
       setIsInitiator(true);
+      isInitiatorRef.current = true;
       await setupMediaAndPeer();
     });
 
     socketRef.current.on("joined", async () => {
       setIsInitiator(false);
+      isInitiatorRef.current = false;
       await setupMediaAndPeer();
     });
 
@@ -51,7 +71,7 @@ export default function CallPage() {
     });
 
     socketRef.current.on("ready", async () => {
-      if (isInitiator && pcRef.current) {
+      if (isInitiatorRef.current && pcRef.current) {
         const offer = await pcRef.current.createOffer();
         await pcRef.current.setLocalDescription(offer);
         socketRef.current.emit("offer", roomId, offer);
@@ -84,62 +104,120 @@ export default function CallPage() {
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     });
 
-    // cleanup
+    // Cleanup
     return () => {
-      socketRef.current?.emit("leave", roomId);
-      socketRef.current?.disconnect();
+      try {
+        socketRef.current?.emit("leave", roomId);
+        socketRef.current?.disconnect();
+      } catch {}
 
-      pcRef.current?.getSenders().forEach((s) => s.track?.stop());
-      pcRef.current?.close();
+      try {
+        pcRef.current?.getSenders().forEach((s) => s.track?.stop());
+        pcRef.current?.close();
+      } catch {}
       pcRef.current = null;
 
-      // stop screen track if any
-      screenTrackRef.current?.stop();
-      screenTrackRef.current = null;
+      try {
+        screenTrackRef.current?.stop();
+        screenTrackRef.current = null;
+      } catch {}
 
-      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      try {
+        localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      } catch {}
+      localStreamRef.current = null;
+
+      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     };
+    // NOTE: roomId only; we use isInitiatorRef to avoid re-wiring on isInitiator changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, isInitiator]);
+  }, [roomId]);
 
+  // ----- Media & Peer setup with graceful fallbacks -----
   const setupMediaAndPeer = async () => {
     setStatus("Getting media…");
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    localStreamRef.current = stream;
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
+    let localStream = null;
+    let sendVideo = false;
+    let sendAudio = false;
+
+    // 1) Try camera+mic
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      sendVideo = true;
+      sendAudio = true;
+    } catch (err) {
+      console.warn("getUserMedia error:", err?.name, err?.message);
+      // 2) If camera blocked or constraints fail, try mic-only
+      if (
+        err?.name === "NotAllowedError" ||
+        err?.name === "SecurityError" ||
+        err?.name === "OverconstrainedError"
+      ) {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true,
+          });
+          sendVideo = false;
+          sendAudio = true;
+          setCamOn(false);
+          setStatus("Camera blocked — audio-only mode");
+        } catch (err2) {
+          console.warn("Audio-only failed:", err2?.name, err2?.message);
+          // 3) No local media: recv-only
+          setCamOn(false);
+          setMicOn(false);
+          setStatus("No local media — recv-only");
+        }
+      } else {
+        setCamOn(false);
+        setMicOn(false);
+        setStatus(`Media error: ${err?.name || "unknown"}`);
+      }
+    }
+
+    // 4) Create peer connection
     const pc = new RTCPeerConnection({ iceServers });
     pcRef.current = pc;
 
-    // add local tracks
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    // 5) Match SDP to our intent even if we have no tracks
+    pc.addTransceiver("video", { direction: sendVideo ? "sendrecv" : "recvonly" });
+    pc.addTransceiver("audio", { direction: sendAudio ? "sendrecv" : "recvonly" });
 
-    // remote track handler
+    // 6) If we have stream, add tracks & preview
+    if (localStream) {
+      localStreamRef.current = localStream;
+      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+      if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+    }
+
+    // 7) Remote track handler
     pc.ontrack = (event) => {
       const [remoteStream] = event.streams;
-      if (remoteVideoRef.current)
-        remoteVideoRef.current.srcObject = remoteStream;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
     };
 
-    // relay local ICE candidates to peer
+    // 8) ICE -> signaling
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         socketRef.current?.emit("ice-candidate", roomId, event.candidate);
       }
     };
 
-    setStatus(isInitiator ? "Waiting for peer…" : "Joining room…");
+    setStatus(isInitiatorRef.current ? "Waiting for peer…" : "Joining room…");
   };
 
+  // ----- Controls -----
   const hangup = () => {
     socketRef.current?.emit("leave", roomId);
     navigate("/");
   };
 
-  // --- simple AV controls (local-only toggles) ---
   const toggleMic = () => {
     const audio = localStreamRef.current?.getAudioTracks()[0];
     if (!audio) return;
@@ -164,15 +242,12 @@ export default function CallPage() {
       screenTrackRef.current = screenTrack;
       setSharing(true);
 
-      // replace sender track for video if exists
       const sender = pcRef.current
         ?.getSenders()
         .find((s) => s.track?.kind === "video");
       if (sender) await sender.replaceTrack(screenTrack);
 
-      // display on local preview (optional UX)
-      if (localVideoRef.current)
-        localVideoRef.current.srcObject = displayStream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = displayStream;
 
       screenTrack.onended = async () => {
         await stopShare();
@@ -187,14 +262,12 @@ export default function CallPage() {
     screenTrackRef.current = null;
     setSharing(false);
 
-    // restore camera track
     const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
     const sender = pcRef.current
       ?.getSenders()
       .find((s) => s.track?.kind === "video");
     if (sender && cameraTrack) await sender.replaceTrack(cameraTrack);
-    if (localVideoRef.current)
-      localVideoRef.current.srcObject = localStreamRef.current;
+    if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
   };
 
   return (
@@ -222,7 +295,6 @@ export default function CallPage() {
 
         {/* Video grid */}
         <section className="rounded-3xl bg-white shadow-lg ring-1 ring-slate-200 p-4 sm:p-6">
-          {/* hairline */}
           <div className="h-1 w-full bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500 rounded-t-2xl -mt-4 mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Local video */}
