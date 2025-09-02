@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import fetchData from "../services/fetchData";
@@ -13,8 +12,8 @@ export default function SearchPage() {
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]); // lessons live under subjects
 
-  //  navigation helpers 
-  const openTeacher = (teacherId) => {
+  //  navigation helpers
+  const teacherInfo = (teacherId) => {
     if (!teacherId) return;
     navigate(`/teacher-info/${teacherId}`);
   };
@@ -23,13 +22,11 @@ export default function SearchPage() {
   //   navigate("/lesson-info", { state: { lesson } });
   // };
   const openLesson = (lesson) => {
-  if (!lesson?._id) return;
-  navigate("/lesson-info-search", { state: { lessonId: lesson._id } });
-};
+    if (!lesson?._id) return;
+    navigate("/lesson-info-search", { state: { lessonId: lesson._id } });
+  };
 
- 
-
-  //  fetch teachers + subjects once 
+  //  fetch teachers + subjects once
   useEffect(() => {
     let alive = true;
 
@@ -40,7 +37,8 @@ export default function SearchPage() {
           fetchData("subjects"),
         ]);
         if (!alive) return;
-        setTeachers(Array.isArray(tData) ? tData : []);
+        const verifiedTeachers = tData.filter((teacher) => teacher.subjects.length > 0);
+        setTeachers(verifiedTeachers);
         setSubjects(Array.isArray(sData) ? sData : []);
       } catch (e) {
         console.error("Search load failed", e);
@@ -55,7 +53,7 @@ export default function SearchPage() {
     };
   }, []);
 
-  //  normalize teachers: support [{teachers:[...]}] or flat array 
+  //  normalize teachers: support [{teachers:[...]}] or flat array
   const flatTeachers = useMemo(() => {
     if (!teachers?.length) return [];
     const first = teachers[0] || {};
@@ -64,7 +62,7 @@ export default function SearchPage() {
       : teachers;
   }, [teachers]);
 
-  //  flatten lessons out of subjects for easy listing/search 
+  //  flatten lessons out of subjects for easy listing/search
   // each lesson gets subject context so we can show it in the UI
   const flatLessons = useMemo(() => {
     if (!subjects?.length) return [];
@@ -77,7 +75,7 @@ export default function SearchPage() {
     );
   }, [subjects]);
 
-  //  filter with YOUR filterData (unchanged) 
+  //  filter with YOUR filterData (unchanged)
   // Note: filterData returns original array if q is empty
   const filteredTeachers = useMemo(
     () => filterData(flatTeachers, q),
@@ -103,68 +101,127 @@ export default function SearchPage() {
         {!filteredTeachers.length ? (
           <p className="text-gray-500">No matching teachers.</p>
         ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTeachers.map((t, i) => {
-              const displayName =
-                `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim() ||
-                t.name ||
-                "Unnamed";
+          <div className="flex space-x-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-thin scrollbar-thumb-slate-300" style={{ scrollSnapType: "x mandatory" }}>
+            {filteredTeachers.map((teacher) => {
+              const subjectsCount = (teacher.subjects || []).length;
 
-              const subjectsText =
-                (t.assignedSubjects || t.subjects || [])
-                  .map((s) => (typeof s === "string" ? s : s?.name))
-                  .filter(Boolean)
-                  .join(", ") || "—";
+              // --- NEW: robust rating detection ---
+              // Prefer ratingAverage/ratingCount from backend aggregation,
+              // fallback to teacher.rating when present, otherwise "New".
+              const ratingAvg =
+                typeof teacher.ratingAverage === "number"
+                  ? teacher.ratingAverage
+                  : typeof teacher.rating === "number"
+                  ? teacher.rating
+                  : null;
+              const ratingCount =
+                typeof teacher.ratingCount === "number"
+                  ? teacher.ratingCount
+                  : 0;
+              const badgeText =
+                ratingCount > 0 && ratingAvg !== null
+                  ? ratingAvg.toFixed(1)
+                  : "New";
+              // ------------------------------------
 
               return (
-                <li
-                  key={t._id ?? t.id ?? i}
-                  className="border rounded bg-white p-3 flex flex-col"
+                <div
+                  key={teacher._id}
+                  className="flex-none w-64"
+                  style={{ scrollSnapAlign: "start" }}
                 >
-                  <img
-                    src={t.image || "/images/user.png"}
-                    alt={displayName}
-                    className="w-full h-40 object-cover rounded mb-2"
-                    loading="lazy"
-                  />
-                  <div className="font-medium">{displayName}</div>
-                  <div className="text-sm text-gray-600">{subjectsText}</div>
+                  <div className="h-[28rem] overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200 transition hover:shadow-xl flex flex-col">
+                    {/* Restored image dimensions */}
+                    <div className="relative h-1/2 w-full">
+                      <img
+                        src={teacher.image}
+                        alt={`${teacher.firstName} ${teacher.lastName}`}
+                        className="absolute h-full w-full object-cover object-[95%_5%]"
+                        loading="lazy"
+                      />
+                      {/* gradient for legibility */}
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/10 to-transparent" />
 
-                  {/* optional: show root-level lessons if exist */}
-                  {Array.isArray(t.lessons) && t.lessons.length > 0 && (
-                    <div className="mt-2">
-                      <div className="text-xs font-semibold text-gray-500">
-                        Lessons
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {t.lessons
-                          .map((l) =>
-                            typeof l === "string" ? l : l?.name || l?.title || ""
-                          )
-                          .filter(Boolean)
-                          .map((nm, idx2) => (
-                            <span
-                              key={`${nm}-${idx2}`}
-                              className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700"
-                            >
-                              {nm}
-                            </span>
-                          ))}
+                      {/* Rating badge (top-left) */}
+                      <div
+                        className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow"
+                        title={
+                          ratingCount > 0 && ratingAvg !== null
+                            ? `${badgeText} average from ${ratingCount} review${
+                                ratingCount === 1 ? "" : "s"
+                              }`
+                            : "New teacher — no reviews yet"
+                        }
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="h-3.5 w-3.5 text-amber-500"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.402 8.167L12 18.896l-7.336 3.868 1.402-8.167L.132 9.21l8.2-1.192L12 .587z" />
+                        </svg>
+                        {badgeText}
                       </div>
                     </div>
-                  )}
 
-                  <button
-                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    onClick={() => openTeacher(t?._id)}
-                    aria-label={`View profile of ${displayName}`}
-                  >
-                    View Profile
-                  </button>
-                </li>
+                    {/* Content */}
+                    <div className="flex flex-col h-1/2 p-4 gap-2">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        {teacher.firstName} {teacher.lastName}
+                      </h3>
+
+                      {/* Chips */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">
+                          Teacher
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                          {subjectsCount}{" "}
+                          {subjectsCount === 1 ? "Subject" : "Subjects"}
+                        </span>
+                      </div>
+
+                      {/* Scrollable subjects/lessons */}
+                      <div className="mt-1 flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300">
+                        {subjectsCount === 0 ? (
+                          <p className="text-slate-500 text-sm">
+                            No subjects assigned
+                          </p>
+                        ) : (
+                          teacher.subjects.map((subject, idx) => (
+                            <div key={idx} className="mb-2">
+                              <h4 className="font-medium text-slate-800 truncate">
+                                {subject.name}
+                              </h4>
+                              {Array.isArray(subject.lessons) &&
+                                subject.lessons.length > 0 && (
+                                  <ul className="list-disc ml-5 text-slate-600 text-sm">
+                                    {subject.lessons.map((lesson, lidx) => (
+                                      <li key={lidx} className="truncate">
+                                        {lesson.name}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => teacherInfo(teacher?._id)}
+                        className="mt-2 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition"
+                      >
+                        View Profile
+                      </button>
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
       </section>
 
@@ -210,5 +267,3 @@ export default function SearchPage() {
     </div>
   );
 }
-
-
