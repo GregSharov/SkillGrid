@@ -15,7 +15,16 @@ var subfolder = "";
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     const { userId } = req.body;
-    subfolder = (await Student.findById(userId)) ? "students" : "teachers";
+    // subfolder = (await Student.findById(userId)) ? "students" : "teachers";
+    if (await Student.findById(userId)) {
+      subfolder = "students";
+    } else if (await Teacher.findById(userId)) {
+      subfolder = "teachers";
+    } else if (await Subject.findById(userId)) {
+      subfolder = "subjects";
+    } else {
+      subfolder = "lessons";
+    }
 
     const dir = `./images/${subfolder}`;
     // Ensure the directory exists
@@ -49,8 +58,15 @@ router.post("/upload", upload.single("image"), async (req, res) => {
     const imagePath = `http://localhost:3000/images/${subfolder}/${req.file.filename}`;
 
     // Detect correct model (Student or Teacher)
-    Model = (await Student.findById(userId)) ? Student : Teacher;
-
+    // Model = (await Student.findById(userId)) ? Student : Teacher;
+    if (await Student.findById(userId)) {
+      Model = Student;
+    } else if (await Teacher.findById(userId)) {
+      Model = Teacher;
+    } else {
+      Model = Subject;
+    }
+    
     const user = await Model.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found." });
 

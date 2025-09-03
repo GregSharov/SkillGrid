@@ -190,8 +190,11 @@ function DisplayTeacherData() {
           credentials: "include",
         });
         const data = await response.json();
-        if (response.ok) setStudent(data.user);
-        else console.error("Error fetching student data:", data);
+        if (response.ok) {
+          setStudent(data.user);
+        } else {
+          console.error("Error fetching student data:", data);
+        }
       } catch (error) {
         console.error("Error fetching student data:", error);
       }

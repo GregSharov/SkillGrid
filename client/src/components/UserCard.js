@@ -17,11 +17,13 @@ function UserCard({ authUser }) {
 
   const navigate = useNavigate();
 
+  // Navigate to teacher info page
   const teacherInfo = (teacherId) => {
     if (!teacherId) return;
     navigate(`/teacher-info/${teacherId}`);
   };
 
+  // Open video manager
   const openVideoManager = async (roomId) => {
     try {
       if (authUser?.role === "teacher") navigate(`/call/${roomId}`);
@@ -32,6 +34,7 @@ function UserCard({ authUser }) {
     }
   };
 
+  // Fetch user profile
   useEffect(() => {
     if (!authUser?.id) return;
     (async () => {
@@ -45,9 +48,11 @@ function UserCard({ authUser }) {
     })();
   }, [authUser]);
 
+  // File input reference
   const fileInputRef = useRef(null);
   const { uploadImage, loading } = useUploadImage();
 
+  // Handle save
   const handleSave = async () => {
     if (!selectedSubjects.length) return;
     const cleanSubjects = selectedSubjects.map((s) => ({
@@ -79,6 +84,7 @@ function UserCard({ authUser }) {
     }
   };
 
+  // Handle image upload
   const handleImageClick = () => fileInputRef.current.click();
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
@@ -87,6 +93,7 @@ function UserCard({ authUser }) {
     if (result?.imageUrl) setUserImage(result.imageUrl);
   };
 
+  // Fetch subjects data
   useEffect(() => {
     fetchData("subjects")
       .then((data) => {
@@ -96,8 +103,12 @@ function UserCard({ authUser }) {
             value: s._id,
             label: s.name,
           }));
+
+          // Pre-select subjects
           setSelectedSubjects(preSelectedSubjects);
           const preSelectedLessonsBySubject = {};
+
+          // Pre-select lessons for each subject
           profile.subjects.forEach((s) => {
             preSelectedLessonsBySubject[s._id] = (s.lessons || []).map((l) => ({
               value: l._id,
@@ -110,6 +121,7 @@ function UserCard({ authUser }) {
       .catch(console.error);
   }, [profile]);
 
+  // Fetch scheduled lessons
   useEffect(() => {
     const fetchScheduledLessons = async () => {
       try {
@@ -130,12 +142,14 @@ function UserCard({ authUser }) {
     fetchScheduledLessons();
   }, [authUser, navigate]);
 
+  // Prepare subject select options
   const subjectSelectOptions = subjectData.map((subject) => ({
     value: subject._id,
     label: subject.name,
     lessons: subject.lessons || [],
   }));
 
+  // Handle subject change
   const handleSubjectChange = (selected) => {
     setSelectedSubjects(selected || []);
     const updatedLessons = { ...selectedLessonsBySubject };
@@ -149,6 +163,7 @@ function UserCard({ authUser }) {
     setSelectedLessonsBySubject(updatedLessons);
   };
 
+  // Handle lesson change for a specific subject
   const handleLessonChange = (subjectId, selectedLessons) => {
     setSelectedLessonsBySubject((prev) => ({
       ...prev,
@@ -156,6 +171,7 @@ function UserCard({ authUser }) {
     }));
   };
 
+  // Handle logout
   const handleLogout = async () => {
     try {
       const response = await fetch("http://localhost:3000/user/logout", {
@@ -169,6 +185,7 @@ function UserCard({ authUser }) {
     }
   };
 
+  // Handle delete lesson
   const handleDeleteLesson = async (slotId) => {
     try {
       const response = await fetch(

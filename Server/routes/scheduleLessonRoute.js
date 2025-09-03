@@ -73,7 +73,8 @@ router.post("/add", async (req, res) => {
       data: savedScheduledLesson,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error scheduling lesson", error });
+    console.log("Error scheduling lesson:", error);
+    res.status(500).json({ message: "Please log in or sign up first" });
   }
 });
 
