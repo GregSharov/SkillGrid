@@ -472,20 +472,36 @@ function DisplayTeacherData() {
                                   key={key}
                                   className="border-t border-slate-200 p-0 text-center"
                                 >
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleCellClick(day, time, formattedDate)
-                                    }
-                                    className={`m-1 inline-flex h-9 w-[96%] items-center justify-center rounded-xl border text-xs font-semibold transition
+                                  {/* if isStudent === false disable onClick function */}
+                                  {isStudent ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleCellClick(
+                                          day,
+                                          time,
+                                          formattedDate
+                                        )
+                                      }
+                                      className={`m-1 inline-flex h-9 w-[96%] items-center justify-center rounded-xl border text-xs font-semibold transition
                                       ${
                                         selected
                                           ? "border-transparent bg-indigo-600 text-white shadow hover:bg-indigo-700 active:scale-[0.98]"
                                           : "border-slate-200 bg-white text-slate-700 hover:bg-indigo-50 hover:border-indigo-200 active:scale-[0.98]"
                                       }`}
-                                  >
-                                    {selected ? selected.lesson.name : "Choose"}
-                                  </button>
+                                    >
+                                      {selected
+                                        ? selected.lesson.name
+                                        : "Choose"}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="m-1 inline-flex h-9 w-[96%] items-center justify-center rounded-xl border text-xs font-semibold transition cursor-not-allowed text-slate-400"
+                                    >
+                                      "Choose"
+                                    </button>
+                                  )}
                                 </td>
                               );
                             })}
@@ -498,19 +514,21 @@ function DisplayTeacherData() {
 
                 {/* Footer Actions */}
                 <div className="mt-8 flex flex-col items-center gap-4">
-                  <button
-                    onClick={handleEnroll}
-                    disabled={isBooking}
-                    aria-busy={isBooking}
-                    className={`inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-lg transition
+                  {isStudent && (
+                    <button
+                      onClick={handleEnroll}
+                      disabled={isBooking}
+                      aria-busy={isBooking}
+                      className={`inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-lg transition
                       ${
                         isBooking
                           ? "bg-slate-300 text-white"
                           : "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98]"
                       }`}
-                  >
-                    {isBooking ? "Booking..." : "Book Selected Lessons"}
-                  </button>
+                    >
+                      {isBooking ? "Booking..." : "Book Selected Lessons"}
+                    </button>
+                  )}
 
                   {responseData && (
                     <p className={`${resStyleColor} text-center text-sm`}>
