@@ -514,7 +514,15 @@ function DisplayTeacherData() {
 
                 {/* Footer Actions */}
                 <div className="mt-8 flex flex-col items-center gap-4">
-                  {isStudent && (
+                  {!isStudent ? (
+                    <button
+                      disabled={isBooking}
+                      aria-busy={isBooking}
+                      className={"inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-lg transition bg-indigo-600 text-white active:scale-[0.98]"}
+                    >
+                      Log in as student to book lessons
+                    </button>
+                  ) : (
                     <button
                       onClick={handleEnroll}
                       disabled={isBooking}
