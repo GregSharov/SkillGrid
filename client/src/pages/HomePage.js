@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import CarouselSubjects from "../carouselSubjects.js";
 import CarouselLessons from "../carouselLessons.js";
 import LessonInfoPage from "../pages/lessonInfoPage.js";
@@ -7,6 +7,17 @@ import CarouselTeachers from "../carouselTeachers.js";
 const Home = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
+
+  const targetRefToLessons = useRef(null);
+  const targetRefToTeachers = useRef(null);
+
+  const scrollToTeachers = () => {
+    targetRefToTeachers.current?.scrollIntoView({ behavior: "smooth" }); // 'smooth' for animated scroll
+  };
+
+  const scrollToLessons = () => {
+    targetRefToLessons.current?.scrollIntoView({ behavior: "smooth" }); // 'smooth' for animated scroll
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40">
@@ -28,14 +39,6 @@ const Home = () => {
         <div className="mx-auto max-w-7xl space-y-10">
           {/* Subjects */}
           <section className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-8">
-            {/* <div className="mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                Browse Subjects
-              </h2>
-              <p className="mt-1 text-slate-600">
-                Start by choosing a subject to narrow down lessons and teachers.
-              </p>
-            </div> */}
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
                 Browse <span className="text-indigo-600">Subjects</span>
@@ -44,19 +47,16 @@ const Home = () => {
                 Pick a subject to explore lessons and teachers.
               </p>
             </div>
-            <CarouselSubjects onSubjectClick={setSelectedSubjectId} />
+            <span className="" onClick={scrollToLessons}>
+              <CarouselSubjects onSubjectClick={setSelectedSubjectId} />
+            </span>
           </section>
 
           {/* Lessons */}
-          <section className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-8">
-            {/* <div className="mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                Featured Lessons
-              </h2>
-              <p className="mt-1 text-slate-600">
-                Pick a lesson to see details and add it to your schedule.
-              </p>
-            </div> */}
+          <section
+            className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-8"
+            ref={targetRefToLessons}
+          >
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
                 Featured <span className="text-indigo-600">Lessons</span>
@@ -65,10 +65,12 @@ const Home = () => {
                 Explore lessons and open details to book your session.
               </p>
             </div>
-            <CarouselLessons
-              subjectId={selectedSubjectId}
-              lessonInfo={setSelectedLessonId}
-            />
+            <span className="" onClick={scrollToTeachers}>
+              <CarouselLessons
+                subjectId={selectedSubjectId}
+                lessonInfo={setSelectedLessonId}
+              />
+            </span>
             {/* Lesson Info card */}
             {selectedLessonId && (
               <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-6">
@@ -78,15 +80,10 @@ const Home = () => {
           </section>
 
           {/* Teachers */}
-          <section className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-8">
-            {/* <div className="mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                Meet the Teachers
-              </h2>
-              <p className="mt-1 text-slate-600">
-                Explore teacher profiles and pick the right mentor for you.
-              </p>
-            </div> */}
+          <section
+            className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-8"
+            ref={targetRefToTeachers}
+          >
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
                 Meet the <span className="text-indigo-600">Teachers</span>
