@@ -1,16 +1,21 @@
 import express from "express";
 import { Subject } from "../models/subjectSchema.js";
+import { Router } from "express";
 
 const router = express.Router();
 
 // Get subjects
+// router.get("/", async (req, res) => {
+//   try {
+//     const subjects = await Subject.find();
+//     res.status(200).json(subjects);
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to fetch subjects." });
+//   }
+// });
 router.get("/", async (req, res) => {
-  try {
-    const subjects = await Subject.find();
-    res.status(200).json(subjects);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch subjects." });
-  }
+  const subjects = await Subject.find().lean();
+  res.json(subjects); // must be JSON
 });
 
 // Create a new subject

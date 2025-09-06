@@ -89,8 +89,7 @@ app.use("/teachers", teacherRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/schedule", scheduleLessonRoutes);
 app.use("/reviews", reviews);
-// app.use("/subject", addSubjectRoutes);
-
+app.use("/subjects", subjectRoutes);
 // Listen to a Server
 // app.listen(PORT, () => {
 //   console.log("Server runs on port ", PORT);
