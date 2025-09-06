@@ -22,24 +22,53 @@ const uri =
   "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/SkillGridDB?retryWrites=true&w=majority&appName=Cluster0";
 
 const app = express();
-const PORT = 3000;
+// const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const ALLOWED_ORIGINS = [
+  "http://localhost:3001",                 // local dev (React)
+  "https://skillgrid-client.onrender.com", // your Render static site
+];
+
+const isProd = process.env.NODE_ENV === "production";
+app.set("trust proxy", 1); // IMPORTANT on Render for secure cookies
+
 
 // Serve static image files
 app.use("/images", express.static(path.join(__dirname, "images")));
-app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
+// app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
+// app.use(
+//   cors({
+//     origin(origin, cb) {
+//       // allow server-to-server or tools with no Origin
+//       if (!origin) return cb(null, true);
+//       // allow only from the list above
+//       if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+//       return cb(new Error(`CORS blocked for origin: ${origin}`), false);
+//     },
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+app.use(
+  cors({
+    origin: ["https://skillgrid-client.onrender.com"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Session middleware
 app.use(
   session({
     name: "sid",
-    secret: "superSecretKey", // required (should be in .env)
-    resave: false, // don't save session if not modified
-    saveUninitialized: false, // don't create empty sessions
+    secret: process.env.SESSION_SECRET || "superSecretKey",
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: "lax", // dev same origin
-      secure: false,
+      sameSite: isProd ? "none" : "lax", // cross-site requires "none"
+      secure: isProd,                    // must be true with "none" (HTTPS)
       maxAge: 1000 * 60 * 60 * 24,
       path: "/",
     },
