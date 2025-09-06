@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import cors from "cors";
 import session from "express-session";
 
+
 // Routes
 import userRoutes from "./routes/userRoute.js";
 import studentRoutes from "./routes/studentRoute.js";
@@ -35,6 +36,8 @@ app.set("trust proxy", 1); // IMPORTANT on Render for secure cookies
 
 // Serve static image files
 app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/subjects", subjectRoutes);
+app.use("/teachers", teacherRoutes);
 // app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
 // app.use(
 //   cors({
@@ -58,21 +61,18 @@ app.use(cors({
 app.use(express.json());
 
 // Session middleware
-app.use(
-  session({
-    name: "sid",
-    secret: process.env.SESSION_SECRET || "superSecretKey",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: isProd ? "none" : "lax", // cross-site requires "none"
-      secure: isProd,                    // must be true with "none" (HTTPS)
-      maxAge: 1000 * 60 * 60 * 24,
-      path: "/",
-    },
-  })
-);
+app.use(session({
+  name: "sid",
+  secret: process.env.SESSION_SECRET || "dev-secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production", // must be true for SameSite=None
+    maxAge: 1000 * 60 * 60 * 24,
+  },
+}));
 
 // Connect to MongoDB
 mongoose
