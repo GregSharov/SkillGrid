@@ -1,12 +1,10 @@
+import dotenv from "dotenv";
 import mongoose from "mongoose";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import session from "express-session";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // Routes
 import userRoutes from "./routes/userRoute.js";
@@ -19,6 +17,7 @@ import reviews from "./routes/reviews.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "./.env") });
 
 // MongoDB connection string
 const uri = process.env.MONGO_URI;
@@ -32,6 +31,8 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 
+app.set("trust proxy", 1); // required for secure cookies on proxies
+
 // Session middleware
 app.use(
   session({
@@ -42,7 +43,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax", // dev same origin
-      secure: false,
+      secure: process.env.NODE_ENV === "production", // set to true on production
       maxAge: 1000 * 60 * 60 * 24,
       path: "/",
     },

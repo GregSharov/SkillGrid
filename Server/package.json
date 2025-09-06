@@ -16,7 +16,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "render-build": "cd ../client && npm ci && npm run build && cd .. && npm ci",
+    "render-build": "npm ci && cd ../client && npm ci && npm run build",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
