@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 
+
 const CarouselSubjects = ({ onSubjectClick }) => {
   const [subjectData, setSubjectData] = useState([]);
   const carouselRef = useRef(null);

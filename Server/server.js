@@ -24,9 +24,9 @@ const uri =
 const app = express();
 // const PORT = 3000;
 const PORT = process.env.PORT || 3000;
-const ALLOWED_ORIGINS = [
-  "http://localhost:3001",                 // local dev (React)
-  "https://skillgrid-client.onrender.com", // your Render static site
+const CLIENT_ORIGINS = [
+  "https://skillgrid-client.onrender.com", // your Render client URL
+  // add any other frontends that should be allowed
 ];
 
 const isProd = process.env.NODE_ENV === "production";
@@ -50,12 +50,11 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //   })
 // );
-app.use(
-  cors({
-    origin: ["https://skillgrid-client.onrender.com"],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: CLIENT_ORIGINS,
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // Session middleware
@@ -93,6 +92,7 @@ app.use("/reviews", reviews);
 // app.use("/subject", addSubjectRoutes);
 
 // Listen to a Server
-app.listen(PORT, () => {
-  console.log("Server runs on port ", PORT);
-});
+// app.listen(PORT, () => {
+//   console.log("Server runs on port ", PORT);
+// });
+app.listen(PORT, "0.0.0.0", () => console.log(`API on :${PORT}`));

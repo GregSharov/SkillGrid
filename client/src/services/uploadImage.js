@@ -1,7 +1,8 @@
 // src/services/uploadImage.js
 import { useState } from "react";
+import { API_BASE } from "../config";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:3000";
+// const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:3000";
 
 export default function useUploadImage() {
   const [loading, setLoading] = useState(false);
