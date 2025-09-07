@@ -27,7 +27,7 @@ const PORT = process.env.PORT;
 
 // Serve static image files
 app.use("/images", express.static(path.join(__dirname, "images")));
-app.use(cors({ credentials: true, origin: process.env.FRONTEND_URL }));
+app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 
 // Session middleware

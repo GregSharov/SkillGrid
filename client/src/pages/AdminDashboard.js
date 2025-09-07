@@ -43,7 +43,8 @@ function FieldInput({ field, value, onChange }) {
     return (
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">
-          {field.label} {field.required && <span className="text-rose-600">*</span>}
+          {field.label}{" "}
+          {field.required && <span className="text-rose-600">*</span>}
         </label>
         <textarea
           rows={field.rows || 4}
@@ -59,7 +60,8 @@ function FieldInput({ field, value, onChange }) {
     return (
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">
-          {field.label} {field.required && <span className="text-rose-600">*</span>}
+          {field.label}{" "}
+          {field.required && <span className="text-rose-600">*</span>}
         </label>
         <select
           className={base}
@@ -92,7 +94,11 @@ function FieldInput({ field, value, onChange }) {
         <textarea
           rows={field.rows || 8}
           className={base + " font-mono"}
-          value={typeof value === "string" ? value : JSON.stringify(value ?? {}, null, 2)}
+          value={
+            typeof value === "string"
+              ? value
+              : JSON.stringify(value ?? {}, null, 2)
+          }
           onChange={(e) => onChange(e.target.value)}
           placeholder='JSON object (e.g. {"a":1})'
         />
@@ -102,7 +108,8 @@ function FieldInput({ field, value, onChange }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-slate-700">
-        {field.label} {field.required && <span className="text-rose-600">*</span>}
+        {field.label}{" "}
+        {field.required && <span className="text-rose-600">*</span>}
       </label>
       <input
         type={field.type || "text"}
@@ -152,30 +159,27 @@ function CrudPanel({
     return items.filter((it) => JSON.stringify(it).toLowerCase().includes(s));
   }, [items, q]);
 
-  const load = useCallback(
-    async () => {
-      try {
-        setLoading(true);
-        setErr("");
-        const data = await apiGet(listPath);
-        const arr = lookupTransform
-          ? lookupTransform(data)
-          : Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-          ? data.data
-          : Array.isArray(data?.items)
-          ? data.items
-          : [];
-        setItems(arr);
-      } catch (e) {
-        setErr(e.message || String(e));
-      } finally {
-        setLoading(false);
-      }
-    },
-    [listPath, lookupTransform]
-  );
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErr("");
+      const data = await apiGet(listPath);
+      const arr = lookupTransform
+        ? lookupTransform(data)
+        : Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.items)
+        ? data.items
+        : [];
+      setItems(arr);
+    } catch (e) {
+      setErr(e.message || String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, [listPath, lookupTransform]);
 
   useEffect(() => {
     load();
@@ -268,12 +272,20 @@ function CrudPanel({
           <thead className="bg-slate-50">
             <tr>
               {columns.map((c) => (
-                <th key={c.key} className="p-3 text-left font-semibold text-slate-700">
+                <th
+                  key={c.key}
+                  className="p-3 text-left font-semibold text-slate-700"
+                >
                   {c.header}
                 </th>
               ))}
-              {(allowEdit || allowDelete || withImageUpload || extraActions) && (
-                <th className="p-3 text-right font-semibold text-slate-700">Actions</th>
+              {(allowEdit ||
+                allowDelete ||
+                withImageUpload ||
+                extraActions) && (
+                <th className="p-3 text-right font-semibold text-slate-700">
+                  Actions
+                </th>
               )}
             </tr>
           </thead>
@@ -292,13 +304,21 @@ function CrudPanel({
               </tr>
             ) : (
               filtered.map((row) => (
-                <tr key={row[columns[0]?.key] + row._id} className="border-t border-slate-200">
+                <tr
+                  key={row[columns[0]?.key] + row._id}
+                  className="border-t border-slate-200"
+                >
                   {columns.map((c) => (
                     <td key={c.key} className="p-3 align-top">
-                      {c.render ? c.render(row[c.key], row) : String(row[c.key] ?? "—")}
+                      {c.render
+                        ? c.render(row[c.key], row)
+                        : String(row[c.key] ?? "—")}
                     </td>
                   ))}
-                  {(allowEdit || allowDelete || withImageUpload || extraActions) && (
+                  {(allowEdit ||
+                    allowDelete ||
+                    withImageUpload ||
+                    extraActions) && (
                     <td className="p-3">
                       <div className="flex justify-end gap-2">
                         {extraActions && extraActions(row)}
@@ -309,7 +329,9 @@ function CrudPanel({
                               type="file"
                               className="hidden"
                               accept="image/*"
-                              onChange={(e) => handleImageUpload(row._id, e.target.files?.[0])}
+                              onChange={(e) =>
+                                handleImageUpload(row._id, e.target.files?.[0])
+                              }
                             />
                           </label>
                         )}
@@ -344,8 +366,13 @@ function CrudPanel({
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h4 className="text-lg font-semibold">{editing ? "Edit" : "Create"}</h4>
-              <button className="rounded-full p-1.5 hover:bg-slate-100" onClick={close}>
+              <h4 className="text-lg font-semibold">
+                {editing ? "Edit" : "Create"}
+              </h4>
+              <button
+                className="rounded-full p-1.5 hover:bg-slate-100"
+                onClick={close}
+              >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
@@ -360,10 +387,12 @@ function CrudPanel({
               ))}
               {withImageUpload && editing && (
                 <div className="text-xs text-slate-500 -mt-2">
-                  Tip: use the <b>Upload</b> action on the list to update the profile image.
+                  Tip: use the <b>Upload</b> action on the list to update the
+                  profile image.
                   {upLoading && (
                     <span className="ml-2 inline-flex items-center gap-1">
-                      <ArrowPathIcon className="h-4 w-4 animate-spin" /> Uploading…
+                      <ArrowPathIcon className="h-4 w-4 animate-spin" />{" "}
+                      Uploading…
                     </span>
                   )}
                   {upErr && <span className="ml-2 text-rose-600">{upErr}</span>}
@@ -425,11 +454,19 @@ export default function AdminDashboard() {
   }, [loadLookups]);
 
   const teacherOptions = useMemo(
-    () => teachers.map((x) => ({ value: x._id, label: `${x.firstName} ${x.lastName}` })),
+    () =>
+      teachers.map((x) => ({
+        value: x._id,
+        label: `${x.firstName} ${x.lastName}`,
+      })),
     [teachers]
   );
   const studentOptions = useMemo(
-    () => students.map((x) => ({ value: x._id, label: `${x.firstName} ${x.lastName}` })),
+    () =>
+      students.map((x) => ({
+        value: x._id,
+        label: `${x.firstName} ${x.lastName}`,
+      })),
     [students]
   );
 
@@ -438,15 +475,21 @@ export default function AdminDashboard() {
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Admin Dashboard</h1>
-            <p className="text-slate-600">CRUD for Subjects, Lessons, Teachers, Students, Schedule, Reviews.</p>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+              Admin Dashboard
+            </h1>
+            <p className="text-slate-600">
+              CRUD for Subjects, Lessons, Teachers, Students, Schedule, Reviews.
+            </p>
             {errLk && <p className="mt-1 text-sm text-rose-600">{errLk}</p>}
           </div>
           <button
             onClick={loadLookups}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow hover:bg-slate-50"
           >
-            <ArrowPathIcon className={`h-4 w-4 ${loadingLk ? "animate-spin" : ""}`} />
+            <ArrowPathIcon
+              className={`h-4 w-4 ${loadingLk ? "animate-spin" : ""}`}
+            />
             Refresh lookups
           </button>
         </header>
@@ -624,12 +667,17 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
       setErr("");
       const updated = [...lessons];
       if (editing) {
-        const idx = updated.findIndex((x) => String(x._id) === String(editing._id));
+        const idx = updated.findIndex(
+          (x) => String(x._id) === String(editing._id)
+        );
         if (idx >= 0) updated[idx] = { ...editing, ...form };
       } else {
         updated.push({ ...form, _id: crypto.randomUUID() }); // temp id; server may replace
       }
-      await apiSend(`/subjects/${subjectId}`, "PUT", { ...subject, lessons: updated });
+      await apiSend(`/subjects/${subjectId}`, "PUT", {
+        ...subject,
+        lessons: updated,
+      });
       close();
       await reloadSubjects();
     } catch (e2) {
@@ -642,7 +690,10 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
     try {
       setErr("");
       const updated = lessons.filter((x) => String(x._id) !== String(l._id));
-      await apiSend(`/subjects/${subjectId}`, "PUT", { ...subject, lessons: updated });
+      await apiSend(`/subjects/${subjectId}`, "PUT", {
+        ...subject,
+        lessons: updated,
+      });
       await reloadSubjects();
     } catch (e2) {
       setErr(e2.message || String(e2));
@@ -653,8 +704,12 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
     <section className="rounded-2xl bg-white ring-1 ring-slate-200 shadow">
       <div className="flex items-center justify-between p-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Lessons (by Subject)</h3>
-          <p className="text-sm text-slate-600">Select a subject to manage its lessons.</p>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Lessons (by Subject)
+          </h3>
+          <p className="text-sm text-slate-600">
+            Select a subject to manage its lessons.
+          </p>
           {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
         </div>
         <div className="flex items-center gap-3">
@@ -674,7 +729,11 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
             onClick={startCreate}
             disabled={!subjectId}
             className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
-              ${subjectId ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"}`}
+              ${
+                subjectId
+                  ? "bg-indigo-600 hover:bg-indigo-700"
+                  : "bg-slate-300 cursor-not-allowed"
+              }`}
           >
             <PlusIcon className="h-4 w-4" /> Add Lesson
           </button>
@@ -685,12 +744,18 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
         <table className="w-full border-t border-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th className="p-3 text-left font-semibold text-slate-700">Lesson</th>
-              <th className="p-3 text-left font-semibold text-slate-700">Description</th>
-              <th className="p-3 text-right font-semibold text-slate-700">Actions</th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Lesson
+              </th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Description
+              </th>
+              <th className="p-3 text-right font-semibold text-slate-700">
+                Actions
+              </th>
             </tr>
           </thead>
-        <tbody>
+          <tbody>
             {!subjectId ? (
               <tr>
                 <td className="p-4 text-slate-500" colSpan={3}>
@@ -735,8 +800,13 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h4 className="text-lg font-semibold">{editing ? "Edit Lesson" : "Create Lesson"}</h4>
-              <button className="rounded-full p-1.5 hover:bg-slate-100" onClick={() => setOpen(false)}>
+              <h4 className="text-lg font-semibold">
+                {editing ? "Edit Lesson" : "Create Lesson"}
+              </h4>
+              <button
+                className="rounded-full p-1.5 hover:bg-slate-100"
+                onClick={() => setOpen(false)}
+              >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
@@ -747,7 +817,11 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
                 onChange={(v) => setForm((s) => ({ ...s, name: v }))}
               />
               <FieldInput
-                field={{ key: "description", label: "Description", type: "textarea" }}
+                field={{
+                  key: "description",
+                  label: "Description",
+                  type: "textarea",
+                }}
                 value={form.description}
                 onChange={(v) => setForm((s) => ({ ...s, description: v }))}
               />
@@ -810,7 +884,13 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
   const [form, setForm] = useState({
     teacherId: "",
     studentId: "",
-    slots: [{ day: "Monday", date: new Date().toLocaleDateString("en-US"), time: "10:00" }],
+    slots: [
+      {
+        day: "Monday",
+        date: new Date().toLocaleDateString("en-US"),
+        time: "10:00",
+      },
+    ],
   });
 
   const createSchedule = async (e) => {
@@ -819,7 +899,11 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
       setErr("");
       const teacher = { _id: form.teacherId };
       const student = { _id: form.studentId };
-      await apiSend("/schedule/add", "POST", { teacher, student, slots: form.slots });
+      await apiSend("/schedule/add", "POST", {
+        teacher,
+        student,
+        slots: form.slots,
+      });
       setOpen(false);
       await load();
     } catch (e2) {
@@ -842,8 +926,12 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
     <section className="rounded-2xl bg-white ring-1 ring-slate-200 shadow">
       <div className="flex items-center justify-between p-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Scheduled Lessons</h3>
-          <p className="text-sm text-slate-600">Pick a teacher to view their schedule.</p>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Scheduled Lessons
+          </h3>
+          <p className="text-sm text-slate-600">
+            Pick a teacher to view their schedule.
+          </p>
           {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
         </div>
         <div className="flex items-center gap-3">
@@ -866,7 +954,11 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
             }}
             disabled={!teacherId}
             className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
-              ${teacherId ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"}`}
+              ${
+                teacherId
+                  ? "bg-indigo-600 hover:bg-indigo-700"
+                  : "bg-slate-300 cursor-not-allowed"
+              }`}
           >
             <PlusIcon className="h-4 w-4" /> Add Schedule
           </button>
@@ -877,9 +969,15 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
         <table className="w-full border-t border-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th className="p-3 text-left font-semibold text-slate-700">Student</th>
-              <th className="p-3 text-left font-semibold text-slate-700">Slots</th>
-              <th className="p-3 text-right font-semibold text-slate-700">Actions</th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Student
+              </th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Slots
+              </th>
+              <th className="p-3 text-right font-semibold text-slate-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -939,23 +1037,43 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 p-4">
               <h4 className="text-lg font-semibold">Create Schedule</h4>
-              <button className="rounded-full p-1.5 hover:bg-slate-100" onClick={() => setOpen(false)}>
+              <button
+                className="rounded-full p-1.5 hover:bg-slate-100"
+                onClick={() => setOpen(false)}
+              >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={createSchedule} className="p-4 space-y-4">
               <FieldInput
-                field={{ key: "teacherId", label: "Teacher", type: "select", options: teacherOptions, required: true }}
+                field={{
+                  key: "teacherId",
+                  label: "Teacher",
+                  type: "select",
+                  options: teacherOptions,
+                  required: true,
+                }}
                 value={form.teacherId}
                 onChange={(v) => setForm((s) => ({ ...s, teacherId: v }))}
               />
               <FieldInput
-                field={{ key: "studentId", label: "Student", type: "select", options: studentOptions, required: true }}
+                field={{
+                  key: "studentId",
+                  label: "Student",
+                  type: "select",
+                  options: studentOptions,
+                  required: true,
+                }}
                 value={form.studentId}
                 onChange={(v) => setForm((s) => ({ ...s, studentId: v }))}
               />
               <FieldInput
-                field={{ key: "slots", label: "Slots (JSON array)", type: "json", rows: 8 }}
+                field={{
+                  key: "slots",
+                  label: "Slots (JSON array)",
+                  type: "json",
+                  rows: 8,
+                }}
                 value={form.slots}
                 onChange={(v) => {
                   try {
@@ -1076,7 +1194,11 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
             onClick={() => setOpen(true)}
             disabled={!teacherId}
             className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
-              ${teacherId ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"}`}
+              ${
+                teacherId
+                  ? "bg-indigo-600 hover:bg-indigo-700"
+                  : "bg-slate-300 cursor-not-allowed"
+              }`}
           >
             <PlusIcon className="h-4 w-4" /> Add Review
           </button>
@@ -1095,11 +1217,21 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
         <table className="w-full border-t border-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th className="p-3 text-left font-semibold text-slate-700">Student</th>
-              <th className="p-3 text-left font-semibold text-slate-700">Rating</th>
-              <th className="p-3 text-left font-semibold text-slate-700">Comment</th>
-              <th className="p-3 text-left font-semibold text-slate-700">Date</th>
-              <th className="p-3 text-right font-semibold text-slate-700">Actions</th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Student
+              </th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Rating
+              </th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Comment
+              </th>
+              <th className="p-3 text-left font-semibold text-slate-700">
+                Date
+              </th>
+              <th className="p-3 text-right font-semibold text-slate-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1125,12 +1257,16 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
               items.map((row) => (
                 <tr key={row._id} className="border-t border-slate-200">
                   <td className="p-3">
-                    {row?.student ? `${row.student.firstName} ${row.student.lastName}` : "—"}
+                    {row?.student
+                      ? `${row.student.firstName} ${row.student.lastName}`
+                      : "—"}
                   </td>
                   <td className="p-3">{row.rating}</td>
                   <td className="p-3">{row.comment || "—"}</td>
                   <td className="p-3">
-                    {row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"}
+                    {row.createdAt
+                      ? new Date(row.createdAt).toLocaleString()
+                      : "—"}
                   </td>
                   <td className="p-3">
                     <div className="flex justify-end">
@@ -1154,7 +1290,10 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 p-4">
               <h4 className="text-lg font-semibold">Create Review</h4>
-              <button className="rounded-full p-1.5 hover:bg-slate-100" onClick={() => setOpen(false)}>
+              <button
+                className="rounded-full p-1.5 hover:bg-slate-100"
+                onClick={() => setOpen(false)}
+              >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
@@ -1193,8 +1332,8 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
                 </button>
               </div>
               <p className="text-xs text-slate-500">
-                * Uses your <code>/reviews</code> POST (session auth). If you want admin to spoof a
-                student, add a server-side admin endpoint.
+                * Uses your <code>/reviews</code> POST (session auth). If you
+                want admin to spoof a student, add a server-side admin endpoint.
               </p>
             </form>
           </div>
