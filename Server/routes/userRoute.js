@@ -182,7 +182,7 @@ router.get("/me", async (req, res) => {
   try {
     const user = req.session.user;
     if (!user) {
-      return;
+      return res.status(401).json({ message: "Not authenticated." });
     }
     return res.status(200).json({ user: user });
   } catch (error) {
