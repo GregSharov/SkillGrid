@@ -13,7 +13,6 @@ import teacherRoutes from "./routes/teacherRoute.js";
 import subjectRoutes from "./routes/subjectRoute.js";
 import scheduleLessonRoutes from "./routes/scheduleLessonRoute.js";
 import reviews from "./routes/reviews.js";
-// import addSubjectRoutes from "./routes/addSubject.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,27 +20,18 @@ dotenv.config();
 
 const app = express();
 
-// MongoDB connection string
 const URI = process.env.MONGO_URI;
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000; // ✅ fallback for local
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const isProd = process.env.NODE_ENV === "production";
 
-// Trust proxy: required for secure cookies on Render (behind proxy)
+// Trust proxy (required for secure cookies on Render)
 app.set("trust proxy", 1);
 
-// Serve static image files
+// Static files
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-// Connect to MongoDB
-mongoose
-  .connect(URI)
-  .then(() => console.log("Connected to MongoDB!"))
-  .catch((err) => {
-    console.error("Could not connect to MongoDB " + err);
-  });
-
-// CORS (allow your frontend + localhost for dev)
+// CORS allowlist
 const allowlist = [
   "http://localhost:3001",
   "http://localhost:5173",
@@ -52,7 +42,7 @@ app.use(
   cors({
     credentials: true,
     origin(origin, cb) {
-      if (!origin) return cb(null, true); // allow curl/Postman
+      if (!origin) return cb(null, true); // curl/Postman
       if (allowlist.includes(origin)) return cb(null, true);
       return cb(new Error("Not allowed by CORS"));
     },
@@ -61,39 +51,63 @@ app.use(
 
 app.use(express.json());
 
-// Session middleware
+// Sessions
 app.use(
   session({
     name: "sid",
-    secret: process.env.SESSION_SECRET, // required (should be in .env)
-    resave: false, // don't save session if not modified
-    saveUninitialized: false, // don't create empty sessions
+    secret: process.env.SESSION_SECRET || "change-me",
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: isProd ? "none" : "lax", // dev same origin
-      secure: isProd, // send cookie over https only in production
+      sameSite: isProd ? "none" : "lax",
+      secure: isProd,
       maxAge: 1000 * 60 * 60 * 24,
       path: "/",
     },
   })
 );
 
-// Use Routers
+// Routers (make sure inside each file you use `router.get('/')`, not `'/teachers'` again)
 app.use("/user", userRoutes);
 app.use("/students", studentRoutes);
 app.use("/teachers", teacherRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/schedule", scheduleLessonRoutes);
 app.use("/reviews", reviews);
-// app.use("/subject", addSubjectRoutes);
 
-// Health + welcome
+// Diagnostics
 app.get("/healthz", (req, res) => res.status(200).send("ok"));
+app.get(
+  "/dbcheck",
+  (req, res) => res.json({ mongoState: mongoose.connection.readyState }) // 0=disconnected, 1=connected
+);
+
+// JSON error handler (after routes, before catch-all)
+app.use((err, req, res, next) => {
+  console.error("Route error:", req.method, req.originalUrl);
+  console.error(err?.stack || err);
+  res
+    .status(err.status || 500)
+    .json({ error: err.message || "Internal Server Error" });
+});
+
+// Catch-all
 app.get("*", (req, res) => {
   res.status(200).type("text/html").send("<h1>Welcome to Skill Grid API</h1>");
 });
 
-// Listen to a Server
-app.listen(PORT, () => {
-  console.log("Server runs on port ", PORT);
-});
+// Start only after Mongo connects
+(async () => {
+  try {
+    await mongoose.connect(URI, {
+      serverSelectionTimeoutMS: 8000, // fail fast with a clear message
+      socketTimeoutMS: 20000,
+    });
+    console.log("Connected to MongoDB!");
+    app.listen(PORT, "0.0.0.0", () => console.log("Server runs on port", PORT));
+  } catch (e) {
+    console.error("Mongo connect failed:", e);
+    process.exit(1);
+  }
+})();
