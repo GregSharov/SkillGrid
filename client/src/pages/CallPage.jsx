@@ -3,13 +3,38 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 
-// ----- Dynamic signaling URL (no hard-coded localhost, no mixed content) -----
-const PROTO = window.location.protocol === "https:" ? "https" : "http";
-const HOST = window.location.hostname; // works for localhost, LAN hostnames, tunnels
-const PORT = 4000; // your signaling port
-const SIGNALING_URL = `${PROTO}://${HOST}:${PORT}`;
+/* ------------------- Signaling URL resolver ------------------- */
+// Works on localhost/LAN, tunnels, and prod. Prefers explicit env URL.
+// Supports CRA (process.env.REACT_APP_*) and Vite (import.meta.env.VITE_*).
+const isHttps =
+  typeof window !== "undefined" && window.location.protocol === "https:";
+const HOST =
+  typeof window !== "undefined" ? window.location.hostname : "localhost";
 
-// ----- ICE servers (add your TURN here for production/NAT traversal) -----
+const ENV_URL =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_WEBRTC_URL) ||
+  process.env.REACT_APP_WEBRTC_URL;
+
+const ENV_PORT =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_WEBRTC_PORT) ||
+  process.env.REACT_APP_WEBRTC_PORT;
+
+let SIGNALING_URL = "";
+if (ENV_URL) {
+  SIGNALING_URL = ENV_URL.replace(/\/$/, "");
+} else if (ENV_PORT) {
+  SIGNALING_URL = `${isHttps ? "https" : "http"}://${HOST}:${ENV_PORT}`;
+} else {
+  // Default: dev -> :4000, prod HTTPS -> same-origin
+  const isIp = /^\d+\.\d+\.\d+\.\d+$/.test(HOST);
+  const devPort = HOST === "localhost" || isIp ? "4000" : "";
+  SIGNALING_URL = devPort
+    ? `${isHttps ? "https" : "http"}://${HOST}:${devPort}`
+    : `${isHttps ? "https" : "http"}://${HOST}`;
+}
+
+/* ------------------------ ICE servers ------------------------ */
+// Add TURN for production/NAT traversal.
 const iceServers = [
   { urls: "stun:stun.l.google.com:19302" },
   // { urls: "turn:YOUR_TURN_HOST:3478", username: "user", credential: "pass" },
@@ -31,15 +56,19 @@ export default function CallPage() {
   const [camOn, setCamOn] = useState(true);
   const [sharing, setSharing] = useState(false);
 
-  // Initiator state + ref (avoid stale closure inside socket handlers)
+  // Initiator state + ref (avoid stale closures inside socket handlers)
   const [isInitiator, setIsInitiator] = useState(false);
   const isInitiatorRef = useRef(false);
   useEffect(() => {
     isInitiatorRef.current = isInitiator;
   }, [isInitiator]);
 
-  // ---- Socket wiring + lifecycle ----
+  /* ---------------- Socket wiring + lifecycle ---------------- */
   useEffect(() => {
+    // ✅ capture elements once for stable cleanup (fixes ESLint warning)
+    const localEl = localVideoRef.current;
+    const remoteEl = remoteVideoRef.current;
+
     // Create socket (allow polling fallback)
     socketRef.current = io(SIGNALING_URL, {
       transports: ["websocket", "polling"],
@@ -101,7 +130,7 @@ export default function CallPage() {
 
     socketRef.current.on("peer-left", () => {
       setStatus("Peer left");
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      if (remoteEl) remoteEl.srcObject = null; // use captured node
     });
 
     // Cleanup
@@ -119,22 +148,23 @@ export default function CallPage() {
 
       try {
         screenTrackRef.current?.stop();
-        screenTrackRef.current = null;
       } catch {}
+      screenTrackRef.current = null;
 
       try {
         localStreamRef.current?.getTracks().forEach((t) => t.stop());
       } catch {}
       localStreamRef.current = null;
 
-      if (localVideoRef.current) localVideoRef.current.srcObject = null;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      // ✅ use captured nodes only in cleanup
+      if (localEl) localEl.srcObject = null;
+      if (remoteEl) remoteEl.srcObject = null;
     };
     // NOTE: roomId only; we use isInitiatorRef to avoid re-wiring on isInitiator changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  // ----- Media & Peer setup with graceful fallbacks -----
+  /* ------------- Media & Peer setup with fallbacks ------------- */
   const setupMediaAndPeer = async () => {
     setStatus("Getting media…");
 
@@ -186,8 +216,12 @@ export default function CallPage() {
     pcRef.current = pc;
 
     // 5) Match SDP to our intent even if we have no tracks
-    pc.addTransceiver("video", { direction: sendVideo ? "sendrecv" : "recvonly" });
-    pc.addTransceiver("audio", { direction: sendAudio ? "sendrecv" : "recvonly" });
+    pc.addTransceiver("video", {
+      direction: sendVideo ? "sendrecv" : "recvonly",
+    });
+    pc.addTransceiver("audio", {
+      direction: sendAudio ? "sendrecv" : "recvonly",
+    });
 
     // 6) If we have stream, add tracks & preview
     if (localStream) {
@@ -199,7 +233,8 @@ export default function CallPage() {
     // 7) Remote track handler
     pc.ontrack = (event) => {
       const [remoteStream] = event.streams;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
+      if (remoteVideoRef.current)
+        remoteVideoRef.current.srcObject = remoteStream;
     };
 
     // 8) ICE -> signaling
@@ -212,7 +247,7 @@ export default function CallPage() {
     setStatus(isInitiatorRef.current ? "Waiting for peer…" : "Joining room…");
   };
 
-  // ----- Controls -----
+  /* --------------------------- Controls --------------------------- */
   const hangup = () => {
     socketRef.current?.emit("leave", roomId);
     navigate("/");
@@ -247,7 +282,8 @@ export default function CallPage() {
         .find((s) => s.track?.kind === "video");
       if (sender) await sender.replaceTrack(screenTrack);
 
-      if (localVideoRef.current) localVideoRef.current.srcObject = displayStream;
+      if (localVideoRef.current)
+        localVideoRef.current.srcObject = displayStream;
 
       screenTrack.onended = async () => {
         await stopShare();
@@ -267,7 +303,8 @@ export default function CallPage() {
       ?.getSenders()
       .find((s) => s.track?.kind === "video");
     if (sender && cameraTrack) await sender.replaceTrack(cameraTrack);
-    if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
+    if (localVideoRef.current)
+      localVideoRef.current.srcObject = localStreamRef.current;
   };
 
   return (

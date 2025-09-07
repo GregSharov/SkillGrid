@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+// client/src/pages/AdminDashboard.js
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   PlusIcon,
   PencilIcon,
@@ -10,7 +11,10 @@ import {
 } from "@heroicons/react/24/outline";
 import useUploadImage from "../services/uploadImage";
 
-const API = "http://localhost:3000";
+const API =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3000";
 
 /* --------------------- tiny fetch utils --------------------- */
 async function apiGet(path) {
@@ -66,9 +70,13 @@ function FieldInput({ field, value, onChange }) {
           <option value="">{field.placeholder || "Select…"}</option>
           {(field.options || []).map((o) =>
             typeof o === "string" ? (
-              <option key={o} value={o}>{o}</option>
+              <option key={o} value={o}>
+                {o}
+              </option>
             ) : (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             )
           )}
         </select>
@@ -144,29 +152,50 @@ function CrudPanel({
     return items.filter((it) => JSON.stringify(it).toLowerCase().includes(s));
   }, [items, q]);
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      setErr("");
-      const data = await apiGet(listPath);
-      const arr = lookupTransform
-        ? lookupTransform(data)
-        : Array.isArray(data) ? data
-        : Array.isArray(data?.data) ? data.data
-        : Array.isArray(data?.items) ? data.items
-        : [];
-      setItems(arr);
-    } catch (e) {
-      setErr(e.message || String(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { load(); }, []); // eslint-disable-line
+  const load = useCallback(
+    async () => {
+      try {
+        setLoading(true);
+        setErr("");
+        const data = await apiGet(listPath);
+        const arr = lookupTransform
+          ? lookupTransform(data)
+          : Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.items)
+          ? data.items
+          : [];
+        setItems(arr);
+      } catch (e) {
+        setErr(e.message || String(e));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [listPath, lookupTransform]
+  );
 
-  const startCreate = () => { setOpen(true); setEditing(null); setForm({}); };
-  const startEdit = (row) => { setOpen(true); setEditing(row); setForm(row); };
-  const close = () => { setOpen(false); setEditing(null); setForm({}); };
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const startCreate = () => {
+    setOpen(true);
+    setEditing(null);
+    setForm({});
+  };
+  const startEdit = (row) => {
+    setOpen(true);
+    setEditing(row);
+    setForm(row);
+  };
+  const close = () => {
+    setOpen(false);
+    setEditing(null);
+    setForm({});
+  };
 
   const onSave = async (e) => {
     e.preventDefault();
@@ -201,8 +230,8 @@ function CrudPanel({
     try {
       await uploadImage(userId, file);
       await load();
-    } catch (e) {
-      // error shown by hook
+    } catch {
+      /* handled by hook */
     }
   };
 
@@ -250,9 +279,17 @@ function CrudPanel({
           </thead>
           <tbody>
             {loading ? (
-              <tr><td className="p-4 text-slate-500" colSpan={columns.length + 1}>Loading…</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={columns.length + 1}>
+                  Loading…
+                </td>
+              </tr>
             ) : filtered.length === 0 ? (
-              <tr><td className="p-4 text-slate-500" colSpan={columns.length + 1}>No data</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={columns.length + 1}>
+                  No data
+                </td>
+              </tr>
             ) : (
               filtered.map((row) => (
                 <tr key={row[columns[0]?.key] + row._id} className="border-t border-slate-200">
@@ -324,17 +361,26 @@ function CrudPanel({
               {withImageUpload && editing && (
                 <div className="text-xs text-slate-500 -mt-2">
                   Tip: use the <b>Upload</b> action on the list to update the profile image.
-                  {upLoading && <span className="ml-2 inline-flex items-center gap-1"><ArrowPathIcon className="h-4 w-4 animate-spin" /> Uploading…</span>}
+                  {upLoading && (
+                    <span className="ml-2 inline-flex items-center gap-1">
+                      <ArrowPathIcon className="h-4 w-4 animate-spin" /> Uploading…
+                    </span>
+                  )}
                   {upErr && <span className="ml-2 text-rose-600">{upErr}</span>}
                 </div>
               )}
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={close}
-                        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                <button
+                  type="button"
+                  onClick={close}
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                >
                   Cancel
                 </button>
-                <button type="submit"
-                        className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                >
                   Save
                 </button>
               </div>
@@ -357,7 +403,7 @@ export default function AdminDashboard() {
   const [loadingLk, setLoadingLk] = useState(false);
   const [errLk, setErrLk] = useState("");
 
-  const loadLookups = async () => {
+  const loadLookups = useCallback(async () => {
     try {
       setLoadingLk(true);
       setErrLk("");
@@ -372,8 +418,11 @@ export default function AdminDashboard() {
     } finally {
       setLoadingLk(false);
     }
-  };
-  useEffect(() => { loadLookups(); }, []); // eslint-disable-line
+  }, []);
+
+  useEffect(() => {
+    loadLookups();
+  }, [loadLookups]);
 
   const teacherOptions = useMemo(
     () => teachers.map((x) => ({ value: x._id, label: `${x.firstName} ${x.lastName}` })),
@@ -382,10 +431,6 @@ export default function AdminDashboard() {
   const studentOptions = useMemo(
     () => students.map((x) => ({ value: x._id, label: `${x.firstName} ${x.lastName}` })),
     [students]
-  );
-  const subjectOptions = useMemo(
-    () => subjects.map((x) => ({ value: x._id, label: x.name })),
-    [subjects]
   );
 
   return (
@@ -408,18 +453,22 @@ export default function AdminDashboard() {
 
         <nav className="flex flex-wrap gap-2">
           {[
-            ["subjects","Subjects"],
-            ["lessons","Lessons"],
-            ["teachers","Teachers"],
-            ["students","Students"],
-            ["schedule","Scheduled Lessons"],
-            ["reviews","Reviews"],
+            ["subjects", "Subjects"],
+            ["lessons", "Lessons"],
+            ["teachers", "Teachers"],
+            ["students", "Students"],
+            ["schedule", "Scheduled Lessons"],
+            ["reviews", "Reviews"],
           ].map(([key, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
               className={`rounded-full px-4 py-2 text-sm font-semibold ring-1 transition
-                ${tab === key ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"}`}
+                ${
+                  tab === key
+                    ? "bg-indigo-600 text-white ring-indigo-600"
+                    : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
+                }`}
             >
               {label}
             </button>
@@ -465,7 +514,11 @@ export default function AdminDashboard() {
                 { key: "lastName", header: "Last Name" },
                 { key: "email", header: "Email" },
                 { key: "phone", header: "Phone" },
-                { key: "ratingAverage", header: "Avg", render: (v) => (v ? Number(v).toFixed(1) : "—") },
+                {
+                  key: "ratingAverage",
+                  header: "Avg",
+                  render: (v) => (v ? Number(v).toFixed(1) : "—"),
+                },
                 { key: "ratingCount", header: "Count" },
               ]}
               fields={[
@@ -531,20 +584,42 @@ export default function AdminDashboard() {
 function LessonsEmbedded({ subjects, reloadSubjects }) {
   const [subjectId, setSubjectId] = useState("");
   const [err, setErr] = useState("");
-  const subject = useMemo(() => subjects.find((s) => s._id === subjectId), [subjects, subjectId]);
+  const subject = useMemo(
+    () => subjects.find((s) => s._id === subjectId),
+    [subjects, subjectId]
+  );
   const lessons = subject?.lessons || [];
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: "", description: "", image: "" });
 
-  const startCreate = () => { setEditing(null); setForm({ name: "", description: "", image: "" }); setOpen(true); };
-  const startEdit = (l) => { setEditing(l); setForm({ name: l.name || "", description: l.description || "", image: l.image || "" }); setOpen(true); };
-  const close = () => { setOpen(false); setEditing(null); setForm({ name: "", description: "", image: "" }); };
+  const startCreate = () => {
+    setEditing(null);
+    setForm({ name: "", description: "", image: "" });
+    setOpen(true);
+  };
+  const startEdit = (l) => {
+    setEditing(l);
+    setForm({
+      name: l.name || "",
+      description: l.description || "",
+      image: l.image || "",
+    });
+    setOpen(true);
+  };
+  const close = () => {
+    setOpen(false);
+    setEditing(null);
+    setForm({ name: "", description: "", image: "" });
+  };
 
   const save = async (e) => {
     e.preventDefault();
-    if (!subjectId) { setErr("Select a subject"); return; }
+    if (!subjectId) {
+      setErr("Select a subject");
+      return;
+    }
     try {
       setErr("");
       const updated = [...lessons];
@@ -590,7 +665,9 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
           >
             <option value="">Choose subject…</option>
             {subjects.map((s) => (
-              <option key={s._id} value={s._id}>{s.name}</option>
+              <option key={s._id} value={s._id}>
+                {s.name}
+              </option>
             ))}
           </select>
           <button
@@ -613,11 +690,19 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
               <th className="p-3 text-right font-semibold text-slate-700">Actions</th>
             </tr>
           </thead>
-          <tbody>
+        <tbody>
             {!subjectId ? (
-              <tr><td className="p-4 text-slate-500" colSpan={3}>Select a subject…</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={3}>
+                  Select a subject…
+                </td>
+              </tr>
             ) : lessons.length === 0 ? (
-              <tr><td className="p-4 text-slate-500" colSpan={3}>No lessons</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={3}>
+                  No lessons
+                </td>
+              </tr>
             ) : (
               lessons.map((l) => (
                 <tr key={l._id} className="border-t border-slate-200">
@@ -656,19 +741,33 @@ function LessonsEmbedded({ subjects, reloadSubjects }) {
               </button>
             </div>
             <form onSubmit={save} className="p-4 space-y-4">
-              <FieldInput field={{ key: "name", label: "Lesson Name", required: true }}
-                          value={form.name} onChange={(v) => setForm((s) => ({ ...s, name: v }))} />
-              <FieldInput field={{ key: "description", label: "Description", type: "textarea" }}
-                          value={form.description} onChange={(v) => setForm((s) => ({ ...s, description: v }))} />
-              <FieldInput field={{ key: "image", label: "Image URL" }}
-                          value={form.image} onChange={(v) => setForm((s) => ({ ...s, image: v }))} />
+              <FieldInput
+                field={{ key: "name", label: "Lesson Name", required: true }}
+                value={form.name}
+                onChange={(v) => setForm((s) => ({ ...s, name: v }))}
+              />
+              <FieldInput
+                field={{ key: "description", label: "Description", type: "textarea" }}
+                value={form.description}
+                onChange={(v) => setForm((s) => ({ ...s, description: v }))}
+              />
+              <FieldInput
+                field={{ key: "image", label: "Image URL" }}
+                value={form.image}
+                onChange={(v) => setForm((s) => ({ ...s, image: v }))}
+              />
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setOpen(false)}
-                        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                >
                   Cancel
                 </button>
-                <button type="submit"
-                        className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                >
                   Save
                 </button>
               </div>
@@ -687,7 +786,7 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!teacherId) return;
     try {
       setLoading(true);
@@ -700,24 +799,24 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
     } finally {
       setLoading(false);
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [teacherId]);
+  }, [teacherId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // Simple create form for schedule/add (uses your existing route)
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     teacherId: "",
     studentId: "",
-    slots: [
-      { day: "Monday", date: new Date().toLocaleDateString("en-US"), time: "10:00" },
-    ],
+    slots: [{ day: "Monday", date: new Date().toLocaleDateString("en-US"), time: "10:00" }],
   });
 
   const createSchedule = async (e) => {
     e.preventDefault();
     try {
       setErr("");
-      // we need full teacher & student objects; admin can supply IDs, we build minimal objects
       const teacher = { _id: form.teacherId };
       const student = { _id: form.studentId };
       await apiSend("/schedule/add", "POST", { teacher, student, slots: form.slots });
@@ -729,7 +828,6 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
   };
 
   const remove = async (row) => {
-    // Try optional /schedule/:id if your server supports it
     if (!window.confirm("Delete this scheduled entry?")) return;
     try {
       setErr("");
@@ -756,11 +854,16 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
           >
             <option value="">Choose teacher…</option>
             {teacherOptions.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
           <button
-            onClick={() => { setOpen(true); setForm((s) => ({ ...s, teacherId })); }}
+            onClick={() => {
+              setOpen(true);
+              setForm((s) => ({ ...s, teacherId }));
+            }}
             disabled={!teacherId}
             className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
               ${teacherId ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"}`}
@@ -781,11 +884,23 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
           </thead>
           <tbody>
             {!teacherId ? (
-              <tr><td className="p-4 text-slate-500" colSpan={3}>Select a teacher…</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={3}>
+                  Select a teacher…
+                </td>
+              </tr>
             ) : loading ? (
-              <tr><td className="p-4 text-slate-500" colSpan={3}>Loading…</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={3}>
+                  Loading…
+                </td>
+              </tr>
             ) : items.length === 0 ? (
-              <tr><td className="p-4 text-slate-500" colSpan={3}>No scheduled lessons</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={3}>
+                  No scheduled lessons
+                </td>
+              </tr>
             ) : (
               items.map((row) => (
                 <tr key={row._id} className="border-t border-slate-200">
@@ -794,7 +909,10 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
                   </td>
                   <td className="p-3">
                     {(row.slots || []).map((s, i) => (
-                      <span key={i} className="mr-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs ring-1 ring-slate-200">
+                      <span
+                        key={i}
+                        className="mr-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs ring-1 ring-slate-200"
+                      >
                         {s.day} • {s.date} • {s.time}
                       </span>
                     ))}
@@ -849,12 +967,17 @@ function SchedulePanel({ teacherOptions, studentOptions }) {
                 }}
               />
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setOpen(false)}
-                        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                >
                   Cancel
                 </button>
-                <button type="submit"
-                        className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                >
                   Save
                 </button>
               </div>
@@ -875,13 +998,12 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!teacherId) return;
     try {
       setLoading(true);
       setErr("");
       const data = await apiGet(`/reviews/teacher/${teacherId}`);
-      // server returns: { avg, count, items: [{_id, rating, comment, createdAt, student:{firstName,lastName}}] }
       setAvg(data?.avg || 0);
       setCount(data?.count || 0);
       setItems(Array.isArray(data?.items) ? data.items : []);
@@ -890,8 +1012,11 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
     } finally {
       setLoading(false);
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [teacherId]);
+  }, [teacherId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // admin create review (optional)
   const [open, setOpen] = useState(false);
@@ -929,7 +1054,9 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
       <div className="flex items-center justify-between p-4">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">Reviews</h3>
-          <p className="text-sm text-slate-600">Pick a teacher to view all reviews (visible to everyone on profile).</p>
+          <p className="text-sm text-slate-600">
+            Pick a teacher to view all reviews (visible to everyone on profile).
+          </p>
           {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
         </div>
         <div className="flex items-center gap-3">
@@ -940,7 +1067,9 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
           >
             <option value="">Choose teacher…</option>
             {teacherOptions.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
           <button
@@ -975,18 +1104,34 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
           </thead>
           <tbody>
             {!teacherId ? (
-              <tr><td className="p-4 text-slate-500" colSpan={5}>Select a teacher…</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={5}>
+                  Select a teacher…
+                </td>
+              </tr>
             ) : loading ? (
-              <tr><td className="p-4 text-slate-500" colSpan={5}>Loading…</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={5}>
+                  Loading…
+                </td>
+              </tr>
             ) : items.length === 0 ? (
-              <tr><td className="p-4 text-slate-500" colSpan={5}>No reviews</td></tr>
+              <tr>
+                <td className="p-4 text-slate-500" colSpan={5}>
+                  No reviews
+                </td>
+              </tr>
             ) : (
               items.map((row) => (
                 <tr key={row._id} className="border-t border-slate-200">
-                  <td className="p-3">{row?.student ? `${row.student.firstName} ${row.student.lastName}` : "—"}</td>
+                  <td className="p-3">
+                    {row?.student ? `${row.student.firstName} ${row.student.lastName}` : "—"}
+                  </td>
                   <td className="p-3">{row.rating}</td>
                   <td className="p-3">{row.comment || "—"}</td>
-                  <td className="p-3">{row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"}</td>
+                  <td className="p-3">
+                    {row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"}
+                  </td>
                   <td className="p-3">
                     <div className="flex justify-end">
                       <button
@@ -1015,7 +1160,15 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
             </div>
             <form onSubmit={create} className="p-4 space-y-4">
               <FieldInput
-                field={{ key: "rating", label: "Rating (1-5)", type: "number", min: 1, max: 5, step: 1, required: true }}
+                field={{
+                  key: "rating",
+                  label: "Rating (1-5)",
+                  type: "number",
+                  min: 1,
+                  max: 5,
+                  step: 1,
+                  required: true,
+                }}
                 value={form.rating}
                 onChange={(v) => setForm((s) => ({ ...s, rating: v }))}
               />
@@ -1025,17 +1178,23 @@ function ReviewsPanel({ teacherOptions, studentOptions }) {
                 onChange={(v) => setForm((s) => ({ ...s, comment: v }))}
               />
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setOpen(false)}
-                        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                >
                   Cancel
                 </button>
-                <button type="submit"
-                        className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                >
                   Save
                 </button>
               </div>
               <p className="text-xs text-slate-500">
-                * Uses your `/reviews` POST (session auth). If you want admin to spoof a student, add a server-side admin endpoint.
+                * Uses your <code>/reviews</code> POST (session auth). If you want admin to spoof a
+                student, add a server-side admin endpoint.
               </p>
             </form>
           </div>

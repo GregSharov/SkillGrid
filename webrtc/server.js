@@ -8,25 +8,46 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // List every frontend origin you actually use (localhost, LAN hostname, tunnels, prod)
-const CLIENT_ORIGINS = [process.env.CLIENT_URL, process.env.CLIENT_ADD_URL];
-const PORT = process.env.PORT || 4000;
+const ALLOWLIST = [process.env.CLIENT_URL, process.env.CLIENT_ADD_URL].filter(
+  Boolean
+);
+const PORT = Number(process.env.SIGNALING_PORT || 4000);
 
 const app = express();
+
+// Express CORS with function-based origin check (handles regex + strings)
 app.use(
   cors({
-    origin: CLIENT_ORIGINS,
+    origin(origin, cb) {
+      // Non-browser requests (curl, mobile apps) may have no origin
+      if (!origin) return cb(null, true);
+      const ok = ALLOWLIST.some((rule) =>
+        typeof rule === "string" ? rule === origin : rule.test?.(origin)
+      );
+      return ok ? cb(null, true) : cb(new Error(`CORS blocked: ${origin}`));
+    },
     credentials: true,
   })
 );
 
 const server = http.createServer(app);
 
+// Socket.IO CORS mirrors Express logic
 const io = new Server(server, {
   path: "/socket.io",
-  cors: { origin: CLIENT_ORIGINS, methods: ["GET", "POST"], credentials: true },
-  transports: ["websocket", "polling"], // allow fallback
+  transports: ["websocket", "polling"],
   pingTimeout: 30000,
   pingInterval: 25000,
+  cors: {
+    origin(origin, cb) {
+      if (!origin) return cb(null, true);
+      const ok = ALLOWLIST.some((rule) =>
+        typeof rule === "string" ? rule === origin : rule.test?.(origin)
+      );
+      return ok ? cb(null, true) : cb(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  },
 });
 
 // --- Simple 2-peer room logic ---
@@ -58,15 +79,11 @@ io.on("connection", (socket) => {
     socket.leave(roomId);
     socket.to(roomId).emit("peer-left");
   });
-
-  socket.on("disconnect", () => {
-    // Optional: you could notify rooms here
-  });
 });
 
 app.get("/", (_req, res) => res.send("WebRTC signaling server running."));
 
-// Listen server on port
 server.listen(PORT, () => {
-  console.log(`Signaling on port: ${PORT}`);
+  console.log(`🔌 Signaling on :${PORT}`);
+  console.log("Allowed origins:", ALLOWLIST);
 });
