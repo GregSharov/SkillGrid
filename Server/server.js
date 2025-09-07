@@ -21,7 +21,7 @@ dotenv.config();
 const app = express();
 
 const URI = process.env.MONGO_URI;
-const PORT = process.env.PORT || 3000; // ✅ fallback for local
+const PORT = process.env.PORT || 3000; // fallback for local
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const isProd = process.env.NODE_ENV === "production";
 

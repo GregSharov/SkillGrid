@@ -1,5 +1,4 @@
-import API_URL from "./apiBase";
-
+import API_URL from "./apiBase.js";
 // Fetch data from the server based on the model type (students, teachers, subjects).
 
 function fetchData(model) {
@@ -15,7 +14,7 @@ function fetchData(model) {
   }
 
   // Fetch data from the server and apply filtering and sorting.
-  return fetch(`${url}${model}`)
+  return fetch(url)
     .then((res) => res.json())
     .then((data) => {
       return sortData(data, model);
