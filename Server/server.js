@@ -33,6 +33,14 @@ app.set("trust proxy", 1);
 // Serve static image files
 app.use("/images", express.static(path.join(__dirname, "images")));
 
+// Connect to MongoDB
+mongoose
+  .connect(URI)
+  .then(() => console.log("Connected to MongoDB!"))
+  .catch((err) => {
+    console.error("Could not connect to MongoDB " + err);
+  });
+
 // CORS (allow your frontend + localhost for dev)
 const allowlist = [
   "http://localhost:3001",
@@ -69,14 +77,6 @@ app.use(
     },
   })
 );
-
-// Connect to MongoDB
-mongoose
-  .connect(URI)
-  .then(() => console.log("Connected to MongoDB!"))
-  .catch((err) => {
-    console.error("Could not connect to MongoDB " + err);
-  });
 
 // Use Routers
 app.use("/user", userRoutes);
