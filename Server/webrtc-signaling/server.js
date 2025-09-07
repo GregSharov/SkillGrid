@@ -68,5 +68,5 @@ app.get("/", (_req, res) => res.send("WebRTC signaling server running."));
 
 // Listen server on port
 server.listen(PORT, () => {
-  console.log(`Signaling on 0.0.0.0:${PORT}`);
+  console.log(`Signaling on port: ${PORT}`);
 });
