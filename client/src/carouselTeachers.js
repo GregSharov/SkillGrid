@@ -3,6 +3,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
+import API_URL from "./services/apiBase.js";
 
 const CarouselTeachers = ({ lessonId, subjectId = null }) => {
   const [teacherData, setTeacherData] = useState([]);
@@ -151,7 +152,7 @@ const CarouselTeachers = ({ lessonId, subjectId = null }) => {
                       {/* Restored image dimensions */}
                       <div className="relative h-1/2 w-full">
                         <img
-                          src={teacher.image}
+                          src={`${API_URL}${teacher.image}`}
                           alt={`${teacher.firstName} ${teacher.lastName}`}
                           className="absolute h-full w-full object-cover object-[95%_5%]"
                           loading="lazy"
