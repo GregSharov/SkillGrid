@@ -45,7 +45,7 @@ function UserCard({ authUser }) {
       if (!res.ok) return console.error("Failed to fetch user profile");
       const data = await res.json();
       setProfile(data.user);
-      setUserImage(data.user?.image || "");
+      setUserImage(`${API_URL}${data.user?.image || ""}`);
     })();
   }, [authUser]);
 
