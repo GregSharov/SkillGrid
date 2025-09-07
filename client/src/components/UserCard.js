@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import fetchData from "../services/fetchData";
 import useUploadImage from "../services/uploadImage";
 import SelectSubjectsForm from "./SelectSubjectsForm";
+import API_URL from "../services/apiBase";
 
 const animatedComponents = makeAnimated();
 
@@ -38,7 +39,7 @@ function UserCard({ authUser }) {
   useEffect(() => {
     if (!authUser?.id) return;
     (async () => {
-      const res = await fetch(`http://localhost:3000/user/${authUser?.id}`, {
+      const res = await fetch(`${API_URL}/user/${authUser?.id}`, {
         credentials: "include",
       });
       if (!res.ok) return console.error("Failed to fetch user profile");
@@ -70,7 +71,7 @@ function UserCard({ authUser }) {
     }
 
     try {
-      await fetch(`http://localhost:3000/user/${authUser?.id}/subjects`, {
+      await fetch(`${API_URL}/user/${authUser?.id}/subjects`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -127,7 +128,7 @@ function UserCard({ authUser }) {
       try {
         if (!authUser?.id) return;
         const response = await fetch(
-          `http://localhost:3000/schedule/user/${authUser.id}`,
+          `${API_URL}/schedule/user/${authUser.id}`,
           { credentials: "include" }
         );
         if (response.status === 401) return navigate("/sign-in");
@@ -174,7 +175,7 @@ function UserCard({ authUser }) {
   // Handle logout
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:3000/user/logout", {
+      const response = await fetch(`${API_URL}/user/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -189,7 +190,7 @@ function UserCard({ authUser }) {
   const handleDeleteLesson = async (slotId) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/schedule/delete/${slotId}`,
+        `${API_URL}/schedule/delete/${slotId}`,
         { method: "DELETE", credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to delete lesson");

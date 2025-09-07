@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API_URL from "./services/apiBase";
 
 function SignIn() {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ function SignIn() {
     setError(false);
 
     try {
-      const res = await fetch("http://localhost:3000/user/login", {
+      const res = await fetch(`${API_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

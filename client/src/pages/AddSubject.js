@@ -1,4 +1,5 @@
 import { useState } from "react";
+import API_URL from "../services/apiBase";
 
 export default function AddSubjectForm() {
   const [subject, setSubject] = useState({
@@ -29,7 +30,7 @@ export default function AddSubjectForm() {
     const payload = { ...subject, lessons };
 
     try {
-      const res = await fetch("http://localhost:3000/subjects/add", {
+      const res = await fetch(`${API_URL}/subjects/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import fetchData from "../services/fetchData";
+import API_URL from "../services/apiBase";
 
 const animatedComponents = makeAnimated();
-const defaultUserImage = "http://localhost:3000/images/user.png";
+const defaultUserImage = `${API_URL}/images/user.png`;
 
 function TeacherCard({ teacher }) {
   const [subjectData, setSubjectData] = useState([]);

@@ -1,5 +1,6 @@
 // src/services/uploadImage.js
 import { useState } from "react";
+import API_URL from "./apiBase";
 
 export default function useUploadImage() {
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,7 @@ export default function useUploadImage() {
       formData.append("userId", userId);
       formData.append("image", file);
 
-      const response = await fetch("http://localhost:3000/user/upload", {
+      const response = await fetch(`${API_URL}/user/upload`, {
         method: "POST",
         body: formData,
       });

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import API_URL from "./services/apiBase";
 
 function SignUp() {
   const [formData, setFormData] = useState({
@@ -81,7 +82,7 @@ function SignUp() {
     if (!formValid) return;
 
     try {
-      const res = await fetch("http://localhost:3000/user/signup", {
+      const res = await fetch(`${API_URL}/user/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

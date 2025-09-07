@@ -6,6 +6,7 @@ import CarouselLessons from "./carouselLessons.js";
 import RatingStars from "./components/RatingStars.js";
 import ReviewsList from "./components/ReviewList.js";
 import ReviewForm from "./components/ReviewForm.js";
+import API_URL from "./services/apiBase.js";
 
 function DisplayTeacherData() {
   // State for managing booking status
@@ -122,7 +123,7 @@ function DisplayTeacherData() {
     inFlightRef.current = true;
 
     try {
-      const response = await fetch("http://localhost:3000/schedule/add", {
+      const response = await fetch(`${API_URL}/schedule/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,7 +160,7 @@ function DisplayTeacherData() {
     if (!teacherId) return;
     try {
       const response = await fetch(
-        `http://localhost:3000/schedule/user/${teacherId}`,
+        `${API_URL}/schedule/user/${teacherId}`,
         {
           method: "GET",
           credentials: "include",
@@ -185,7 +186,7 @@ function DisplayTeacherData() {
   useEffect(() => {
     const fetchStudentId = async () => {
       try {
-        const response = await fetch("http://localhost:3000/user/me", {
+        const response = await fetch(`${API_URL}/user/me`, {
           method: "GET",
           credentials: "include",
         });
@@ -207,7 +208,7 @@ function DisplayTeacherData() {
     const fetchStudentProfile = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/user/${student?.id}`,
+          `${API_URL}/user/${student?.id}`,
           {
             method: "GET",
             credentials: "include",
@@ -228,7 +229,7 @@ function DisplayTeacherData() {
     const fetchTeacherProfile = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/user/${teacherId}`,
+          `${API_URL}/user/${teacherId}`,
           {
             method: "GET",
             credentials: "include",

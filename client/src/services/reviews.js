@@ -1,5 +1,7 @@
-const API = "http://localhost:3000";
+import API_URL from "./apiBase";
+const API = API_URL;
 
+// Fetch reviews for a specific teacher by their ID.
 export async function getTeacherReviews(teacherId) {
   const res = await fetch(`${API}/reviews/teacher/${teacherId}`, {
     credentials: "include",
