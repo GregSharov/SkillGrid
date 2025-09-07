@@ -55,7 +55,7 @@ var Model = Student;
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     const { userId } = req.body;
-    const imagePath = `http://localhost:3000/images/${subfolder}/${req.file.filename}`;
+    const imagePath = `/images/${subfolder}/${req.file.filename}`;
 
     // Detect correct model (Student or Teacher)
     // Model = (await Student.findById(userId)) ? Student : Teacher;
@@ -182,7 +182,7 @@ router.get("/me", async (req, res) => {
   try {
     const user = req.session.user;
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(200).json({ message: "Unauthorized" });
     }
     return res.status(200).json({ user: user });
   } catch (error) {
