@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import session from "express-session";
+import dotenv from "dotenv";
 
 // Routes
 import userRoutes from "./routes/userRoute.js";
@@ -16,24 +17,24 @@ import reviews from "./routes/reviews.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config();
 
 // MongoDB connection string
-const uri =
-  "mongodb+srv://GregAdmin:greg-25@cluster0.crqk0.mongodb.net/SkillGridDB?retryWrites=true&w=majority&appName=Cluster0";
+const uri = process.env.MONGO_URI;
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 // Serve static image files
 app.use("/images", express.static(path.join(__dirname, "images")));
-app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
+app.use(cors({ credentials: true, origin: process.env.FRONTEND_URL }));
 app.use(express.json());
 
 // Session middleware
 app.use(
   session({
     name: "sid",
-    secret: "superSecretKey", // required (should be in .env)
+    secret: process.env.SESSION_SECRET, // required (should be in .env)
     resave: false, // don't save session if not modified
     saveUninitialized: false, // don't create empty sessions
     cookie: {
@@ -62,6 +63,10 @@ app.use("/subjects", subjectRoutes);
 app.use("/schedule", scheduleLessonRoutes);
 app.use("/reviews", reviews);
 // app.use("/subject", addSubjectRoutes);
+
+app.get("*", (req, res) => {
+  res.status(200).type("text/html").send("<h1>Welcome to Skill Grid API</h1>");
+});
 
 // Listen to a Server
 app.listen(PORT, () => {

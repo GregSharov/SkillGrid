@@ -3,12 +3,13 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // List every frontend origin you actually use (localhost, LAN hostname, tunnels, prod)
-const CLIENT_ORIGINS = [
-  "http://localhost:3001",
-  "http://127.0.0.1:3001",
-];
+const CLIENT_ORIGINS = [process.env.CLIENT_URL, process.env.CLIENT_ADD_URL];
+const PORT = process.env.PORT || 4000;
 
 const app = express();
 app.use(
@@ -49,7 +50,9 @@ io.on("connection", (socket) => {
   // Relay SDP & ICE
   socket.on("offer", (roomId, sdp) => socket.to(roomId).emit("offer", sdp));
   socket.on("answer", (roomId, sdp) => socket.to(roomId).emit("answer", sdp));
-  socket.on("ice-candidate", (roomId, c) => socket.to(roomId).emit("ice-candidate", c));
+  socket.on("ice-candidate", (roomId, c) =>
+    socket.to(roomId).emit("ice-candidate", c)
+  );
 
   socket.on("leave", (roomId) => {
     socket.leave(roomId);
@@ -63,8 +66,7 @@ io.on("connection", (socket) => {
 
 app.get("/", (_req, res) => res.send("WebRTC signaling server running."));
 
-const PORT = process.env.PORT || 4000;
-// Bind to 0.0.0.0 so LAN/tunnels can reach it
-server.listen(PORT, "0.0.0.0", () => {
+// Listen server on port
+server.listen(PORT, () => {
   console.log(`Signaling on 0.0.0.0:${PORT}`);
 });
