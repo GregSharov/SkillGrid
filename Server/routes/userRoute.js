@@ -182,7 +182,7 @@ router.get("/me", async (req, res) => {
   try {
     const user = req.session.user;
     if (!user) {
-      return res.status(200).json({ message: "Unauthorized" });
+      return;
     }
     return res.status(200).json({ user: user });
   } catch (error) {
