@@ -19,6 +19,9 @@
     "start": "node server.js",
     "build": "npm install"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "argon2": "^0.44.0",
     "cors": "^2.8.5",

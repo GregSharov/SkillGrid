@@ -19,15 +19,38 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config();
 
-// MongoDB connection string
-const uri = process.env.MONGO_URI;
-
 const app = express();
+
+// MongoDB connection string
+const URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const isProd = process.env.NODE_ENV === "production";
+
+// Trust proxy: required for secure cookies on Render (behind proxy)
+app.set("trust proxy", 1);
 
 // Serve static image files
 app.use("/images", express.static(path.join(__dirname, "images")));
-app.use(cors({ credentials: true, origin: true }));
+
+// CORS (allow your frontend + localhost for dev)
+const allowlist = [
+  "http://localhost:3001",
+  "http://localhost:5173",
+  FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    credentials: true,
+    origin(origin, cb) {
+      if (!origin) return cb(null, true); // allow curl/Postman
+      if (allowlist.includes(origin)) return cb(null, true);
+      return cb(new Error("Not allowed by CORS"));
+    },
+  })
+);
+
 app.use(express.json());
 
 // Session middleware
@@ -39,8 +62,8 @@ app.use(
     saveUninitialized: false, // don't create empty sessions
     cookie: {
       httpOnly: true,
-      sameSite: "lax", // dev same origin
-      secure: false,
+      sameSite: isProd ? "none" : "lax", // dev same origin
+      secure: isProd, // send cookie over https only in production
       maxAge: 1000 * 60 * 60 * 24,
       path: "/",
     },
@@ -49,7 +72,7 @@ app.use(
 
 // Connect to MongoDB
 mongoose
-  .connect(uri)
+  .connect(URI)
   .then(() => console.log("Connected to MongoDB!"))
   .catch((err) => {
     console.error("Could not connect to MongoDB " + err);
@@ -64,6 +87,8 @@ app.use("/schedule", scheduleLessonRoutes);
 app.use("/reviews", reviews);
 // app.use("/subject", addSubjectRoutes);
 
+// Health + welcome
+app.get("/healthz", (req, res) => res.status(200).send("ok"));
 app.get("*", (req, res) => {
   res.status(200).type("text/html").send("<h1>Welcome to Skill Grid API</h1>");
 });
