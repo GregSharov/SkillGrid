@@ -1,5 +1,6 @@
 // client/src/pages/AdminDashboard.js
 import { useEffect, useMemo, useState, useCallback } from "react";
+import API_URL from "../services/apiBase";
 import {
   PlusIcon,
   PencilIcon,
@@ -11,10 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import useUploadImage from "../services/uploadImage";
 
-const API =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
-  process.env.REACT_APP_API_URL ||
-  "http://localhost:3000";
+const API = API_URL;
 
 /* --------------------- tiny fetch utils --------------------- */
 async function apiGet(path) {
