@@ -24,7 +24,8 @@ const app = express();
 const URI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 3000; // fallback for local
 const FRONTEND_URL = process.env.FRONTEND_URL;
-const isProd = process.env.NODE_ENV === "production";
+// Consider Render as production-like environment for cookie/security
+const isProd = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
 
 // Trust proxy (required for secure cookies on Render)
 app.set("trust proxy", 1);
@@ -44,6 +45,19 @@ app.use(
     credentials: true,
     origin(origin, cb) {
       if (!origin) return cb(null, true); // curl/Postman
+      if (allowlist.includes(origin)) return cb(null, true);
+      return cb(new Error("Not allowed by CORS"));
+    },
+  })
+);
+
+// Explicitly handle CORS preflight for all routes
+app.options(
+  "*",
+  cors({
+    credentials: true,
+    origin(origin, cb) {
+      if (!origin) return cb(null, true);
       if (allowlist.includes(origin)) return cb(null, true);
       return cb(new Error("Not allowed by CORS"));
     },
@@ -74,6 +88,14 @@ app.use(
     },
   })
 );
+
+// Optional: session debug (enable with DEBUG_SESS=true)
+app.use((req, res, next) => {
+  if (process.env.DEBUG_SESS === "true") {
+    console.log("origin:", req.headers.origin, "sessionID:", req.sessionID, "user:", req.session?.user);
+  }
+  next();
+});
 
 // Routers (make sure inside each file you use `router.get('/')`, not `'/teachers'` again)
 app.use("/user", userRoutes);
