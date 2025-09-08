@@ -70,6 +70,7 @@ app.use(
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
       path: "/",
+      domain: ".onrender.com",
       maxAge: 1000 * 60 * 60 * 24,
     },
   })
