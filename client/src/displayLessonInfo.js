@@ -32,7 +32,7 @@ const DisplayLessonsInfo = ({ lessonId }) => {
               <div className="relative">
                 <img
                   className="w-full h-80 sm:h-96 object-cover"
-                  src={`${API_URL}lessonData.image`}
+                  src={`${API_URL}${lessonData.image}`}
                   alt={lessonData.name}
                   loading="lazy"
                 />
