@@ -66,7 +66,7 @@ router.post("/upload", upload.single("image"), async (req, res) => {
     } else {
       Model = Subject;
     }
-    
+
     const user = await Model.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found." });
 
@@ -130,49 +130,33 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password, isTeacher } = req.body;
   try {
-    // Detect correct model (Student or Teacher)
     const Model = isTeacher ? Teacher : Student;
-
-    // Check if email exists in such Model
     const user = await Model.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    const ok = await VerifyPassword(user.password, password);
+    if (!ok) return res.status(401).json({ message: "Invalid password." });
 
-    // Verify password
-    const isValid = await VerifyPassword(user.password, password);
-    if (!isValid) {
-      return res.status(401).json({ message: "Invalid password." });
-    }
-
-    // Regenerate session
     req.session.regenerate((err) => {
-      if (err) {
-        console.error("Error regenerating session:", err);
-        return res.status(500).json({ message: "Error logging in user." });
-      }
-      // Set user session
+      if (err) return res.status(500).json({ message: "Session error." });
+
       req.session.user = {
         id: user._id,
         role: user.isTeacher ? "teacher" : "student",
       };
 
-      // Save session
-      req.session.save((err) => {
-        if (err) {
-          console.error("Error saving session:", err);
+      req.session.save((err2) => {
+        if (err2)
           return res.status(500).json({ message: "Session save failed." });
-        }
-      });
 
-      // Return user data
-      res
-        .status(200)
-        .json({ message: "Login successful.", user: req.session.user });
+        // <-- Only respond after save so Set-Cookie definitely goes out
+        return res
+          .status(200)
+          .json({ message: "Login successful.", user: req.session.user });
+      });
     });
-  } catch (error) {
-    console.error("Error logging in user:", error);
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ message: "Error logging in user." });
   }
 });

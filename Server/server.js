@@ -67,10 +67,10 @@ app.use(
     }),
     cookie: {
       httpOnly: true,
-      sameSite: "lax",
       secure: isProd,
-      maxAge: 1000 * 60 * 60 * 24,
+      sameSite: isProd ? "none" : "lax",
       path: "/",
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
