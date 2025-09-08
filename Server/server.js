@@ -34,7 +34,13 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 
 // CORS allowlist
 const allowlist = [
+  // local dev (CRA default)
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  // alternate local port
   "http://localhost:3001",
+  "http://127.0.0.1:3001",
+  // deployed frontend
   "https://skillgrid-edu.onrender.com",
   FRONTEND_URL,
 ].filter(Boolean);

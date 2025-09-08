@@ -149,6 +149,12 @@ router.post("/login", async (req, res) => {
         if (err2)
           return res.status(500).json({ message: "Session save failed." });
 
+        // Diagnostics: confirm session cookie + payload
+        try {
+          console.log("[LOGIN] sessionID:", req.sessionID);
+          console.log("[LOGIN] cookie sent?", Boolean(req.session.cookie));
+          console.log("[LOGIN] user:", req.session.user);
+        } catch {}
         // <-- Only respond after save so Set-Cookie definitely goes out
         return res
           .status(200)
@@ -164,6 +170,12 @@ router.post("/login", async (req, res) => {
 // Get current logged in user (id, role)
 router.get("/me", async (req, res) => {
   try {
+    // Diagnostics: print minimal cookie + session state
+    try {
+      console.log("[ME] hasCookieHeader:", Boolean(req.headers.cookie));
+      console.log("[ME] sessionID:", req.sessionID);
+    } catch {}
+
     const user = req.session.user;
     if (!user) {
       return res.status(401).json({ message: "Not authenticated." });
