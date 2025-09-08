@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import CarouselTeachers from "./carouselTeachers";
+import API_URL from "./services/apiBase";
 
 const DisplayLessonsInfo = ({ lessonId }) => {
   const [lessonData, setLessonData] = useState(null);
@@ -31,7 +32,7 @@ const DisplayLessonsInfo = ({ lessonId }) => {
               <div className="relative">
                 <img
                   className="w-full h-80 sm:h-96 object-cover"
-                  src={lessonData.image}
+                  src={`${API_URL}lessonData.image`}
                   alt={lessonData.name}
                   loading="lazy"
                 />
