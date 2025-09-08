@@ -78,16 +78,6 @@ const CarouselSubjects = ({ onSubjectClick }) => {
   return (
     <div className="w-full px-4 py-10">
       <div className="mx-auto max-w-7xl">
-        {/* Title */}
-        {/* <div className="mb-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Browse <span className="text-indigo-600">Subjects</span>
-          </h2>
-          <p className="mt-1 text-slate-600 text-sm">
-            Pick a subject to explore lessons and teachers.
-          </p>
-        </div> */}
-
         {/* Carousel wrapper */}
         <div className="relative">
           {/* Previous Button */}

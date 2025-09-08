@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import session from "express-session";
+import MongoStore from "connect-mongo";
 import dotenv from "dotenv";
 
 // Routes
@@ -34,7 +35,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 // CORS allowlist
 const allowlist = [
   "http://localhost:3001",
-  "http://localhost:5173",
+  "https://skillgrid-edu.onrender.com",
   FRONTEND_URL,
 ].filter(Boolean);
 
@@ -58,9 +59,15 @@ app.use(
     secret: process.env.SESSION_SECRET || "change-me",
     resave: false,
     saveUninitialized: false,
+    proxy: true,
+    store: MongoStore.create({
+      mongoUrl: URI,
+      collectionName: "sessions",
+      ttl: 60 * 60 * 24 * 7, // 1 week
+    }),
     cookie: {
       httpOnly: true,
-      sameSite: isProd ? "none" : "lax",
+      sameSite: "lax",
       secure: isProd,
       maxAge: 1000 * 60 * 60 * 24,
       path: "/",
