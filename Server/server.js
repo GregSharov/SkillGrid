@@ -70,7 +70,6 @@ app.use(
       sameSite: isProd ? "none" : "lax",
       path: "/",
       maxAge: 1000 * 60 * 60 * 24,
-      domain: isProd ? ".onrender.com" : null,
     },
   })
 );
