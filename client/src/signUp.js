@@ -85,6 +85,7 @@ function SignUp() {
       const res = await fetch(`${API_URL}/user/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
           phone: phoneDigits, // send clean digits to server

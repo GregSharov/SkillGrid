@@ -17,6 +17,7 @@ export default function useUploadImage() {
 
       const response = await fetch(`${API_URL}/user/upload`, {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
 

@@ -126,6 +126,7 @@ function DisplayTeacherData() {
       const response = await fetch(`${API_URL}/schedule/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           teacher: teacherProfile,
           student: studentProfile,

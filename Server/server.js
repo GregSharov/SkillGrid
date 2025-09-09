@@ -59,12 +59,11 @@ app.use(
     secret: process.env.SESSION_SECRET || "change-me",
     resave: false,
     saveUninitialized: false,
-    proxy: true,
-    store: MongoStore.create({
+    store: isProd ? MongoStore.create({
       mongoUrl: URI,
       collectionName: "sessions",
       ttl: 60 * 60 * 24 * 7, // 1 week
-    }),
+    }) : null,
     cookie: {
       httpOnly: true,
       secure: isProd,

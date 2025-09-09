@@ -14,7 +14,9 @@ function fetchData(model) {
   }
 
   // Fetch data from the server and apply filtering and sorting.
-  return fetch(url)
+  return fetch(url, {
+    credentials: "include", // Include cookies for session authentication
+  })
     .then((res) => res.json())
     .then((data) => {
       return sortData(data, model);

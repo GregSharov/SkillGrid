@@ -35,6 +35,7 @@ export default function AddSubjectForm() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
