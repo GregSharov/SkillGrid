@@ -2,7 +2,7 @@ import API_URL from "./apiBase.js";
 // Fetch data from the server based on the model type (students, teachers, subjects).
 
 function fetchData(model) {
-  const url = `${API_URL}/api/${model}`;
+  const url = `${API_URL}/${model}`;
 
   // Sort data based on the model type in alphabetical order.
   function sortData(data, model) {
