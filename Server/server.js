@@ -24,6 +24,7 @@ const app = express();
 const URI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 3000; // fallback for local
 const FRONTEND_URL = process.env.FRONTEND_URL;
+const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
 const isProd = process.env.NODE_ENV === "production";
 
 // Trust proxy (required for secure cookies on Render)
@@ -34,8 +35,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 
 // CORS allowlist
 const allowlist = [
-  "http://localhost:3001",
-  "https://skillgrid-edu.onrender.com",
+  FRONT_LOCAL_URL,
   FRONTEND_URL,
 ].filter(Boolean);
 
