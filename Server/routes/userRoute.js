@@ -135,6 +135,7 @@ router.post("/login", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
 
     const ok = await VerifyPassword(user.password, password);
+    
     if (!ok) return res.status(401).json({ message: "Invalid password." });
 
     req.session.regenerate((err) => {
@@ -168,6 +169,7 @@ router.get("/me", async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Not authenticated." });
     }
+
     return res.status(200).json({ user: user });
   } catch (error) {
     console.error("Error fetching user data:", error);

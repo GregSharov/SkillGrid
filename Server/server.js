@@ -56,14 +56,14 @@ app.use(express.json());
 app.use(
   session({
     name: "sid",
-    secret: process.env.SESSION_SECRET || "change-me",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: isProd ? MongoStore.create({
       mongoUrl: URI,
       collectionName: "sessions",
       ttl: 60 * 60 * 24 * 7, // 1 week
-    }) : null,
+    }) : undefined,
     cookie: {
       httpOnly: true,
       secure: isProd,
