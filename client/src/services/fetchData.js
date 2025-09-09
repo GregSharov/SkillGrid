@@ -1,7 +1,7 @@
 import API_URL from "./apiBase.js";
 // Fetch data from the server based on the model type (students, teachers, subjects).
 
-function fetchData(model) {
+async function fetchData(model) {
   const url = `${API_URL}/${model}`;
 
   // Sort data based on the model type in alphabetical order.
@@ -14,8 +14,9 @@ function fetchData(model) {
   }
 
   // Fetch data from the server and apply filtering and sorting.
-  return fetch(url, {
+  return await fetch(url, {
     credentials: "include", // Include cookies for session authentication
+    headers: { "Content-Type": "application/json" },
   })
     .then((res) => res.json())
     .then((data) => {

@@ -24,7 +24,7 @@ function SignIn() {
     setError(false);
 
     try {
-      const res = await fetch(`${API_URL}/api/user/login`, {
+      const res = await fetch(`${API_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

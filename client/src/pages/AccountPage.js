@@ -10,8 +10,9 @@ const AccountPage = () => {
   // Ensure that user is authenticated
   useEffect(() => {
     (async () => {
-      const res = await fetch(`${API_URL}/api/user/me`, {
+      const res = await fetch(`${API_URL}/user/me`, {
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) {
         console.error("Not logged in");
