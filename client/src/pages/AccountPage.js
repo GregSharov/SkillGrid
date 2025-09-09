@@ -26,9 +26,10 @@ const AccountPage = () => {
   }, [navigate]);
 
   return (
-    <div className="p-4">
-      <UserCard authUser={authUser} />
-    </div>
+    (authUser && (
+      <div className="p-4">
+        <UserCard authUser={authUser} />
+      </div>))
   );
 };
 export default AccountPage;
