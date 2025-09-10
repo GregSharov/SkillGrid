@@ -1,13 +1,12 @@
 import { useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
-export default function AutoJoin() {
+export default function JoinCall() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (roomId) {
-      // tiny delay so the UI renders the loader first (feels snappier)
       const t = setTimeout(() => {
         navigate(`/call/${encodeURIComponent(roomId)}`, { replace: true });
       }, 300);
@@ -23,10 +22,8 @@ export default function AutoJoin() {
           aria-live="polite"
           aria-busy="true"
         >
-          {/* decorative hairline */}
           <div className="h-1 w-full bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500" />
           <div className="p-8 text-center">
-            {/* spinner */}
             <div className="mx-auto mb-4 grid place-items-center h-14 w-14 rounded-full bg-slate-50 ring-1 ring-slate-200">
               <svg
                 className="h-7 w-7 animate-spin text-indigo-600"

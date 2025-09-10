@@ -1,43 +1,47 @@
-// client/src/pages/CallPage.jsx
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 
-/* ------------------- Signaling URL resolver ------------------- */
-// Works on localhost/LAN, tunnels, and prod. Prefers explicit env URL.
-// Supports CRA (process.env.REACT_APP_*) and Vite (import.meta.env.VITE_*).
-const isHttps =
-  typeof window !== "undefined" && window.location.protocol === "https:";
-const HOST =
-  typeof window !== "undefined" ? window.location.hostname : "localhost";
-
+/* --------- Signaling URL (explicit env in prod; localhost in dev) --------- */
 const ENV_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_WEBRTC_URL) ||
   process.env.REACT_APP_WEBRTC_URL;
 
-const ENV_PORT =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_WEBRTC_PORT) ||
-  process.env.REACT_APP_WEBRTC_PORT;
+const SIGNALING_URL =
+  (ENV_URL && ENV_URL.replace(/\/$/, "")) ||
+    (typeof window !== "undefined" && window.location.hostname === "localhost")
+    ? "http://localhost:4000"
+    : "http://localhost:4000"; // dev fallback
 
-let SIGNALING_URL = "";
-if (ENV_URL) {
-  SIGNALING_URL = ENV_URL.replace(/\/$/, "");
-} else if (ENV_PORT) {
-  SIGNALING_URL = `${isHttps ? "https" : "http"}://${HOST}:${ENV_PORT}`;
-} else {
-  // Default: dev -> :4000, prod HTTPS -> same-origin
-  const isIp = /^\d+\.\d+\.\d+\.\d+$/.test(HOST);
-  const devPort = HOST === "localhost" || isIp ? "4000" : "";
-  SIGNALING_URL = devPort
-    ? `${isHttps ? "https" : "http"}://${HOST}:${devPort}`
-    : `${isHttps ? "https" : "http"}://${HOST}`;
-}
-
-/* ------------------------ ICE servers ------------------------ */
-// Add TURN for production/NAT traversal.
+/* ------------------------ ICE servers (expressTURN) ------------------------ */
+/* Replace <1TJPNFxHKXrZfelz> with your real 1TJPNFxHKXrZfelz. You can also move these to envs. */
 const iceServers = [
+  // STUN (public)
   { urls: "stun:stun.l.google.com:19302" },
-  // { urls: "turn:YOUR_TURN_HOST:3478", username: "user", credential: "pass" },
+  // STUN (expressTURN)
+  { urls: "stun:relay1.expressturn.com:3478" },
+
+  // TURN (expressTURN) — multiple transports/ports for reachability
+  {
+    urls: "turn:relay1.expressturn.com:3478?transport=udp",
+    username: "efPU52K4SLOQ34W2QY",
+    credential: "<1TJPNFxHKXrZfelz>",
+  },
+  {
+    urls: "turn:relay1.expressturn.com:3478?transport=tcp",
+    username: "efPU52K4SLOQ34W2QY",
+    credential: "<1TJPNFxHKXrZfelz>",
+  },
+  {
+    urls: "turns:relay1.expressturn.com:5349?transport=tcp",
+    username: "efPU52K4SLOQ34W2QY",
+    credential: "<1TJPNFxHKXrZfelz>",
+  },
+  {
+    urls: "turn:relay1.expressturn.com:3480?transport=tcp",
+    username: "efPU52K4SLOQ34W2QY",
+    credential: "<1TJPNFxHKXrZfelz>",
+  },
 ];
 
 export default function CallPage() {
@@ -56,20 +60,20 @@ export default function CallPage() {
   const [camOn, setCamOn] = useState(true);
   const [sharing, setSharing] = useState(false);
 
-  // Initiator state + ref (avoid stale closures inside socket handlers)
+  // initiator tracking (ref avoids stale closure in handlers)
   const [isInitiator, setIsInitiator] = useState(false);
   const isInitiatorRef = useRef(false);
   useEffect(() => {
     isInitiatorRef.current = isInitiator;
   }, [isInitiator]);
 
-  /* ---------------- Socket wiring + lifecycle ---------------- */
+  /* ------------------------- Socket wiring & lifecycle ------------------------- */
   useEffect(() => {
-    // ✅ capture elements once for stable cleanup (fixes ESLint warning)
+    // capture nodes once for safe cleanup
     const localEl = localVideoRef.current;
     const remoteEl = remoteVideoRef.current;
 
-    // Create socket (allow polling fallback)
+    // connect to signaling
     socketRef.current = io(SIGNALING_URL, {
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -124,47 +128,45 @@ export default function CallPage() {
       try {
         await pcRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
-        console.error("Error adding received ICE candidate", err);
+        console.error("Error adding ICE candidate", err);
       }
     });
 
     socketRef.current.on("peer-left", () => {
       setStatus("Peer left");
-      if (remoteEl) remoteEl.srcObject = null; // use captured node
+      if (remoteEl) remoteEl.srcObject = null;
     });
 
-    // Cleanup
+    // cleanup
     return () => {
       try {
         socketRef.current?.emit("leave", roomId);
         socketRef.current?.disconnect();
-      } catch {}
+      } catch { }
 
       try {
         pcRef.current?.getSenders().forEach((s) => s.track?.stop());
         pcRef.current?.close();
-      } catch {}
+      } catch { }
       pcRef.current = null;
 
       try {
         screenTrackRef.current?.stop();
-      } catch {}
+      } catch { }
       screenTrackRef.current = null;
 
       try {
         localStreamRef.current?.getTracks().forEach((t) => t.stop());
-      } catch {}
+      } catch { }
       localStreamRef.current = null;
 
-      // ✅ use captured nodes only in cleanup
       if (localEl) localEl.srcObject = null;
       if (remoteEl) remoteEl.srcObject = null;
     };
-    // NOTE: roomId only; we use isInitiatorRef to avoid re-wiring on isInitiator changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  /* ------------- Media & Peer setup with fallbacks ------------- */
+  /* ---------------------- Media & RTCPeerConnection setup --------------------- */
   const setupMediaAndPeer = async () => {
     setStatus("Getting media…");
 
@@ -172,7 +174,7 @@ export default function CallPage() {
     let sendVideo = false;
     let sendAudio = false;
 
-    // 1) Try camera+mic
+    // 1) try cam+mic
     try {
       localStream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -182,7 +184,7 @@ export default function CallPage() {
       sendAudio = true;
     } catch (err) {
       console.warn("getUserMedia error:", err?.name, err?.message);
-      // 2) If camera blocked or constraints fail, try mic-only
+      // 2) fallback mic-only
       if (
         err?.name === "NotAllowedError" ||
         err?.name === "SecurityError" ||
@@ -199,7 +201,7 @@ export default function CallPage() {
           setStatus("Camera blocked — audio-only mode");
         } catch (err2) {
           console.warn("Audio-only failed:", err2?.name, err2?.message);
-          // 3) No local media: recv-only
+          // 3) recv-only
           setCamOn(false);
           setMicOn(false);
           setStatus("No local media — recv-only");
@@ -211,11 +213,15 @@ export default function CallPage() {
       }
     }
 
-    // 4) Create peer connection
-    const pc = new RTCPeerConnection({ iceServers });
+    // 4) peer connection
+    const pc = new RTCPeerConnection({
+      iceServers,
+      // For strict NAT debugging, temporarily uncomment:
+      // iceTransportPolicy: "relay",
+    });
     pcRef.current = pc;
 
-    // 5) Match SDP to our intent even if we have no tracks
+    // 5) align transceivers (so SDP matches even without local tracks)
     pc.addTransceiver("video", {
       direction: sendVideo ? "sendrecv" : "recvonly",
     });
@@ -223,18 +229,17 @@ export default function CallPage() {
       direction: sendAudio ? "sendrecv" : "recvonly",
     });
 
-    // 6) If we have stream, add tracks & preview
+    // 6) add local tracks + preview
     if (localStream) {
       localStreamRef.current = localStream;
       localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
       if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
     }
 
-    // 7) Remote track handler
+    // 7) remote track
     pc.ontrack = (event) => {
       const [remoteStream] = event.streams;
-      if (remoteVideoRef.current)
-        remoteVideoRef.current.srcObject = remoteStream;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
     };
 
     // 8) ICE -> signaling
@@ -247,7 +252,7 @@ export default function CallPage() {
     setStatus(isInitiatorRef.current ? "Waiting for peer…" : "Joining room…");
   };
 
-  /* --------------------------- Controls --------------------------- */
+  /* --------------------------------- Controls -------------------------------- */
   const hangup = () => {
     socketRef.current?.emit("leave", roomId);
     navigate("/");
@@ -282,8 +287,7 @@ export default function CallPage() {
         .find((s) => s.track?.kind === "video");
       if (sender) await sender.replaceTrack(screenTrack);
 
-      if (localVideoRef.current)
-        localVideoRef.current.srcObject = displayStream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = displayStream;
 
       screenTrack.onended = async () => {
         await stopShare();
@@ -377,10 +381,9 @@ export default function CallPage() {
             <button
               onClick={toggleMic}
               className={`rounded-2xl px-4 py-2 text-sm font-semibold shadow-sm ring-1 transition
-                ${
-                  micOn
-                    ? "bg-white text-slate-800 ring-slate-200 hover:bg-slate-50"
-                    : "bg-rose-600 text-white ring-rose-500 hover:bg-rose-700"
+                ${micOn
+                  ? "bg-white text-slate-800 ring-slate-200 hover:bg-slate-50"
+                  : "bg-rose-600 text-white ring-rose-500 hover:bg-rose-700"
                 }`}
               aria-pressed={micOn ? "true" : "false"}
             >
@@ -390,10 +393,9 @@ export default function CallPage() {
             <button
               onClick={toggleCam}
               className={`rounded-2xl px-4 py-2 text-sm font-semibold shadow-sm ring-1 transition
-                ${
-                  camOn
-                    ? "bg-white text-slate-800 ring-slate-200 hover:bg-slate-50"
-                    : "bg-amber-500 text-white ring-amber-400 hover:bg-amber-600"
+                ${camOn
+                  ? "bg-white text-slate-800 ring-slate-200 hover:bg-slate-50"
+                  : "bg-amber-500 text-white ring-amber-400 hover:bg-amber-600"
                 }`}
               aria-pressed={camOn ? "true" : "false"}
             >
