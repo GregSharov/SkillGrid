@@ -7,11 +7,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const FRONT_URL = process.env.CLIENT_URL;
+const FRONT_LOCAL_URL = process.env.CLIENT_ADD_URL;
 // List every frontend origin you actually use (localhost, LAN hostname, tunnels, prod)
-const ALLOWLIST = [process.env.CLIENT_URL, process.env.CLIENT_ADD_URL].filter(
+const ALLOWLIST = [FRONT_URL, FRONT_LOCAL_URL].filter(
   Boolean
 );
-const PORT = Number(process.env.SIGNALING_PORT || 4000);
+
+const PORT = Number(process.env.PORT || process.env.SIGNALING_PORT || 4000);
 
 const app = express();
 
