@@ -14,7 +14,9 @@ const SIGNALING_URL =
     : "http://localhost:4000"; // dev fallback
 
 /* ------------------------ ICE servers (expressTURN) ------------------------ */
-/* Replace <1TJPNFxHKXrZfelz> with your real 1TJPNFxHKXrZfelz. You can also move these to envs. */
+const username = process.env.REACT_APP_TURN_USERNAME;
+const password = process.env.REACT_APP_TURN_PASSWORD;
+
 const iceServers = [
   // STUN (public)
   { urls: "stun:stun.l.google.com:19302" },
@@ -24,23 +26,23 @@ const iceServers = [
   // TURN (expressTURN) — multiple transports/ports for reachability
   {
     urls: "turn:relay1.expressturn.com:3478?transport=udp",
-    username: "efPU52K4SLOQ34W2QY",
-    credential: "<1TJPNFxHKXrZfelz>",
+    username: username,
+    credential: password,
   },
   {
     urls: "turn:relay1.expressturn.com:3478?transport=tcp",
-    username: "efPU52K4SLOQ34W2QY",
-    credential: "<1TJPNFxHKXrZfelz>",
+    username: username,
+    credential: password,
   },
   {
     urls: "turns:relay1.expressturn.com:5349?transport=tcp",
-    username: "efPU52K4SLOQ34W2QY",
-    credential: "<1TJPNFxHKXrZfelz>",
+    username: username,
+    credential: password,
   },
   {
     urls: "turn:relay1.expressturn.com:3480?transport=tcp",
-    username: "efPU52K4SLOQ34W2QY",
-    credential: "<1TJPNFxHKXrZfelz>",
+    username: username,
+    credential: password,
   },
 ];
 
