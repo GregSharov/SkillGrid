@@ -43,6 +43,9 @@ app.use(
   cors({
     credentials: true,
     origin(origin, cb) {
+      // In non-production, allow all origins to simplify LAN testing
+      if (!isProd) return cb(null, true);
+      // Else: for production
       if (!origin) return cb(null, true); // curl/Postman
       if (allowlist.includes(origin)) return cb(null, true);
       return cb(new Error("Not allowed by CORS"));
