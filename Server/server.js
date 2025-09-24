@@ -27,9 +27,11 @@ const URI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 3000; // fallback for local
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
-const key = fs.readFileSync(process.env.SSL_KEY_FILE);
-const cert = fs.readFileSync(process.env.SSL_CERT_FILE);
 const isProd = process.env.NODE_ENV === "production";
+
+// For LAN/local HTTPS testing (mkcert)
+const key = !isProd ? fs.readFileSync(process.env.SSL_KEY_FILE) : null;
+const cert = !isProd ? fs.readFileSync(process.env.SSL_CERT_FILE) : null;
 
 // Trust proxy (required for secure cookies on Render)
 app.set("trust proxy", 1);
