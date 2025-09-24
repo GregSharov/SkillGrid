@@ -1,6 +1,9 @@
 # DS-Store
 .DS_Store
 
+# SSL keys certs
+*.pem
+
 # Logs
 logs
 *.log

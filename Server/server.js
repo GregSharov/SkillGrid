@@ -6,6 +6,8 @@ import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import dotenv from "dotenv";
+import https from "https";
+import fs from "fs";
 
 // Routes
 import userRoutes from "./routes/userRoute.js";
@@ -25,6 +27,8 @@ const URI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 3000; // fallback for local
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
+const key = fs.readFileSync(process.env.SSL_KEY_FILE);
+const cert = fs.readFileSync(process.env.SSL_CERT_FILE);
 const isProd = process.env.NODE_ENV === "production";
 
 // Trust proxy (required for secure cookies on Render)
@@ -46,7 +50,7 @@ app.use(
       // In non-production, allow all origins to simplify LAN testing
       if (!isProd) return cb(null, true);
       // Else: for production
-      if (!origin) return cb(null, true); // curl/Postman
+      if (!origin) return cb(null, true);
       if (allowlist.includes(origin)) return cb(null, true);
       return cb(new Error("Not allowed by CORS"));
     },
@@ -107,6 +111,17 @@ app.get("*", (req, res) => {
 });
 
 // Start only after Mongo connects
+// For local/LAN dev test - https
+// For deployment - http
+let server;
+let protocol = "http";
+if (!isProd) {
+  server = https.createServer({ key, cert }, app);
+  protocol = "https";
+} else {
+  server = app;
+}
+
 (async () => {
   try {
     await mongoose.connect(URI, {
@@ -114,9 +129,12 @@ app.get("*", (req, res) => {
       socketTimeoutMS: 20000,
     });
     console.log("Connected to MongoDB!");
-    app.listen(PORT, "0.0.0.0", () => console.log("Server runs on port", PORT));
-  } catch (e) {
-    console.error("Mongo connect failed:", e);
+    const HOST = process.env.HOST;
+    server.listen(PORT, () => {
+      console.log(`Server runs on ${protocol}://${HOST}:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Mongo connect failed:", error);
     process.exit(1);
   }
 })();
