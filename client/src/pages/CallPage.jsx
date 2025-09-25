@@ -3,15 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 
 /* --------- Signaling URL (explicit env in prod; localhost in dev) --------- */
-const ENV_URL =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_WEBRTC_URL) ||
-  process.env.REACT_APP_WEBRTC_URL;
+const REACT_APP_WEBRTC_URL = process.env.REACT_APP_WEBRTC_URL;
 
-const SIGNALING_URL =
-  (ENV_URL && ENV_URL.replace(/\/$/, "")) ||
-    (typeof window !== "undefined" && window.location.hostname === "localhost")
-    ? "http://localhost:4000"
-    : "http://localhost:4000"; // dev fallback
+const SIGNALING_URL = REACT_APP_WEBRTC_URL;
 
 /* ------------------------ ICE servers (expressTURN) ------------------------ */
 const username = process.env.REACT_APP_TURN_USERNAME;
