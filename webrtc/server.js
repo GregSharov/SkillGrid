@@ -1,20 +1,26 @@
 // server/webrtc-signaling.js
 import express from "express";
-import http from "http";
+import https from "https";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 
-const FRONT_URL = process.env.CLIENT_URL;
-const FRONT_LOCAL_URL = process.env.CLIENT_ADD_URL;
+const FRONT_URL = process.env.FRONTEND_URL;
+const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
 // List every frontend origin you actually use (localhost, LAN hostname, tunnels, prod)
 const ALLOWLIST = [FRONT_URL, FRONT_LOCAL_URL].filter(
   Boolean
 );
 
-const PORT = Number(process.env.PORT || process.env.SIGNALING_PORT || 4000);
+const PORT = Number(process.env.SIGNALING_PORT || 4000);
+const isProd = process.env.NODE_ENV === "production";
+
+// For LAN/local HTTPS testing (mkcert)
+const key = !isProd ? fs.readFileSync(process.env.SSL_KEY_FILE) : null;
+const cert = !isProd ? fs.readFileSync(process.env.SSL_CERT_FILE) : null;
 
 const app = express();
 
@@ -33,7 +39,14 @@ app.use(
   })
 );
 
-const server = http.createServer(app);
+let server;
+let protocol = "http";
+if (!isProd) {
+  server = https.createServer({ key, cert }, app);
+  protocol = "https";
+} else {
+  server = app;
+}
 
 // Socket.IO CORS mirrors Express logic
 const io = new Server(server, {
@@ -86,7 +99,8 @@ io.on("connection", (socket) => {
 
 app.get("/", (_req, res) => res.send("WebRTC signaling server running."));
 
+const HOST = process.env.HOST;
 server.listen(PORT, () => {
-  console.log(`🔌 Signaling on :${PORT}`);
+  console.log(`🔌 Signaling on ${protocol}://${HOST}:${PORT}`);
   console.log("Allowed origins:", ALLOWLIST);
 });
