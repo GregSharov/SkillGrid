@@ -125,18 +125,33 @@ export default function CallPage() {
     socketRef.current.on("offer", async (sdp) => {
       console.log("Received offer:", sdp);
       if (!pcRef.current) return;
-      await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
-      const answer = await pcRef.current.createAnswer();
-      console.log("Created answer:", answer);
-      await pcRef.current.setLocalDescription(answer);
-      socketRef.current.emit("answer", roomId, answer);
-      console.log("Emitted answer for room:", roomId);
+      
+      try {
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
+        console.log("✅ Remote description set successfully");
+        
+        const answer = await pcRef.current.createAnswer();
+        console.log("Created answer:", answer);
+        await pcRef.current.setLocalDescription(answer);
+        socketRef.current.emit("answer", roomId, answer);
+        console.log("Emitted answer for room:", roomId);
+      } catch (error) {
+        console.error("❌ Error setting remote description:", error);
+        setStatus("Failed to process offer");
+      }
     });
 
     socketRef.current.on("answer", async (sdp) => {
       console.log("Received answer:", sdp);
       if (!pcRef.current) return;
-      await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
+      
+      try {
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
+        console.log("✅ Remote description set successfully");
+      } catch (error) {
+        console.error("❌ Error setting remote description:", error);
+        setStatus("Failed to process answer");
+      }
     });
 
     socketRef.current.on("ice-candidate", async (candidate) => {
@@ -179,6 +194,21 @@ export default function CallPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
+  // Add this useEffect to monitor peer connection state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (pcRef.current) {
+        console.log("PC connection state:", pcRef.current.connectionState);
+        console.log("PC ICE connection state:", pcRef.current.iceConnectionState);
+        console.log("PC senders:", pcRef.current.getSenders());
+        console.log("PC receivers:", pcRef.current.getReceivers());
+        console.log("PC receiver tracks:", pcRef.current.getReceivers().map(r => r.track));
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   /* ---------------------- Media & RTCPeerConnection setup --------------------- */
   const setupMediaAndPeer = async () => {
     setStatus("Getting media…");
@@ -197,6 +227,13 @@ export default function CallPage() {
       sendAudio = true;
     } catch (err) {
       console.warn("getUserMedia error:", err?.name, err?.message);
+
+      // iPad/Safari specific handling
+      if (err?.name === "NotAllowedError") {
+        setStatus("Camera/microphone access denied. Please allow access and refresh.");
+        return;
+      }
+
       // 2) fallback mic-only
       if (
         err?.name === "NotAllowedError" ||
@@ -238,9 +275,14 @@ export default function CallPage() {
     pc.addTransceiver("video", {
       direction: sendVideo ? "sendrecv" : "recvonly",
     });
+
     pc.addTransceiver("audio", {
       direction: sendAudio ? "sendrecv" : "recvonly",
     });
+
+    pc.ontransceiver = (event) => {
+      console.log("Transceiver added:", event.transceiver);
+    };
 
     // 6) add local tracks + preview
     if (localStream) {
@@ -268,13 +310,18 @@ export default function CallPage() {
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           console.log("✅ Set remote video source");
+        } else {
+          console.log("❌ Remote video ref is null");
         }
+      } else {
+        console.log("❌ No remote stream in event");
       }
     };
 
     // In setupMediaAndPeer function, add stream monitoring
     pc.onaddstream = (event) => {
-      console.log("Stream added:", event.stream);
+      console.log("=== ONADDSTREAM EVENT ===");
+      console.log("Stream:", event.stream);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = event.stream;
         console.log("✅ Set remote video source via onaddstream");
