@@ -7,6 +7,7 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import dotenv from "dotenv";
 import https from "https";
+import http from "http";
 import fs from "fs";
 
 // Routes
@@ -77,6 +78,8 @@ app.use(
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
+      // secure: false,
+      // sameSite: "lax",
       path: "/",
       maxAge: 1000 * 60 * 60 * 24,
     },
@@ -121,7 +124,7 @@ if (!isProd) {
   server = https.createServer({ key, cert }, app);
   protocol = "https";
 } else {
-  server = app;
+  server = http.createServer(app);
 }
 
 (async () => {

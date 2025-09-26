@@ -7,34 +7,28 @@ const REACT_APP_WEBRTC_URL = process.env.REACT_APP_WEBRTC_URL;
 
 const SIGNALING_URL = REACT_APP_WEBRTC_URL;
 
+console.log('SIGNALING_URL:', SIGNALING_URL);
+console.log('REACT_APP_WEBRTC_URL:', process.env.REACT_APP_WEBRTC_URL);
+
 /* ------------------------ ICE servers (expressTURN) ------------------------ */
 const username = process.env.REACT_APP_TURN_USERNAME;
 const password = process.env.REACT_APP_TURN_PASSWORD;
 
 const iceServers = [
-  // STUN (public)
   { urls: "stun:stun.l.google.com:19302" },
-  // STUN (expressTURN)
-  { urls: "stun:relay1.expressturn.com:3478" },
-
-  // TURN (expressTURN) — multiple transports/ports for reachability
+  { urls: `stun:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}` },
   {
-    urls: "turn:relay1.expressturn.com:3478?transport=udp",
+    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}?transport=udp`,
     username: username,
     credential: password,
   },
   {
-    urls: "turn:relay1.expressturn.com:3478?transport=tcp",
+    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TCP}?transport=tcp`,
     username: username,
     credential: password,
   },
   {
-    urls: "turns:relay1.expressturn.com:5349?transport=tcp",
-    username: username,
-    credential: password,
-  },
-  {
-    urls: "turn:relay1.expressturn.com:3480?transport=tcp",
+    urls: `turns:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TLS}?transport=tcp`,
     username: username,
     credential: password,
   },
@@ -76,7 +70,18 @@ export default function CallPage() {
       path: "/socket.io",
     });
 
+    socketRef.current.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+      setStatus(`Connection failed: ${error.message}`);
+    });
+
+    socketRef.current.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
+      setStatus(`Disconnected: ${reason}`);
+    });
+
     socketRef.current.on("connect", () => {
+      console.log("Socket connected successfully");
       setStatus("Connected to signaling");
       socketRef.current.emit("join", roomId);
     });

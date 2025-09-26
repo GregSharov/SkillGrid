@@ -1,6 +1,7 @@
 // server/webrtc-signaling.js
 import express from "express";
 import https from "https";
+import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -14,6 +15,7 @@ const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
 const ALLOWLIST = [FRONT_URL, FRONT_LOCAL_URL].filter(
   Boolean
 );
+console.log("Allowed origins:", ALLOWLIST);
 
 const PORT = Number(process.env.SIGNALING_PORT || 4000);
 const isProd = process.env.NODE_ENV === "production";
@@ -41,11 +43,12 @@ app.use(
 
 let server;
 let protocol = "http";
+
 if (!isProd) {
   server = https.createServer({ key, cert }, app);
   protocol = "https";
 } else {
-  server = app;
+  server = http.createServer(app);
 }
 
 // Socket.IO CORS mirrors Express logic
@@ -68,6 +71,12 @@ const io = new Server(server, {
 
 // --- Simple 2-peer room logic ---
 io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  socket.on("disconnect", (reason) => {
+    console.log("Client disconnected:", socket.id, "Reason:", reason);
+  });
+
   socket.on("join", (roomId) => {
     const room = io.sockets.adapter.rooms.get(roomId);
     const num = room ? room.size : 0;
