@@ -247,7 +247,8 @@ export default function CallPage() {
       localStreamRef.current = localStream;
       localStream.getTracks().forEach((track) => {
         console.log("Adding track:", track.kind, track.id);
-        pc.addTrack(track, localStream);
+        const sender = pc.addTrack(track, localStream);
+        console.log("Track sender:", sender);
       });
       if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
       console.log("Local stream setup complete");
@@ -255,11 +256,28 @@ export default function CallPage() {
 
     // 7) remote track
     pc.ontrack = (event) => {
-      console.log("Received remote track:", event.track);
+      console.log("=== ONTRACK EVENT ===");
+      console.log("Event:", event);
+      console.log("Track:", event.track);
+      console.log("Streams:", event.streams);
+      console.log("Transceiver:", event.transceiver);
+
       const [remoteStream] = event.streams;
+      if (remoteStream) {
+        console.log("Remote stream tracks:", remoteStream.getTracks());
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          console.log("✅ Set remote video source");
+        }
+      }
+    };
+
+    // In setupMediaAndPeer function, add stream monitoring
+    pc.onaddstream = (event) => {
+      console.log("Stream added:", event.stream);
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        console.log("Set remote video source");
+        remoteVideoRef.current.srcObject = event.stream;
+        console.log("✅ Set remote video source via onaddstream");
       }
     };
 
