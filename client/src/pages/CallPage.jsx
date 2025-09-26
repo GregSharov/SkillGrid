@@ -108,13 +108,17 @@ export default function CallPage() {
     });
 
     socketRef.current.on("ready", async () => {
-      console.log("Ready signal received - creating offer");
+      console.log("Ready signal received");
+      // Only the initiator should create an offer when ready signal is received
       if (isInitiatorRef.current && pcRef.current) {
+        console.log("I am the initiator - creating offer");
         const offer = await pcRef.current.createOffer();
         console.log("Created offer:", offer);
         await pcRef.current.setLocalDescription(offer);
         socketRef.current.emit("offer", roomId, offer);
         console.log("Emitted offer for room:", roomId);
+      } else {
+        console.log("I am the joiner - waiting for offer");
       }
     });
 
@@ -241,14 +245,22 @@ export default function CallPage() {
     // 6) add local tracks + preview
     if (localStream) {
       localStreamRef.current = localStream;
-      localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+      localStream.getTracks().forEach((track) => {
+        console.log("Adding track:", track.kind, track.id);
+        pc.addTrack(track, localStream);
+      });
       if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+      console.log("Local stream setup complete");
     }
 
     // 7) remote track
     pc.ontrack = (event) => {
+      console.log("Received remote track:", event.track);
       const [remoteStream] = event.streams;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        console.log("Set remote video source");
+      }
     };
 
     // 8) ICE -> signaling
@@ -256,6 +268,22 @@ export default function CallPage() {
       if (event.candidate) {
         socketRef.current?.emit("ice-candidate", roomId, event.candidate);
       }
+    };
+
+    // In setupMediaAndPeer function, add connection state monitoring
+    pc.onconnectionstatechange = () => {
+      console.log("Connection state:", pc.connectionState);
+      if (pc.connectionState === 'connected') {
+        console.log("✅ WebRTC connection established!");
+        setStatus("Connected to peer");
+      } else if (pc.connectionState === 'failed') {
+        console.log("❌ WebRTC connection failed");
+        setStatus("Connection failed");
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log("ICE connection state:", pc.iceConnectionState);
     };
 
     setStatus(isInitiatorRef.current ? "Waiting for peer…" : "Joining room…");
