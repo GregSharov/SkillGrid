@@ -84,15 +84,18 @@ export default function CallPage() {
       console.log("Socket connected successfully");
       setStatus("Connected to signaling");
       socketRef.current.emit("join", roomId);
+      console.log("Emitted join for room:", roomId);
     });
 
     socketRef.current.on("created", async () => {
+      console.log("Room created - I am the initiator");
       setIsInitiator(true);
       isInitiatorRef.current = true;
       await setupMediaAndPeer();
     });
 
     socketRef.current.on("joined", async () => {
+      console.log("Room joined - I am the joiner");
       setIsInitiator(false);
       isInitiatorRef.current = false;
       await setupMediaAndPeer();
@@ -105,32 +108,37 @@ export default function CallPage() {
     });
 
     socketRef.current.on("ready", async () => {
+      console.log("Ready signal received - creating offer");
       if (isInitiatorRef.current && pcRef.current) {
         const offer = await pcRef.current.createOffer();
+        console.log("Created offer:", offer);
         await pcRef.current.setLocalDescription(offer);
         socketRef.current.emit("offer", roomId, offer);
+        console.log("Emitted offer for room:", roomId);
       }
     });
 
     socketRef.current.on("offer", async (sdp) => {
+      console.log("Received offer:", sdp);
       if (!pcRef.current) return;
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
       const answer = await pcRef.current.createAnswer();
+      console.log("Created answer:", answer);
       await pcRef.current.setLocalDescription(answer);
       socketRef.current.emit("answer", roomId, answer);
+      console.log("Emitted answer for room:", roomId);
     });
 
     socketRef.current.on("answer", async (sdp) => {
+      console.log("Received answer:", sdp);
       if (!pcRef.current) return;
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
     });
 
     socketRef.current.on("ice-candidate", async (candidate) => {
-      try {
-        await pcRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.error("Error adding ICE candidate", err);
-      }
+      console.log("Received ICE candidate:", candidate);
+      if (!pcRef.current) return;
+      await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
     });
 
     socketRef.current.on("peer-left", () => {

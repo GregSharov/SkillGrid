@@ -78,27 +78,41 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join", (roomId) => {
+    console.log("Client joining room:", roomId, "Socket:", socket.id);
     const room = io.sockets.adapter.rooms.get(roomId);
     const num = room ? room.size : 0;
+    console.log("Room size:", num);
 
     if (num === 0) {
       socket.join(roomId);
-      socket.emit("created", roomId); // initiator
+      socket.emit("created", roomId);
+      console.log("Room created, emitted 'created' to:", socket.id);
     } else if (num === 1) {
       socket.join(roomId);
-      socket.emit("joined", roomId); // second peer
-      socket.to(roomId).emit("ready"); // tell initiator to offer
+      socket.emit("joined", roomId);
+      socket.to(roomId).emit("ready");
+      console.log("Room joined, emitted 'joined' to:", socket.id, "and 'ready' to others");
     } else {
       socket.emit("full", roomId);
+      console.log("Room full, emitted 'full' to:", socket.id);
     }
   });
 
   // Relay SDP & ICE
-  socket.on("offer", (roomId, sdp) => socket.to(roomId).emit("offer", sdp));
-  socket.on("answer", (roomId, sdp) => socket.to(roomId).emit("answer", sdp));
-  socket.on("ice-candidate", (roomId, c) =>
-    socket.to(roomId).emit("ice-candidate", c)
-  );
+  socket.on("offer", (roomId, sdp) => {
+    console.log("Relaying offer for room:", roomId, "from:", socket.id);
+    socket.to(roomId).emit("offer", sdp);
+  });
+
+  socket.on("answer", (roomId, sdp) => {
+    console.log("Relaying answer for room:", roomId, "from:", socket.id);
+    socket.to(roomId).emit("answer", sdp);
+  });
+
+  socket.on("ice-candidate", (roomId, c) => {
+    console.log("Relaying ICE candidate for room:", roomId, "from:", socket.id);
+    socket.to(roomId).emit("ice-candidate", c);
+  });
 
   socket.on("leave", (roomId) => {
     socket.leave(roomId);
