@@ -31,8 +31,18 @@ const ALLOWLIST = [
 console.log("Allowed origins:", ALLOWLIST);
 
 // For LAN/local HTTPS testing (mkcert)
-const key = !isProd ? fs.readFileSync(process.env.SSL_KEY_FILE) : null;
-const cert = !isProd ? fs.readFileSync(process.env.SSL_CERT_FILE) : null;
+let key = null;
+let cert = null;
+if (!isProd) {
+  try {
+    if (process.env.SSL_KEY_FILE && process.env.SSL_CERT_FILE) {
+      key = fs.readFileSync(process.env.SSL_KEY_FILE);
+      cert = fs.readFileSync(process.env.SSL_CERT_FILE);
+    }
+  } catch (e) {
+    console.warn("Dev HTTPS certs not found or unreadable; falling back to HTTP.", e?.message);
+  }
+}
 
 const app = express();
 
@@ -54,7 +64,7 @@ app.use(
 let server;
 let protocol = "http";
 
-if (!isProd) {
+if (!isProd && key && cert) {
   server = https.createServer({ key, cert }, app);
   protocol = "https";
 } else {
@@ -132,7 +142,7 @@ io.on("connection", (socket) => {
 
 app.get("/", (_req, res) => res.send("WebRTC signaling server running."));
 
-const HOST = process.env.HOST;
+const HOST = process.env.HOST || "0.0.0.0";
 server.listen(PORT, () => {
   console.log(`🔌 Signaling on ${protocol}://${HOST}:${PORT}`);
   console.log("Allowed origins:", ALLOWLIST);

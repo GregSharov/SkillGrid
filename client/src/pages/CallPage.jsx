@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 /* --------- Signaling URL (explicit env in prod; localhost in dev) --------- */
 const REACT_APP_WEBRTC_URL = process.env.REACT_APP_WEBRTC_URL;
 
-const SIGNALING_URL = REACT_APP_WEBRTC_URL;
+const SIGNALING_URL = REACT_APP_WEBRTC_URL || `${window.location.protocol}//${window.location.hostname}:4000`;
 
 console.log('SIGNALING_URL:', SIGNALING_URL);
 console.log('REACT_APP_WEBRTC_URL:', process.env.REACT_APP_WEBRTC_URL);
@@ -16,22 +16,18 @@ const password = process.env.REACT_APP_TURN_PASSWORD;
 
 const iceServers = [
   { urls: "stun:stun.l.google.com:19302" },
-  { urls: `stun:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}` },
-  {
-    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}?transport=udp`,
-    username: username,
-    credential: password,
-  },
-  {
-    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TCP}?transport=tcp`,
-    username: username,
-    credential: password,
-  },
-  {
-    urls: `turns:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TLS}?transport=tcp`,
-    username: username,
-    credential: password,
-  },
+  ...(process.env.REACT_APP_TURN_HOST && process.env.REACT_APP_TURN_PORT_UDP
+    ? [{ urls: `stun:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}` }]
+    : []),
+  ...(process.env.REACT_APP_TURN_HOST && process.env.REACT_APP_TURN_PORT_UDP && username && password
+    ? [{ urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}?transport=udp`, username, credential: password }]
+    : []),
+  ...(process.env.REACT_APP_TURN_HOST && process.env.REACT_APP_TURN_PORT_TCP && username && password
+    ? [{ urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TCP}?transport=tcp`, username, credential: password }]
+    : []),
+  ...(process.env.REACT_APP_TURN_HOST && process.env.REACT_APP_TURN_PORT_TLS && username && password
+    ? [{ urls: `turns:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TLS}?transport=tcp`, username, credential: password }]
+    : []),
 ];
 
 const FORCE_TURN = String(process.env.REACT_APP_FORCE_TURN || "false").toLowerCase() === "true";
