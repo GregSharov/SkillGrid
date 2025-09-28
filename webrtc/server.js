@@ -11,10 +11,21 @@ dotenv.config();
 
 const FRONT_URL = process.env.FRONTEND_URL;
 const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
-// List every frontend origin you actually use (localhost, LAN hostname, tunnels, prod)
-const ALLOWLIST = [FRONT_URL, FRONT_LOCAL_URL].filter(
-  Boolean
-);
+
+// Enhanced CORS allowlist for LAN testing
+const ALLOWLIST = [
+  FRONT_URL, 
+  FRONT_LOCAL_URL,
+  // Add common localhost patterns
+  "http://localhost:3000",
+  "https://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://127.0.0.1:3000",
+  // Add LAN IP patterns (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+  /^https?:\/\/192\.168\.\d+\.\d+:3000$/,
+  /^https?:\/\/10\.\d+\.\d+\.\d+:3000$/,
+  /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+:3000$/,
+].filter(Boolean);
 console.log("Allowed origins:", ALLOWLIST);
 
 const PORT = Number(process.env.SIGNALING_PORT || 4000);
