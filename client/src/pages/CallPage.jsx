@@ -10,28 +10,39 @@ const SIGNALING_URL = REACT_APP_WEBRTC_URL;
 console.log('SIGNALING_URL:', SIGNALING_URL);
 console.log('REACT_APP_WEBRTC_URL:', process.env.REACT_APP_WEBRTC_URL);
 
-/* ------------------------ ICE servers (expressTURN) ------------------------ */
+/* ------------------------ ICE servers (LAN optimized) ------------------------ */
 const username = process.env.REACT_APP_TURN_USERNAME;
 const password = process.env.REACT_APP_TURN_PASSWORD;
 
+// Enhanced ICE servers for LAN testing
 const iceServers = [
+  // Google STUN servers (free, reliable)
   { urls: "stun:stun.l.google.com:19302" },
-  { urls: `stun:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}` },
-  {
-    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}?transport=udp`,
-    username: username,
-    credential: password,
-  },
-  {
-    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TCP}?transport=tcp`,
-    username: username,
-    credential: password,
-  },
-  {
-    urls: `turns:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TLS}?transport=tcp`,
-    username: username,
-    credential: password,
-  },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  
+  // Additional STUN servers for better connectivity
+  { urls: "stun:stun.cloudflare.com:3478" },
+  { urls: "stun:stun.voiparound.com" },
+  
+  // TURN servers (only add if you have credentials)
+  ...(username && password ? [
+    {
+      urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}?transport=udp`,
+      username: username,
+      credential: password,
+    },
+    {
+      urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TCP}?transport=tcp`,
+      username: username,
+      credential: password,
+    },
+    {
+      urls: `turns:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TLS}?transport=tcp`,
+      username: username,
+      credential: password,
+    },
+  ] : []),
 ];
 
 export default function CallPage() {
@@ -263,11 +274,15 @@ export default function CallPage() {
       }
     }
 
-    // 4) peer connection
+    // 4) peer connection with LAN-optimized configuration
     const pc = new RTCPeerConnection({
       iceServers,
-      // For strict NAT debugging, temporarily uncomment:
-      // iceTransportPolicy: "relay",
+      // Enhanced configuration for LAN testing
+      iceCandidatePoolSize: 10,
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
+      // For LAN testing, prefer direct connections
+      iceTransportPolicy: "all", // Try all: host, srflx, relay
     });
     pcRef.current = pc;
 
@@ -328,11 +343,25 @@ export default function CallPage() {
       }
     };
 
-    // 8) ICE -> signaling
+    // 8) ICE -> signaling with enhanced debugging
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log("🔗 ICE Candidate:", {
+          type: event.candidate.type,
+          protocol: event.candidate.protocol,
+          address: event.candidate.address,
+          port: event.candidate.port,
+          candidate: event.candidate.candidate
+        });
         socketRef.current?.emit("ice-candidate", roomId, event.candidate);
+      } else {
+        console.log("✅ ICE gathering complete");
       }
+    };
+
+    // Enhanced ICE gathering state monitoring
+    pc.onicegatheringstatechange = () => {
+      console.log("🧊 ICE Gathering State:", pc.iceGatheringState);
     };
 
     // In setupMediaAndPeer function, add connection state monitoring
