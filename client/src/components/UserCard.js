@@ -27,8 +27,7 @@ function UserCard({ authUser }) {
   // Open video manager
   const openVideoManager = async (roomId) => {
     try {
-      if (authUser?.role === "teacher") navigate(`/call/${roomId}`);
-      else if (authUser?.role === "student") navigate(`/join/${roomId}`);
+      if (authUser?.role === "teacher" || authUser?.role === "student") navigate(`/join/${roomId}`);
       else alert("Unregistered user. Please sign in again.");
     } catch (error) {
       console.error("Error opening video manager:", error);

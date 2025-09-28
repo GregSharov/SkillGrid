@@ -1,4 +1,5 @@
 import express from "express";
+import { v4 as uuidv4 } from "uuid";
 import { Schedule } from "../models/scheduleSchema.js";
 
 const router = express.Router();
@@ -61,6 +62,12 @@ router.post("/add", async (req, res) => {
           description: slot.lesson.description,
         },
       })),
+      peers: [
+        {
+          teacherPeerId: uuidv4(),
+          studentPeerId: uuidv4(),
+        },
+      ],
     });
 
     const savedScheduledLesson = await newScheduledLesson.save();

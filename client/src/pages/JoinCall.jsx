@@ -9,7 +9,7 @@ export default function JoinCall() {
     if (roomId) {
       const t = setTimeout(() => {
         navigate(`/call/${encodeURIComponent(roomId)}`, { replace: true });
-      }, 300);
+      }, 1000);
       return () => clearTimeout(t);
     }
   }, [roomId, navigate]);
