@@ -9,16 +9,26 @@ import fs from "fs";
 
 dotenv.config();
 
+const PORT = Number(process.env.SIGNALING_PORT || 4000);
+const isProd = process.env.NODE_ENV === "production";
+
 const FRONT_URL = process.env.FRONTEND_URL;
 const FRONT_LOCAL_URL = process.env.FRONT_LOCAL_URL;
 // List every frontend origin you actually use (localhost, LAN hostname, tunnels, prod)
-const ALLOWLIST = [FRONT_URL, FRONT_LOCAL_URL].filter(
-  Boolean
-);
+const devLanOrigins = [
+  /^https?:\/\/localhost(:\d+)?$/i,
+  /^https?:\/\/127\.0\.0\.1(:\d+)?$/i,
+  /^https?:\/\/0\.0\.0\.0(:\d+)?$/i,
+  /^https?:\/\/[\w-]+\.local(:\d+)?$/i,
+  /^https?:\/\/192\.168\.[0-9]+\.[0-9]+(:\d+)?$/i,
+  /^https?:\/\/10\.[0-9]+\.[0-9]+\.[0-9]+(:\d+)?$/i,
+  /^https?:\/\/172\.(1[6-9]|2\d|3[0-1])\.[0-9]+\.[0-9]+(:\d+)?$/i,
+];
+const ALLOWLIST = [
+  ...[FRONT_URL, FRONT_LOCAL_URL].filter(Boolean),
+  ...(!isProd ? devLanOrigins : []),
+];
 console.log("Allowed origins:", ALLOWLIST);
-
-const PORT = Number(process.env.SIGNALING_PORT || 4000);
-const isProd = process.env.NODE_ENV === "production";
 
 // For LAN/local HTTPS testing (mkcert)
 const key = !isProd ? fs.readFileSync(process.env.SSL_KEY_FILE) : null;

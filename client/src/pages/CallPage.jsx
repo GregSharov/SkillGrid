@@ -34,6 +34,8 @@ const iceServers = [
   },
 ];
 
+const FORCE_TURN = String(process.env.REACT_APP_FORCE_TURN || "false").toLowerCase() === "true";
+
 export default function CallPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -266,8 +268,7 @@ export default function CallPage() {
     // 4) peer connection
     const pc = new RTCPeerConnection({
       iceServers,
-      // For strict NAT debugging, temporarily uncomment:
-      // iceTransportPolicy: "relay",
+      iceTransportPolicy: FORCE_TURN ? "relay" : "all",
     });
     pcRef.current = pc;
 
@@ -332,6 +333,7 @@ export default function CallPage() {
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         socketRef.current?.emit("ice-candidate", roomId, event.candidate);
+        console.log('Sent ICE candidate:', event.candidate.type || 'candidate');
       }
     };
 
@@ -349,6 +351,22 @@ export default function CallPage() {
 
     pc.oniceconnectionstatechange = () => {
       console.log("ICE connection state:", pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed') {
+        console.warn('ICE failed; attempting ICE restart');
+        try {
+          pc.restartIce();
+        } catch (e) {
+          console.error('ICE restart error:', e);
+        }
+      }
+    };
+
+    pc.onicegatheringstatechange = () => {
+      console.log('ICE gathering state:', pc.iceGatheringState);
+    };
+
+    pc.onsignalingstatechange = () => {
+      console.log('Signaling state:', pc.signalingState);
     };
 
     setStatus(isInitiatorRef.current ? "Waiting for peer…" : "Joining room…");
