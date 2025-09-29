@@ -1,417 +1,137 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
+import React, { useEffect, useRef, useState } from 'react';
+import Peer from 'peerjs';
+import { v4 as uuidv4 } from 'uuid';
 
-/* --------- Signaling URL (explicit env in prod; localhost in dev) --------- */
-const REACT_APP_WEBRTC_URL = process.env.REACT_APP_WEBRTC_URL;
+// IMPORTANT: set this to the server host/IP + port where PeerServer runs
+// Example: https://192.168.1.10:4000 (if you run HTTPS) or http://192.168.1.10:4000
+// const REACT_APP_API_URL = process.env.REACT_APP_API_URL || 'https://10.0.0.20:4000';
 
-const SIGNALING_URL = REACT_APP_WEBRTC_URL;
+// Function to generate short UUID
+function generateShortUuid() {
+  return uuidv4().substring(0, 4).toUpperCase();
+}
 
-console.log('SIGNALING_URL:', SIGNALING_URL);
-console.log('REACT_APP_WEBRTC_URL:', process.env.REACT_APP_WEBRTC_URL);
+// const teacherId = '1234';
+// const studentId = '5678';
 
-/* ------------------------ ICE servers (expressTURN) ------------------------ */
-const username = process.env.REACT_APP_TURN_USERNAME;
-const password = process.env.REACT_APP_TURN_PASSWORD;
-
-const iceServers = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: `stun:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}` },
-  {
-    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_UDP}?transport=udp`,
-    username: username,
-    credential: password,
-  },
-  {
-    urls: `turn:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TCP}?transport=tcp`,
-    username: username,
-    credential: password,
-  },
-  {
-    urls: `turns:${process.env.REACT_APP_TURN_HOST}:${process.env.REACT_APP_TURN_PORT_TLS}?transport=tcp`,
-    username: username,
-    credential: password,
-  },
-];
-
-export default function CallPage() {
-  const { roomId } = useParams();
-  const navigate = useNavigate();
-
+export default function App() {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const pcRef = useRef(null);
-  const socketRef = useRef(null);
   const localStreamRef = useRef(null);
-  const screenTrackRef = useRef(null);
+  const peerRef = useRef(null);
+  const [myId, setMyId] = useState('');
+  const [remoteId, setRemoteId] = useState('');
+  const [connected, setConnected] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [showIncomingCallModal, setShowIncomingCallModal] = useState(false);
 
-  const [status, setStatus] = useState("Idle");
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
-  const [sharing, setSharing] = useState(false);
-
-  // initiator tracking (ref avoids stale closure in handlers)
-  const [isInitiator, setIsInitiator] = useState(false);
-  const isInitiatorRef = useRef(false);
   useEffect(() => {
-    isInitiatorRef.current = isInitiator;
-  }, [isInitiator]);
-
-  /* ------------------------- Socket wiring & lifecycle ------------------------- */
-  useEffect(() => {
-    // capture nodes once for safe cleanup
-    const localEl = localVideoRef.current;
-    const remoteEl = remoteVideoRef.current;
-
-    // connect to signaling
-    socketRef.current = io(SIGNALING_URL, {
-      transports: ["websocket", "polling"],
-      withCredentials: true,
-      path: "/socket.io",
-    });
-
-    socketRef.current.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      setStatus(`Connection failed: ${error.message}`);
-    });
-
-    socketRef.current.on("disconnect", (reason) => {
-      console.log("Socket disconnected:", reason);
-      setStatus(`Disconnected: ${reason}`);
-    });
-
-    socketRef.current.on("connect", () => {
-      console.log("Socket connected successfully");
-      setStatus("Connected to signaling");
-      socketRef.current.emit("join", roomId);
-      console.log("Emitted join for room:", roomId);
-    });
-
-    socketRef.current.on("created", async () => {
-      console.log("Room created - I am the initiator");
-      setIsInitiator(true);
-      isInitiatorRef.current = true;
-      await setupMediaAndPeer();
-    });
-
-    socketRef.current.on("joined", async () => {
-      console.log("Room joined - I am the joiner");
-      setIsInitiator(false);
-      isInitiatorRef.current = false;
-      await setupMediaAndPeer();
-    });
-
-    socketRef.current.on("full", () => {
-      setStatus("Room full");
-      alert("Room is full");
-      navigate("/");
-    });
-
-    socketRef.current.on("ready", async () => {
-      console.log("Ready signal received");
-      // Only the initiator should create an offer when ready signal is received
-      if (isInitiatorRef.current && pcRef.current) {
-        console.log("I am the initiator - creating offer");
-        const offer = await pcRef.current.createOffer();
-        console.log("Created offer:", offer);
-        await pcRef.current.setLocalDescription(offer);
-        socketRef.current.emit("offer", roomId, offer);
-        console.log("Emitted offer for room:", roomId);
-      } else {
-        console.log("I am the joiner - waiting for offer");
-      }
-    });
-
-    socketRef.current.on("offer", async (sdp) => {
-      console.log("Received offer:", sdp);
-      if (!pcRef.current) return;
-      
+    (async () => {
+      // get local media
       try {
-        await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
-        console.log("✅ Remote description set successfully");
-        
-        const answer = await pcRef.current.createAnswer();
-        console.log("Created answer:", answer);
-        await pcRef.current.setLocalDescription(answer);
-        socketRef.current.emit("answer", roomId, answer);
-        console.log("Emitted answer for room:", roomId);
-      } catch (error) {
-        console.error("❌ Error setting remote description:", error);
-        setStatus("Failed to process offer");
-      }
-    });
-
-    socketRef.current.on("answer", async (sdp) => {
-      console.log("Received answer:", sdp);
-      if (!pcRef.current) return;
-      
-      try {
-        await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
-        console.log("✅ Remote description set successfully");
-      } catch (error) {
-        console.error("❌ Error setting remote description:", error);
-        setStatus("Failed to process answer");
-      }
-    });
-
-    socketRef.current.on("ice-candidate", async (candidate) => {
-      console.log("Received ICE candidate:", candidate);
-      if (!pcRef.current) return;
-      await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-    });
-
-    socketRef.current.on("peer-left", () => {
-      setStatus("Peer left");
-      if (remoteEl) remoteEl.srcObject = null;
-    });
-
-    // cleanup
-    return () => {
-      try {
-        socketRef.current?.emit("leave", roomId);
-        socketRef.current?.disconnect();
-      } catch { }
-
-      try {
-        pcRef.current?.getSenders().forEach((s) => s.track?.stop());
-        pcRef.current?.close();
-      } catch { }
-      pcRef.current = null;
-
-      try {
-        screenTrackRef.current?.stop();
-      } catch { }
-      screenTrackRef.current = null;
-
-      try {
-        localStreamRef.current?.getTracks().forEach((t) => t.stop());
-      } catch { }
-      localStreamRef.current = null;
-
-      if (localEl) localEl.srcObject = null;
-      if (remoteEl) remoteEl.srcObject = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
-
-  // Add this useEffect to monitor peer connection state
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (pcRef.current) {
-        console.log("PC connection state:", pcRef.current.connectionState);
-        console.log("PC ICE connection state:", pcRef.current.iceConnectionState);
-        console.log("PC senders:", pcRef.current.getSenders());
-        console.log("PC receivers:", pcRef.current.getReceivers());
-        console.log("PC receiver tracks:", pcRef.current.getReceivers().map(r => r.track));
-      }
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  /* ---------------------- Media & RTCPeerConnection setup --------------------- */
-  const setupMediaAndPeer = async () => {
-    setStatus("Getting media…");
-
-    let localStream = null;
-    let sendVideo = false;
-    let sendAudio = false;
-
-    // 1) try cam+mic
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      sendVideo = true;
-      sendAudio = true;
-    } catch (err) {
-      console.warn("getUserMedia error:", err?.name, err?.message);
-
-      // iPad/Safari specific handling
-      if (err?.name === "NotAllowedError") {
-        setStatus("Camera/microphone access denied. Please allow access and refresh.");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStreamRef.current = stream;
+        localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true;
+      } catch (err) {
+        console.error('getUserMedia failed', err);
+        alert('Camera/mic permission required');
         return;
       }
 
-      // 2) fallback mic-only
-      if (
-        err?.name === "NotAllowedError" ||
-        err?.name === "SecurityError" ||
-        err?.name === "OverconstrainedError"
-      ) {
-        try {
-          localStream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true,
-          });
-          sendVideo = false;
-          sendAudio = true;
-          setCamOn(false);
-          setStatus("Camera blocked — audio-only mode");
-        } catch (err2) {
-          console.warn("Audio-only failed:", err2?.name, err2?.message);
-          // 3) recv-only
-          setCamOn(false);
-          setMicOn(false);
-          setStatus("No local media — recv-only");
-        }
-      } else {
-        setCamOn(false);
-        setMicOn(false);
-        setStatus(`Media error: ${err?.name || "unknown"}`);
-      }
-    }
-
-    // 4) peer connection
-    const pc = new RTCPeerConnection({
-      iceServers,
-      // For strict NAT debugging, temporarily uncomment:
-      // iceTransportPolicy: "relay",
-    });
-    pcRef.current = pc;
-
-    // 5) align transceivers (so SDP matches even without local tracks)
-    pc.addTransceiver("video", {
-      direction: sendVideo ? "sendrecv" : "recvonly",
-    });
-
-    pc.addTransceiver("audio", {
-      direction: sendAudio ? "sendrecv" : "recvonly",
-    });
-
-    pc.ontransceiver = (event) => {
-      console.log("Transceiver added:", event.transceiver);
-    };
-
-    // 6) add local tracks + preview
-    if (localStream) {
-      localStreamRef.current = localStream;
-      localStream.getTracks().forEach((track) => {
-        console.log("Adding track:", track.kind, track.id);
-        const sender = pc.addTrack(track, localStream);
-        console.log("Track sender:", sender);
+      // Create Peer instance, configured to use our peerjs server
+      // Peerjs wants host/port/path. We pass the host via options below.
+      // NOTE: when using HTTPS, ensure SERVER_BASE is https://YOUR_IP:PORT
+      // const url = new URL(REACT_APP_API_URL);
+      const peer = new Peer(generateShortUuid(), {
+        // host: url.hostname,
+        // port: Number(url.port),
+        // path: '/peerjs',
+        // secure: url.protocol === 'https:',
+        debug: 3
       });
-      if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-      console.log("Local stream setup complete");
-    }
+      peerRef.current = peer;
 
-    // 7) remote track
-    pc.ontrack = (event) => {
-      console.log("=== ONTRACK EVENT ===");
-      console.log("Event:", event);
-      console.log("Track:", event.track);
-      console.log("Streams:", event.streams);
-      console.log("Transceiver:", event.transceiver);
-
-      const [remoteStream] = event.streams;
-      if (remoteStream) {
-        console.log("Remote stream tracks:", remoteStream.getTracks());
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-          console.log("✅ Set remote video source");
-        } else {
-          console.log("❌ Remote video ref is null");
-        }
-      } else {
-        console.log("❌ No remote stream in event");
-      }
-    };
-
-    // In setupMediaAndPeer function, add stream monitoring
-    pc.onaddstream = (event) => {
-      console.log("=== ONADDSTREAM EVENT ===");
-      console.log("Stream:", event.stream);
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.stream;
-        console.log("✅ Set remote video source via onaddstream");
-      }
-    };
-
-    // 8) ICE -> signaling
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketRef.current?.emit("ice-candidate", roomId, event.candidate);
-      }
-    };
-
-    // In setupMediaAndPeer function, add connection state monitoring
-    pc.onconnectionstatechange = () => {
-      console.log("Connection state:", pc.connectionState);
-      if (pc.connectionState === 'connected') {
-        console.log("✅ WebRTC connection established!");
-        setStatus("Connected to peer");
-      } else if (pc.connectionState === 'failed') {
-        console.log("❌ WebRTC connection failed");
-        setStatus("Connection failed");
-      }
-    };
-
-    pc.oniceconnectionstatechange = () => {
-      console.log("ICE connection state:", pc.iceConnectionState);
-    };
-
-    setStatus(isInitiatorRef.current ? "Waiting for peer…" : "Joining room…");
-  };
-
-  /* --------------------------------- Controls -------------------------------- */
-  const hangup = () => {
-    socketRef.current?.emit("leave", roomId);
-    navigate("/");
-  };
-
-  const toggleMic = () => {
-    const audio = localStreamRef.current?.getAudioTracks()[0];
-    if (!audio) return;
-    audio.enabled = !audio.enabled;
-    setMicOn(audio.enabled);
-  };
-
-  const toggleCam = () => {
-    const video = localStreamRef.current?.getVideoTracks()[0];
-    if (!video) return;
-    video.enabled = !video.enabled;
-    setCamOn(video.enabled);
-  };
-
-  const startShare = async () => {
-    try {
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false,
+      peer.on('open', (id) => {
+        console.log('peer open id=', id);
+        setMyId(id);
       });
-      const screenTrack = displayStream.getVideoTracks()[0];
-      screenTrackRef.current = screenTrack;
-      setSharing(true);
 
-      const sender = pcRef.current
-        ?.getSenders()
-        .find((s) => s.track?.kind === "video");
-      if (sender) await sender.replaceTrack(screenTrack);
+      // When someone calls us:
+      peer.on('call', (call) => {
+        console.log('incoming call', call);
+        setIncomingCall(call);
+        setShowIncomingCallModal(true);
+      });
 
-      if (localVideoRef.current) localVideoRef.current.srcObject = displayStream;
+      peer.on('error', (err) => {
+        console.warn('peer error', err);
+      });
+    })();
 
-      screenTrack.onended = async () => {
-        await stopShare();
-      };
-    } catch (e) {
-      console.error("Screen share error:", e);
-    }
-  };
+    return () => {
+      if (peerRef.current) peerRef.current.destroy();
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
 
-  const stopShare = async () => {
-    screenTrackRef.current?.stop();
-    screenTrackRef.current = null;
-    setSharing(false);
+  function callPeer() {
+    if (!peerRef.current) return;
+    if (!remoteId) return alert('Enter remote peer id');
+    const call = peerRef.current.call(remoteId, localStreamRef.current);
+    call.on('stream', (remoteStream) => {
+      remoteVideoRef.current.srcObject = remoteStream;
+      setConnected(true);
+    });
+    call.on('error', (err) => console.warn('call error', err));
+  }
 
-    const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
-    const sender = pcRef.current
-      ?.getSenders()
-      .find((s) => s.track?.kind === "video");
-    if (sender && cameraTrack) await sender.replaceTrack(cameraTrack);
-    if (localVideoRef.current)
-      localVideoRef.current.srcObject = localStreamRef.current;
-  };
+  function toggleMute() {
+    if (!localStreamRef.current) return;
+
+    const audioTracks = localStreamRef.current.getAudioTracks();
+    audioTracks.forEach(track => {
+      track.enabled = isMuted;
+    });
+
+    setIsMuted(!isMuted);
+  }
+
+  function toggleVideo() {
+    if (!localStreamRef.current) return;
+
+    const videoTracks = localStreamRef.current.getVideoTracks();
+    videoTracks.forEach(track => {
+      track.enabled = isVideoOff;
+    });
+
+    setIsVideoOff(!isVideoOff);
+  }
+
+  function acceptCall() {
+    if (!incomingCall || !localStreamRef.current) return;
+    
+    incomingCall.answer(localStreamRef.current);
+    incomingCall.on('stream', (remoteStream) => {
+      remoteVideoRef.current.srcObject = remoteStream;
+      setConnected(true);
+    });
+    
+    setShowIncomingCallModal(false);
+    setIncomingCall(null);
+  }
+
+  function declineCall() {
+    if (!incomingCall) return;
+    
+    incomingCall.close();
+    setShowIncomingCallModal(false);
+    setIncomingCall(null);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-10">
@@ -421,7 +141,7 @@ export default function CallPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                Room <span className="text-indigo-600">#{roomId}</span>
+                PeerJS <span className="text-indigo-600">P2P Demo</span>
               </h1>
               <p className="text-sm text-slate-600 mt-1">
                 Peer-to-peer encrypted video session.
@@ -430,11 +150,48 @@ export default function CallPage() {
             <div className="inline-flex items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
                 Status:
-                <span className="ml-1 text-indigo-700">{status}</span>
+                <span className="ml-1 text-indigo-700">
+                  {connected ? 'Connected' : myId ? 'Ready' : 'Connecting...'}
+                </span>
               </span>
             </div>
           </div>
         </header>
+
+        {/* Connection Info */}
+        <section className="rounded-3xl bg-white shadow-lg ring-1 ring-slate-200 p-6">
+          <div className="h-1 w-full bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500 rounded-t-2xl -mt-6 mb-6" />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Your Peer ID
+              </label>
+              <div className="inline-flex items-center rounded-full bg-slate-50 px-4 py-2 text-sm font-mono text-slate-800 ring-1 ring-slate-200">
+                {myId || 'Connecting...'}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Connect to Peer
+              </label>
+              <div className="flex gap-3">
+                <input
+                  className="flex-1 rounded-2xl border-0 bg-slate-50 px-4 py-2 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter remote peer ID"
+                  value={remoteId}
+                  onChange={(e) => setRemoteId(e.target.value)}
+                />
+                <button
+                  className="rounded-2xl px-6 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={callPeer}
+                  disabled={!myId || connected || !remoteId}
+                >
+                  Call
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Video grid */}
         <section className="rounded-3xl bg-white shadow-lg ring-1 ring-slate-200 p-4 sm:p-6">
@@ -448,16 +205,17 @@ export default function CallPage() {
                 playsInline
                 muted
                 className="w-full h-[40vh] md:h-[48vh] object-cover"
+                style={{ transform: 'scaleX(-1)' }}
               />
               <div className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200">
                 You
               </div>
-              {!camOn && (
+              {isVideoOff && (
                 <div className="absolute inset-0 grid place-items-center bg-slate-900/70 text-white text-sm">
                   Camera off
                 </div>
               )}
-              {!micOn && (
+              {isMuted && (
                 <div className="absolute right-3 top-3 rounded-full bg-rose-600 text-white text-xs px-2 py-0.5">
                   Mic off
                 </div>
@@ -475,60 +233,103 @@ export default function CallPage() {
               <div className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-200">
                 Remote
               </div>
+              {!connected && (
+                <div className="absolute inset-0 grid place-items-center bg-slate-900/70 text-white text-sm">
+                  Waiting for peer to join...
+                </div>
+              )}
             </div>
           </div>
 
           {/* Controls */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={toggleMic}
+              onClick={toggleMute}
               className={`rounded-2xl px-4 py-2 text-sm font-semibold shadow-sm ring-1 transition
-                ${micOn
+                ${!isMuted
                   ? "bg-white text-slate-800 ring-slate-200 hover:bg-slate-50"
                   : "bg-rose-600 text-white ring-rose-500 hover:bg-rose-700"
                 }`}
-              aria-pressed={micOn ? "true" : "false"}
+              aria-pressed={!isMuted ? "true" : "false"}
             >
-              {micOn ? "Mute Mic" : "Unmute Mic"}
+              {!isMuted ? "Mute Mic" : "Unmute Mic"}
             </button>
 
             <button
-              onClick={toggleCam}
+              onClick={toggleVideo}
               className={`rounded-2xl px-4 py-2 text-sm font-semibold shadow-sm ring-1 transition
-                ${camOn
+                ${!isVideoOff
                   ? "bg-white text-slate-800 ring-slate-200 hover:bg-slate-50"
                   : "bg-amber-500 text-white ring-amber-400 hover:bg-amber-600"
                 }`}
-              aria-pressed={camOn ? "true" : "false"}
+              aria-pressed={!isVideoOff ? "true" : "false"}
             >
-              {camOn ? "Turn Camera Off" : "Turn Camera On"}
+              {!isVideoOff ? "Turn Camera Off" : "Turn Camera On"}
             </button>
 
-            {!sharing ? (
-              <button
-                onClick={startShare}
-                className="rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition"
-              >
-                Share Screen
-              </button>
-            ) : (
-              <button
-                onClick={stopShare}
-                className="rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm bg-slate-700 hover:bg-slate-800 active:scale-[0.98] transition"
-              >
-                Stop Sharing
-              </button>
-            )}
-
             <button
-              onClick={hangup}
+              onClick={() => {
+                if (peerRef.current) {
+                  peerRef.current.destroy();
+                }
+                window.location.reload();
+              }}
               className="rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition"
             >
-              Hang Up
+              End Call
             </button>
           </div>
         </section>
       </div>
+
+      {/* Incoming Call Modal */}
+      {showIncomingCallModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl ring-1 ring-slate-200 max-w-md w-full p-8">
+            <div className="text-center space-y-6">
+              {/* Call Icon */}
+              <div className="mx-auto w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              
+              {/* Call Info */}
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                  Incoming Call
+                </h3>
+                <p className="text-slate-600">
+                  {incomingCall?.peer || 'Unknown caller'} is calling you
+                </p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={declineCall}
+                  className="flex items-center justify-center w-14 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg transition-colors"
+                  aria-label="Decline call"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                
+                <button
+                  onClick={acceptCall}
+                  className="flex items-center justify-center w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
+                  aria-label="Accept call"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
