@@ -2,19 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
 import { v4 as uuidv4 } from 'uuid';
 
-// IMPORTANT: set this to the server host/IP + port where PeerServer runs
-// Example: https://192.168.1.10:4000 (if you run HTTPS) or http://192.168.1.10:4000
-// const REACT_APP_API_URL = process.env.REACT_APP_API_URL || 'https://10.0.0.20:4000';
-
 // Function to generate short UUID
 function generateShortUuid() {
   return uuidv4().substring(0, 4).toUpperCase();
 }
 
-// const teacherId = '1234';
-// const studentId = '5678';
-
-export default function App() {
+export default function CallPage() {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -42,9 +35,6 @@ export default function App() {
       }
 
       // Create Peer instance, configured to use our peerjs server
-      // Peerjs wants host/port/path. We pass the host via options below.
-      // NOTE: when using HTTPS, ensure SERVER_BASE is https://YOUR_IP:PORT
-      // const url = new URL(REACT_APP_API_URL);
       const peer = new Peer(generateShortUuid(), {
         debug: 3,
         config: {
