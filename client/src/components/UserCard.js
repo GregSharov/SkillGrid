@@ -15,6 +15,7 @@ function UserCard({ authUser }) {
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [profile, setProfile] = useState(null);
   const [userImage, setUserImage] = useState();
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' for ascending, 'desc' for descending
 
   const navigate = useNavigate();
 
@@ -207,6 +208,33 @@ function UserCard({ authUser }) {
     }
   };
 
+  // Sort scheduled lessons by date and time
+  const getSortedScheduledLessons = () => {
+    const allSlots = [];
+    
+    // Flatten all slots from all lessons
+    scheduledLessons.forEach((lesson) => {
+      lesson.slots.forEach((slot) => {
+        allSlots.push({ ...slot, lessonData: lesson });
+      });
+    });
+
+    // Sort by date and time
+    return allSlots.sort((a, b) => {
+      const dateA = new Date(`${a.date} ${a.time}`);
+      const dateB = new Date(`${b.date} ${b.time}`);
+      
+      return sortOrder === 'asc' 
+        ? dateB.getTime() - dateA.getTime()
+        : dateA.getTime() - dateB.getTime();
+    });
+  };
+
+  // Toggle sort order
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -270,72 +298,87 @@ function UserCard({ authUser }) {
 
           {/* Scheduled Lessons */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              Scheduled Lessons
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-slate-900">
+                Scheduled Lessons
+              </h2>
+              <button
+                onClick={toggleSortOrder}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition-colors"
+                title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'} by date/time`}
+              >
+                <svg 
+                  className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                </svg>
+                {sortOrder === 'asc' ? 'Earliest First' : 'Latest First'}
+              </button>
+            </div>
 
             {scheduledLessons.length === 0 && (
               <p className="text-slate-500">No lessons scheduled.</p>
             )}
 
             <div className="grid md:grid-cols-2 gap-6">
-              {scheduledLessons.map((items) =>
-                items.slots.map((slot) => (
-                  <div
-                    key={slot?._id}
-                    className="bg-white rounded-2xl shadow-md ring-1 ring-slate-200 p-5 flex flex-col justify-between hover:shadow-lg transition"
-                  >
-                    <div className="space-y-1">
-                      <p className="font-semibold text-lg text-slate-900">
-                        {slot.lesson.name}
-                      </p>
-                      <p className="text-slate-600 text-sm">
-                        {slot.date} {slot.time}
-                      </p>
+              {getSortedScheduledLessons().map((slot) => (
+                <div
+                  key={slot?._id}
+                  className="bg-white rounded-2xl shadow-md ring-1 ring-slate-200 p-5 flex flex-col justify-between hover:shadow-lg transition"
+                >
+                  <div className="space-y-1">
+                    <p className="font-semibold text-lg text-slate-900">
+                      {slot.lesson.name}
+                    </p>
+                    <p className="text-slate-600 text-sm">
+                      {slot.date} {slot.time}
+                    </p>
 
-                      {!profile?.isTeacher ? (
-                        <button
-                          className="mt-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
-                          onClick={() => teacherInfo(items.teacher._id)}
-                        >
-                          Teacher: {items.teacher.firstName} {items.teacher.lastName}
-                        </button>
-                      ) : (
-                        <p className="text-slate-600 text-sm">
-                          Student: {items.student.firstName} {items.student.lastName}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="mt-3 flex gap-2">
-                      {new Date(slot.date).setHours(
-                        slot.time.split(":")[0],
-                        0,
-                        0,
-                        0
-                      ) < new Date().setHours(new Date().getHours() + 1) ? (
-                        <span className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium">
-                          Completed
-                        </span>
-                      ) : (
-                        <button
-                          className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition"
-                          onClick={() => openVideoManager(slot?._id)}
-                        >
-                          Join Lesson
-                        </button>
-                      )}
-
+                    {!profile?.isTeacher ? (
                       <button
-                        className="px-3 py-1 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition"
-                        onClick={() => handleDeleteLesson(slot?._id)}
+                        className="mt-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
+                        onClick={() => teacherInfo(slot.lessonData.teacher._id)}
                       >
-                        Delete
+                        Teacher: {slot.lessonData.teacher.firstName} {slot.lessonData.teacher.lastName}
                       </button>
-                    </div>
+                    ) : (
+                      <p className="text-slate-600 text-sm">
+                        Student: {slot.student.firstName} {slot.student.lastName}
+                      </p>
+                    )}
                   </div>
-                ))
-              )}
+
+                  <div className="mt-3 flex gap-2">
+                    {new Date(slot.date).setHours(
+                      slot.time.split(":")[0],
+                      0,
+                      0,
+                      0
+                    ) < new Date().setHours(new Date().getHours() + 1) ? (
+                      <span className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium">
+                        Completed
+                      </span>
+                    ) : (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition"
+                        onClick={() => openVideoManager(slot?._id)}
+                      >
+                        Join Lesson
+                      </button>
+                    )}
+
+                    <button
+                      className="px-3 py-1 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition"
+                      onClick={() => handleDeleteLesson(slot?._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
