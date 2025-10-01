@@ -3,8 +3,9 @@ import makeAnimated from "react-select/animated";
 import { useNavigate } from "react-router-dom";
 import fetchData from "../services/fetchData";
 import useUploadImage from "../services/uploadImage";
-import SelectSubjectsForm from "./SelectSubjectsForm";
 import API_URL from "../services/apiBase";
+import SelectSubjectsForm from "./SelectSubjectsForm";
+import { LogOut, Calendar, User, Phone } from "lucide-react";
 
 const animatedComponents = makeAnimated();
 
@@ -15,7 +16,7 @@ function UserCard({ authUser }) {
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [profile, setProfile] = useState(null);
   const [userImage, setUserImage] = useState();
-  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' for ascending, 'desc' for descending
+  const [sortOrder, setSortOrder] = useState("asc");
 
   const navigate = useNavigate();
 
@@ -28,7 +29,8 @@ function UserCard({ authUser }) {
   // Open video manager
   const openVideoManager = async (roomId) => {
     try {
-      if (authUser?.role === "teacher" || authUser?.role === "student") navigate(`/join/${roomId}`);
+      if (authUser?.role === "teacher" || authUser?.role === "student")
+        navigate(`/join/${roomId}`);
       else alert("Unregistered user. Please sign in again.");
     } catch (error) {
       console.error("Error opening video manager:", error);
@@ -105,11 +107,8 @@ function UserCard({ authUser }) {
             label: s.name,
           }));
 
-          // Pre-select subjects
           setSelectedSubjects(preSelectedSubjects);
           const preSelectedLessonsBySubject = {};
-
-          // Pre-select lessons for each subject
           profile.subjects.forEach((s) => {
             preSelectedLessonsBySubject[s._id] = (s.lessons || []).map((l) => ({
               value: l._id,
@@ -143,14 +142,13 @@ function UserCard({ authUser }) {
     fetchScheduledLessons();
   }, [authUser, navigate]);
 
-  // Prepare subject select options
+  // Subject select options
   const subjectSelectOptions = subjectData.map((subject) => ({
     value: subject._id,
     label: subject.name,
     lessons: subject.lessons || [],
   }));
 
-  // Handle subject change
   const handleSubjectChange = (selected) => {
     setSelectedSubjects(selected || []);
     const updatedLessons = { ...selectedLessonsBySubject };
@@ -164,7 +162,6 @@ function UserCard({ authUser }) {
     setSelectedLessonsBySubject(updatedLessons);
   };
 
-  // Handle lesson change for a specific subject
   const handleLessonChange = (subjectId, selectedLessons) => {
     setSelectedLessonsBySubject((prev) => ({
       ...prev,
@@ -172,7 +169,6 @@ function UserCard({ authUser }) {
     }));
   };
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       const response = await fetch(`${API_URL}/user/logout`, {
@@ -186,13 +182,12 @@ function UserCard({ authUser }) {
     }
   };
 
-  // Handle delete lesson
   const handleDeleteLesson = async (slotId) => {
     try {
-      const response = await fetch(
-        `${API_URL}/schedule/delete/${slotId}`,
-        { method: "DELETE", credentials: "include" }
-      );
+      const response = await fetch(`${API_URL}/schedule/delete/${slotId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to delete lesson");
 
       setScheduledLessons((prev) =>
@@ -208,31 +203,24 @@ function UserCard({ authUser }) {
     }
   };
 
-  // Sort scheduled lessons by date and time
   const getSortedScheduledLessons = () => {
     const allSlots = [];
-    
-    // Flatten all slots from all lessons
     scheduledLessons.forEach((lesson) => {
       lesson.slots.forEach((slot) => {
         allSlots.push({ ...slot, lessonData: lesson });
       });
     });
-
-    // Sort by date and time
     return allSlots.sort((a, b) => {
       const dateA = new Date(`${a.date} ${a.time}`);
       const dateB = new Date(`${b.date} ${b.time}`);
-      
-      return sortOrder === 'asc' 
+      return sortOrder === "asc"
         ? dateB.getTime() - dateA.getTime()
         : dateA.getTime() - dateB.getTime();
     });
   };
 
-  // Toggle sort order
   const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
   return (
@@ -244,44 +232,56 @@ function UserCard({ authUser }) {
             Welcome {profile?.firstName}!
           </h1>
           <button
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
+            className="flex items-center gap-2 text-sm font-medium text-rose-600 hover:text-rose-700 transition"
             onClick={handleLogout}
           >
+            <LogOut className="w-4 h-4" />
             Logout
           </button>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Profile Card */}
-          <div className="bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-6 flex flex-col items-center">
+          <div className="bg-white rounded-2xl shadow-md ring-1 ring-slate-200 hover:shadow-lg transition">
+            {/* Header with image */}
             <div
-              className="relative w-44 h-44 rounded-full overflow-hidden border-4 border-slate-100 shadow cursor-pointer group"
+              className="relative w-full flex justify-center p-6 border-b border-slate-100 cursor-pointer group"
               onClick={handleImageClick}
             >
-              <img
-                src={userImage}
-                alt={`${profile?.firstName} ${profile?.lastName}`}
-                className="w-full h-full object-cover object-[80%_20%] transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute bottom-0 left-0 w-full h-12 bg-slate-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white font-medium text-sm">
+              <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-slate-100 shadow">
+                <img
+                  src={userImage}
+                  alt={`${profile?.firstName} ${profile?.lastName}`}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+              <div className="absolute bottom-6 w-40 text-center text-xs bg-slate-900/70 text-white py-1 rounded opacity-0 group-hover:opacity-100 transition">
                 Change Image
               </div>
             </div>
 
-            <h2 className="mt-4 text-xl font-bold text-slate-900 text-center">
-              {profile?.firstName} {profile?.lastName}
-            </h2>
-            <p className="text-slate-600 text-center">{profile?.email}</p>
-            <p className="text-slate-600 text-center">{profile?.phone}</p>
-            <p className="text-slate-600 text-center">
-              DOB:{" "}
-              {new Date(profile?.dateOfBirth)
-                .toLocaleDateString("en-GB")
-                .replaceAll("/", "-")}
-            </p>
+            {/* Body */}
+            <div className="px-6 py-4 space-y-2 text-center">
+              <h2 className="text-xl font-bold text-slate-900">
+                {profile?.firstName} {profile?.lastName}
+              </h2>
+              <p className="text-sm text-slate-600 flex justify-center gap-1">
+                <User className="w-4 h-4 text-indigo-500" /> {profile?.email}
+              </p>
+              <p className="text-sm text-slate-600 flex justify-center gap-1">
+                <Phone className="w-4 h-4 text-indigo-500" /> {profile?.phone}
+              </p>
+              <p className="text-sm text-slate-600 flex justify-center gap-1">
+                <Calendar className="w-4 h-4 text-indigo-500" /> DOB:{" "}
+                {new Date(profile?.dateOfBirth)
+                  .toLocaleDateString("en-GB")
+                  .replaceAll("/", "-")}
+              </p>
+            </div>
 
+            {/* Footer → Subject Selection (teachers only) */}
             {authUser?.role === "teacher" && (
-              <div className="mt-6 w-full">
+              <div className="px-6 py-4 border-t border-slate-100">
                 <SelectSubjectsForm
                   animatedComponents={animatedComponents}
                   subjectSelectOptions={subjectSelectOptions}
@@ -304,18 +304,9 @@ function UserCard({ authUser }) {
               </h2>
               <button
                 onClick={toggleSortOrder}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition-colors"
-                title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'} by date/time`}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-700 transition"
               >
-                <svg 
-                  className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-                {sortOrder === 'asc' ? 'Earliest First' : 'Latest First'}
+                {sortOrder === "asc" ? "Earliest First" : "Latest First"}
               </button>
             </div>
 
@@ -324,61 +315,90 @@ function UserCard({ authUser }) {
             )}
 
             <div className="grid md:grid-cols-2 gap-6">
-              {getSortedScheduledLessons().map((slot) => (
-                <div
-                  key={slot?._id}
-                  className="bg-white rounded-2xl shadow-md ring-1 ring-slate-200 p-5 flex flex-col justify-between hover:shadow-lg transition"
-                >
-                  <div className="space-y-1">
-                    <p className="font-semibold text-lg text-slate-900">
-                      {slot.lesson.name}
-                    </p>
-                    <p className="text-slate-600 text-sm">
-                      {slot.date} {slot.time}
-                    </p>
+              {getSortedScheduledLessons().map((slot) => {
+                const slotDate = new Date(`${slot.date} ${slot.time}`);
+                const isPast = slotDate < new Date();
+                const isSoon =
+                  slotDate > new Date() &&
+                  slotDate < new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-                    {!profile?.isTeacher ? (
-                      <button
-                        className="mt-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
-                        onClick={() => teacherInfo(slot.lessonData.teacher._id)}
-                      >
-                        Teacher: {slot.lessonData.teacher.firstName} {slot.lessonData.teacher.lastName}
-                      </button>
-                    ) : (
-                      <p className="text-slate-600 text-sm">
-                        Student: {slot.lessonData.student.firstName} {slot.lessonData.student.lastName}
+                return (
+                  <div
+                    key={slot?._id}
+                    className="flex flex-col justify-between rounded-2xl bg-white shadow-md ring-1 ring-slate-200 hover:shadow-xl transition-transform hover:-translate-y-1"
+                  >
+                    {/* Header */}
+                    <div className="px-5 py-4 border-b border-slate-100">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        {slot.lesson.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-600 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-indigo-500" />
+                        {slotDate.toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}{" "}
+                        · {slot.time}
                       </p>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="mt-3 flex gap-2">
-                    {new Date(slot.date).setHours(
-                      slot.time.split(":")[0],
-                      0,
-                      0,
-                      0
-                    ) < new Date().setHours(new Date().getHours() + 1) ? (
-                      <span className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium">
-                        Completed
-                      </span>
-                    ) : (
-                      <button
-                        className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition"
-                        onClick={() => openVideoManager(slot?._id)}
-                      >
-                        Join Lesson
-                      </button>
-                    )}
+                    {/* Body */}
+                    <div className="px-5 py-3">
+                      {!profile?.isTeacher ? (
+                        <button
+                          onClick={() =>
+                            teacherInfo(slot.lessonData.teacher._id)
+                          }
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition"
+                        >
+                          Teacher: {slot.lessonData.teacher.firstName}{" "}
+                          {slot.lessonData.teacher.lastName}
+                        </button>
+                      ) : (
+                        <p className="text-sm text-slate-600">
+                          Student: {slot.lessonData.student.firstName}{" "}
+                          {slot.lessonData.student.lastName}
+                        </p>
+                      )}
+                    </div>
 
-                    <button
-                      className="px-3 py-1 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition"
-                      onClick={() => handleDeleteLesson(slot?._id)}
-                    >
-                      Delete
-                    </button>
+                    {/* Footer */}
+                    <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+                      {isPast ? (
+                        <span className="px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-medium">
+                          Completed
+                        </span>
+                      ) : isSoon ? (
+                        <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+                          Upcoming Soon
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+                          Scheduled
+                        </span>
+                      )}
+
+                      <div className="flex gap-2">
+                        {!isPast && (
+                          <button
+                            onClick={() => openVideoManager(slot?._id)}
+                            className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition"
+                          >
+                            Join
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteLesson(slot?._id)}
+                          className="px-3 py-1.5 rounded-lg bg-rose-100 text-rose-600 text-sm font-medium hover:bg-rose-200 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
