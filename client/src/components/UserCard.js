@@ -346,7 +346,7 @@ function UserCard({ authUser }) {
                       </button>
                     ) : (
                       <p className="text-slate-600 text-sm">
-                        Student: {slot.student.firstName} {slot.student.lastName}
+                        Student: {slot.lessonData.student.firstName} {slot.lessonData.student.lastName}
                       </p>
                     )}
                   </div>
