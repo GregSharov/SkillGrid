@@ -6,48 +6,13 @@ import { HashPassword, VerifyPassword } from "../utils/auth.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import uploadImage from "./cloudinary.js";
 
 const router = express.Router();
 
-var subfolder = "";
-
-// Configure multer to store files in /images
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const { userId } = req.body;
-    // subfolder = (await Student.findById(userId)) ? "students" : "teachers";
-    if (await Student.findById(userId)) {
-      subfolder = "students";
-    } else if (await Teacher.findById(userId)) {
-      subfolder = "teachers";
-    } else if (await Subject.findById(userId)) {
-      subfolder = "subjects";
-    } else {
-      subfolder = "lessons";
-    }
-
-    const dir = `./images/${subfolder}`;
-    // Ensure the directory exists
-    fs.access(dir, (err) => {
-      if (err) {
-        fs.mkdir(dir, { recursive: true }, (err) => {
-          if (err) {
-            return cb(err);
-          }
-          cb(null, dir);
-        });
-      } else {
-        cb(null, dir);
-      }
-    });
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // .png
-    const baseName = path.basename(file.originalname, ext); // logo
-    cb(null, `${baseName}-${Date.now()}${ext}`);
-  },
-});
-const upload = multer({ storage: storage });
+// Configure multer to store files in memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 var Model = Student;
 
@@ -55,27 +20,49 @@ var Model = Student;
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     const { userId } = req.body;
-    const imagePath = `/images/${subfolder}/${req.file.filename}`;
 
-    // Detect correct model (Student or Teacher)
-    // Model = (await Student.findById(userId)) ? Student : Teacher;
+    // Detect correct model and subfolder
+    let subfolder = "";
     if (await Student.findById(userId)) {
       Model = Student;
+      subfolder = "students";
     } else if (await Teacher.findById(userId)) {
       Model = Teacher;
-    } else {
+      subfolder = "teachers";
+    } else if (await Subject.findById(userId)) {
       Model = Subject;
+      subfolder = "subjects";
+    } else {
+      subfolder = "lessons";
     }
 
+    // Upload buffer to Cloudinary in nested folder
+    const cloudinaryResult = await new Promise((resolve, reject) => {
+      const stream = uploadImage.uploader.upload_stream(
+        {
+          folder: `SkillGrid/images/${subfolder}`,
+          use_filename: true,
+          unique_filename: false,
+          overwrite: true,
+        },
+        (error, result) => {
+          if (result) resolve(result);
+          else reject(error);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+
+    // Update user with Cloudinary URL
     const user = await Model.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    user.image = imagePath;
+    user.image = cloudinaryResult.secure_url;
     await user.save();
 
     res.status(200).json({
       message: "Profile image uploaded successfully.",
-      imageUrl: imagePath,
+      imageUrl: cloudinaryResult.secure_url,
     });
   } catch (error) {
     console.error("Error uploading profile image:", error);
@@ -135,7 +122,7 @@ router.post("/login", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
 
     const ok = await VerifyPassword(user.password, password);
-    
+
     if (!ok) return res.status(401).json({ message: "Invalid password." });
 
     req.session.regenerate((err) => {

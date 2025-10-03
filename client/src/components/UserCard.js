@@ -8,6 +8,7 @@ import SelectSubjectsForm from "./SelectSubjectsForm";
 import { LogOut, Calendar, User, Phone } from "lucide-react";
 
 const animatedComponents = makeAnimated();
+const defaultUserImage = `https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/user_mtgtft.png`
 
 function UserCard({ authUser }) {
   const [subjectData, setSubjectData] = useState([]);
@@ -15,7 +16,7 @@ function UserCard({ authUser }) {
   const [selectedLessonsBySubject, setSelectedLessonsBySubject] = useState({});
   const [scheduledLessons, setScheduledLessons] = useState([]);
   const [profile, setProfile] = useState(null);
-  const [userImage, setUserImage] = useState();
+  const [userImage, setUserImage] = useState(defaultUserImage);
   const [sortOrder, setSortOrder] = useState("asc");
 
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ function UserCard({ authUser }) {
       if (!res.ok) return console.error("Failed to fetch user profile");
       const data = await res.json();
       setProfile(data.user);
-      setUserImage(`${API_URL}${data.user?.image || ""}`);
+      setUserImage(`${data.user?.image || ""}`);
     })();
   }, [authUser]);
 
