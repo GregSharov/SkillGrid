@@ -137,7 +137,7 @@ router.post("/signup", async (req, res) => {
 // Login user
 router.post("/login", async (req, res) => {
   const { email, password, isTeacher } = req.body;
-  console.log(req.body);
+  
   try {
     const Model = isTeacher ? Teacher : Student;
     const user = await Model.findOne({ email });

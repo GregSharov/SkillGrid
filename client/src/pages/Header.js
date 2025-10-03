@@ -1,11 +1,11 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import logo from "../logo.png";
 
 const Header = () => {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const logo = `https://res.cloudinary.com/de3jgizbm/image/upload/v1759534356/logo_jvcc5c.png`;
 
   const go = () => {
     const term = q.trim();
