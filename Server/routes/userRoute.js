@@ -41,8 +41,7 @@ router.post("/upload", upload.single("image"), async (req, res) => {
       const stream = uploadImage.uploader.upload_stream(
         {
           folder: `SkillGrid/images/${subfolder}`,
-          use_filename: true,
-          unique_filename: false,
+          public_id: userId, // file will always be named after the userId
           overwrite: true,
         },
         (error, result) => {
