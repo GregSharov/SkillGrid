@@ -3,7 +3,6 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
 import filterData from "./services/filterData";
 import { useNavigate } from "react-router-dom";
-import API_URL from "./services/apiBase.js";
 
 const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
   const [lessonData, setLessonsData] = useState([]);
@@ -119,7 +118,7 @@ const CarouselLessons = ({ subjectId, lessonsArray = null, onLessonClick }) => {
                   {/* Image */}
                   <div className="relative pb-[66%]">
                     <img
-                      src={`${API_URL}${lesson.image}`}
+                      src={lesson.image}
                       alt={lesson.name}
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                       loading="lazy"

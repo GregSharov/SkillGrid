@@ -19,9 +19,31 @@ var Model = Student;
 // Upload profile image
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, directUpload } = req.body;
 
-    // Detect correct model and subfolder
+    // For direct uploads (new items), just upload to Cloudinary without user association
+    if (directUpload === "true") {
+      const cloudinaryResult = await new Promise((resolve, reject) => {
+        const stream = uploadImage.uploader.upload_stream(
+          {
+            folder: `SkillGrid/images/temp`,
+            public_id: `temp_${Date.now()}`,
+          },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
+      return res.status(200).json({
+        message: "Image uploaded successfully.",
+        imageUrl: cloudinaryResult.secure_url,
+      });
+    }
+
+    // For existing users, update their profile
     let subfolder = "";
     if (await Student.findById(userId)) {
       Model = Student;
@@ -115,6 +137,7 @@ router.post("/signup", async (req, res) => {
 // Login user
 router.post("/login", async (req, res) => {
   const { email, password, isTeacher } = req.body;
+  console.log(req.body);
   try {
     const Model = isTeacher ? Teacher : Student;
     const user = await Model.findOne({ email });

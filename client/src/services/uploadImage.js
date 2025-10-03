@@ -21,11 +21,16 @@ export default function useUploadImage() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to upload image");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to upload image");
+      }
 
-      return await response.json();
+      const result = await response.json();
+      return result;
     } catch (err) {
       setError(err.message);
+      throw err; // Re-throw so the calling function knows there was an error
     } finally {
       setLoading(false);
     }

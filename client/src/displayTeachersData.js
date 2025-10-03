@@ -274,7 +274,7 @@ function DisplayTeacherData() {
                 <div className="flex flex-col md:flex-row md:items-center gap-6">
                   <div className="relative shrink-0">
                     <img
-                      src={`${API_URL}${teacherProfile.image}`}
+                      src={teacherProfile.image}
                       alt={`${teacherProfile.firstName} ${teacherProfile.lastName}`}
                       className="h-28 w-28 sm:h-32 sm:w-32 rounded-full object-cover ring-4 ring-white shadow-xl"
                     />

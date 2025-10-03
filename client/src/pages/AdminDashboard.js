@@ -1,1342 +1,963 @@
-// client/src/pages/AdminDashboard.js
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import API_URL from "../services/apiBase";
-import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  XMarkIcon,
-  MagnifyingGlassIcon,
-  ArrowPathIcon,
-  PhotoIcon,
-} from "@heroicons/react/24/outline";
+import fetchData from "../services/fetchData";
 import useUploadImage from "../services/uploadImage";
 
-const API = API_URL;
+// Import icons (you may need to install react-icons)
+import {
+  FiUsers,
+  FiBookOpen,
+  FiCalendar,
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiImage,
+  FiSave,
+  FiX
+} from "react-icons/fi";
 
-/* --------------------- tiny fetch utils --------------------- */
-async function apiGet(path) {
-  const res = await fetch(`${API}${path}`, { credentials: "include" });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.message || "Request failed");
-  return data;
-}
-async function apiSend(path, method, body) {
-  const res = await fetch(`${API}${path}`, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.message || "Request failed");
-  return data;
-}
-
-/* --------------------- generic field input --------------------- */
-function FieldInput({ field, value, onChange }) {
-  const base =
-    "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100";
-  if (field.type === "textarea") {
-    return (
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          {field.label}{" "}
-          {field.required && <span className="text-rose-600">*</span>}
-        </label>
-        <textarea
-          rows={field.rows || 4}
-          className={base}
-          value={value ?? ""}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={field.placeholder}
-        />
-      </div>
-    );
-  }
-  if (field.type === "select") {
-    return (
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          {field.label}{" "}
-          {field.required && <span className="text-rose-600">*</span>}
-        </label>
-        <select
-          className={base}
-          value={value ?? ""}
-          onChange={(e) => onChange(e.target.value)}
-          required={field.required}
-        >
-          <option value="">{field.placeholder || "Select…"}</option>
-          {(field.options || []).map((o) =>
-            typeof o === "string" ? (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ) : (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            )
-          )}
-        </select>
-      </div>
-    );
-  }
-  if (field.type === "json") {
-    return (
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          {field.label}
-        </label>
-        <textarea
-          rows={field.rows || 8}
-          className={base + " font-mono"}
-          value={
-            typeof value === "string"
-              ? value
-              : JSON.stringify(value ?? {}, null, 2)
-          }
-          onChange={(e) => onChange(e.target.value)}
-          placeholder='JSON object (e.g. {"a":1})'
-        />
-      </div>
-    );
-  }
-  return (
-    <div>
-      <label className="mb-1 block text-sm font-medium text-slate-700">
-        {field.label}{" "}
-        {field.required && <span className="text-rose-600">*</span>}
-      </label>
-      <input
-        type={field.type || "text"}
-        className={base}
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={field.placeholder}
-        min={field.min}
-        max={field.max}
-        step={field.step}
-        required={field.required}
-      />
-    </div>
-  );
-}
-
-/* --------------------- generic CRUD panel --------------------- */
-function CrudPanel({
-  title,
-  listPath,
-  createPath,
-  updatePath, // "/resource/:id"
-  deletePath, // "/resource/:id"
-  columns,
-  fields,
-  idKey = "_id",
-  lookupTransform, // optional function to normalize list API result
-  afterSave, // optional callback(row)
-  allowCreate = true,
-  allowEdit = true,
-  allowDelete = true,
-  extraActions, // (row)=>JSX
-  withImageUpload = false,
-}) {
-  const [items, setItems] = useState([]);
-  const [q, setQ] = useState("");
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("teachers");
+  const [teachersData, setTeachersData] = useState([]);
+  const [studentsData, setStudentsData] = useState([]);
+  const [subjectsData, setSubjectsData] = useState([]);
+  const [scheduledLessonsData, setScheduledLessonsData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({});
-  const { uploadImage, loading: upLoading, error: upErr } = useUploadImage();
+  const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [showLessonModal, setShowLessonModal] = useState(false);
+  const [editingLesson, setEditingLesson] = useState(null);
+  const [lessonFormData, setLessonFormData] = useState({});
+  const { uploadImage, loading: uploadLoading } = useUploadImage();
+  const defaultUserImage = `https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/user_mtgtft.png`;
 
-  const filtered = useMemo(() => {
-    if (!q.trim()) return items;
-    const s = q.toLowerCase();
-    return items.filter((it) => JSON.stringify(it).toLowerCase().includes(s));
-  }, [items, q]);
+  // Direct upload function for new items
+  const uploadImageDirectly = async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("directUpload", "true"); // Flag to indicate direct upload
 
-  const load = useCallback(async () => {
+    const response = await fetch(`${API_URL}/user/upload`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to upload image");
+    }
+
+    return await response.json();
+  };
+
+  const tabs = [
+    { id: "teachers", label: "Teachers", icon: FiUsers },
+    { id: "students", label: "Students", icon: FiUsers },
+    { id: "subjects", label: "Subjects", icon: FiBookOpen },
+    { id: "scheduled", label: "Scheduled Lessons", icon: FiCalendar },
+  ];
+
+  // Load data based on active tab
+  useEffect(() => {
+    loadData();
+  }, [activeTab]);
+
+  const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setErr("");
-      const data = await apiGet(listPath);
-      const arr = lookupTransform
-        ? lookupTransform(data)
-        : Array.isArray(data)
-        ? data
-        : Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.items)
-        ? data.items
-        : [];
-      setItems(arr);
-    } catch (e) {
-      setErr(e.message || String(e));
+      switch (activeTab) {
+        case "teachers":
+          const teachers = await fetchData("teachers");
+          setTeachersData(teachers);
+          break;
+        case "students":
+          const students = await fetchData("students");
+          setStudentsData(students);
+          break;
+        case "subjects":
+          const subjects = await fetchData("subjects");
+          setSubjectsData(subjects);
+          break;
+        case "scheduled":
+          const scheduled = await fetch(`${API_URL}/schedule/user/all`, {
+            credentials: "include",
+          });
+          const scheduledData = await scheduled.json();
+          setScheduledLessonsData(scheduledData.data || []);
+          break;
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
-  }, [listPath, lookupTransform]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const startCreate = () => {
-    setOpen(true);
-    setEditing(null);
-    setForm({});
-  };
-  const startEdit = (row) => {
-    setOpen(true);
-    setEditing(row);
-    setForm(row);
-  };
-  const close = () => {
-    setOpen(false);
-    setEditing(null);
-    setForm({});
   };
 
-  const onSave = async (e) => {
-    e.preventDefault();
-    try {
-      setErr("");
-      if (editing) {
-        await apiSend(updatePath.replace(":id", editing[idKey]), "PUT", form);
-      } else {
-        await apiSend(createPath, "POST", form);
-      }
-      if (afterSave) afterSave(form);
-      close();
-      await load();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
-    }
+  const handleCreate = () => {
+    setEditingItem(null);
+    setFormData(getDefaultFormData());
+    setShowModal(true);
   };
 
-  const onDelete = async (row) => {
-    if (!window.confirm("Delete this item?")) return;
-    try {
-      setErr("");
-      await apiSend(deletePath.replace(":id", row[idKey]), "DELETE");
-      await load();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
-    }
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    // Format date for input field (convert ISO to YYYY-MM-DD)
+    const formattedItem = {
+      ...item,
+      dateOfBirth: item.dateOfBirth ? new Date(item.dateOfBirth).toISOString().split('T')[0] : ''
+    };
+    setFormData(formattedItem);
+    setShowModal(true);
   };
 
-  const handleImageUpload = async (userId, file) => {
-    if (!file || !userId) return;
-    try {
-      await uploadImage(userId, file);
-      await load();
-    } catch {
-      /* handled by hook */
-    }
-  };
-
-  return (
-    <section className="rounded-2xl bg-white ring-1 ring-slate-200 shadow">
-      <header className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-          {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="w-56 rounded-lg border border-slate-300 pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100"
-              placeholder="Search…"
-            />
-          </div>
-          {allowCreate && (
-            <button
-              onClick={startCreate}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 active:scale-[0.98]"
-            >
-              <PlusIcon className="h-4 w-4" /> Add
-            </button>
-          )}
-        </div>
-      </header>
-
-      <div className="overflow-x-auto">
-        <table className="w-full border-t border-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  className="p-3 text-left font-semibold text-slate-700"
-                >
-                  {c.header}
-                </th>
-              ))}
-              {(allowEdit ||
-                allowDelete ||
-                withImageUpload ||
-                extraActions) && (
-                <th className="p-3 text-right font-semibold text-slate-700">
-                  Actions
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={columns.length + 1}>
-                  Loading…
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={columns.length + 1}>
-                  No data
-                </td>
-              </tr>
-            ) : (
-              filtered.map((row) => (
-                <tr
-                  key={row[columns[0]?.key] + row._id}
-                  className="border-t border-slate-200"
-                >
-                  {columns.map((c) => (
-                    <td key={c.key} className="p-3 align-top">
-                      {c.render
-                        ? c.render(row[c.key], row)
-                        : String(row[c.key] ?? "—")}
-                    </td>
-                  ))}
-                  {(allowEdit ||
-                    allowDelete ||
-                    withImageUpload ||
-                    extraActions) && (
-                    <td className="p-3">
-                      <div className="flex justify-end gap-2">
-                        {extraActions && extraActions(row)}
-                        {withImageUpload && (
-                          <label className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-50 cursor-pointer">
-                            <PhotoIcon className="h-4 w-4" /> Upload
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept="image/*"
-                              onChange={(e) =>
-                                handleImageUpload(row._id, e.target.files?.[0])
-                              }
-                            />
-                          </label>
-                        )}
-                        {allowEdit && (
-                          <button
-                            onClick={() => startEdit(row)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-50"
-                          >
-                            <PencilIcon className="h-4 w-4" /> Edit
-                          </button>
-                        )}
-                        {allowDelete && (
-                          <button
-                            onClick={() => onDelete(row)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
-                          >
-                            <TrashIcon className="h-4 w-4" /> Delete
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* modal */}
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h4 className="text-lg font-semibold">
-                {editing ? "Edit" : "Create"}
-              </h4>
-              <button
-                className="rounded-full p-1.5 hover:bg-slate-100"
-                onClick={close}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-            <form onSubmit={onSave} className="p-4 space-y-4">
-              {fields.map((f) => (
-                <FieldInput
-                  key={f.key}
-                  field={f}
-                  value={form[f.key]}
-                  onChange={(val) => setForm((s) => ({ ...s, [f.key]: val }))}
-                />
-              ))}
-              {withImageUpload && editing && (
-                <div className="text-xs text-slate-500 -mt-2">
-                  Tip: use the <b>Upload</b> action on the list to update the
-                  profile image.
-                  {upLoading && (
-                    <span className="ml-2 inline-flex items-center gap-1">
-                      <ArrowPathIcon className="h-4 w-4 animate-spin" />{" "}
-                      Uploading…
-                    </span>
-                  )}
-                  {upErr && <span className="ml-2 text-rose-600">{upErr}</span>}
-                </div>
-              )}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
-/* --------------------- dashboard --------------------- */
-export default function AdminDashboard() {
-  const [tab, setTab] = useState("subjects");
-
-  // lookups
-  const [teachers, setTeachers] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [loadingLk, setLoadingLk] = useState(false);
-  const [errLk, setErrLk] = useState("");
-
-  const loadLookups = useCallback(async () => {
-    try {
-      setLoadingLk(true);
-      setErrLk("");
-      const t = await apiGet("/teachers");
-      const s = await apiGet("/students");
-      const subj = await apiGet("/subjects");
-      setTeachers(Array.isArray(t?.data) ? t.data : t);
-      setStudents(Array.isArray(s?.data) ? s.data : s);
-      setSubjects(Array.isArray(subj?.data) ? subj.data : subj);
-    } catch (e) {
-      setErrLk(e.message || String(e));
-    } finally {
-      setLoadingLk(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLookups();
-  }, [loadLookups]);
-
-  const teacherOptions = useMemo(
-    () =>
-      teachers.map((x) => ({
-        value: x._id,
-        label: `${x.firstName} ${x.lastName}`,
-      })),
-    [teachers]
-  );
-  const studentOptions = useMemo(
-    () =>
-      students.map((x) => ({
-        value: x._id,
-        label: `${x.firstName} ${x.lastName}`,
-      })),
-    [students]
-  );
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-indigo-50/30 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-              Admin Dashboard
-            </h1>
-            <p className="text-slate-600">
-              CRUD for Subjects, Lessons, Teachers, Students, Schedule, Reviews.
-            </p>
-            {errLk && <p className="mt-1 text-sm text-rose-600">{errLk}</p>}
-          </div>
-          <button
-            onClick={loadLookups}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow hover:bg-slate-50"
-          >
-            <ArrowPathIcon
-              className={`h-4 w-4 ${loadingLk ? "animate-spin" : ""}`}
-            />
-            Refresh lookups
-          </button>
-        </header>
-
-        <nav className="flex flex-wrap gap-2">
-          {[
-            ["subjects", "Subjects"],
-            ["lessons", "Lessons"],
-            ["teachers", "Teachers"],
-            ["students", "Students"],
-            ["schedule", "Scheduled Lessons"],
-            ["reviews", "Reviews"],
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ring-1 transition
-                ${
-                  tab === key
-                    ? "bg-indigo-600 text-white ring-indigo-600"
-                    : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
-                }`}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="space-y-6">
-          {/* Subjects */}
-          {tab === "subjects" && (
-            <CrudPanel
-              title="Subjects"
-              listPath="/subjects"
-              createPath="/subjects"
-              updatePath="/subjects/:id"
-              deletePath="/subjects/:id"
-              columns={[
-                { key: "name", header: "Name" },
-                { key: "description", header: "Description" },
-              ]}
-              fields={[
-                { key: "name", label: "Name", required: true },
-                { key: "description", label: "Description", type: "textarea" },
-                { key: "image", label: "Image URL" },
-              ]}
-            />
-          )}
-
-          {/* Lessons (embedded in Subject) */}
-          {tab === "lessons" && (
-            <LessonsEmbedded subjects={subjects} reloadSubjects={loadLookups} />
-          )}
-
-          {/* Teachers */}
-          {tab === "teachers" && (
-            <CrudPanel
-              title="Teachers"
-              listPath="/teachers"
-              createPath="/teachers"
-              updatePath="/teachers/:id"
-              deletePath="/teachers/:id"
-              columns={[
-                { key: "firstName", header: "First Name" },
-                { key: "lastName", header: "Last Name" },
-                { key: "email", header: "Email" },
-                { key: "phone", header: "Phone" },
-                {
-                  key: "ratingAverage",
-                  header: "Avg",
-                  render: (v) => (v ? Number(v).toFixed(1) : "—"),
-                },
-                { key: "ratingCount", header: "Count" },
-              ]}
-              fields={[
-                { key: "firstName", label: "First Name", required: true },
-                { key: "lastName", label: "Last Name", required: true },
-                { key: "email", label: "Email", type: "email", required: true },
-                { key: "phone", label: "Phone" },
-                { key: "dateOfBirth", label: "DOB", type: "date" },
-                { key: "image", label: "Image URL" },
-              ]}
-              withImageUpload
-            />
-          )}
-
-          {/* Students */}
-          {tab === "students" && (
-            <CrudPanel
-              title="Students"
-              listPath="/students"
-              createPath="/students"
-              updatePath="/students/:id"
-              deletePath="/students/:id"
-              columns={[
-                { key: "firstName", header: "First Name" },
-                { key: "lastName", header: "Last Name" },
-                { key: "email", header: "Email" },
-                { key: "phone", header: "Phone" },
-              ]}
-              fields={[
-                { key: "firstName", label: "First Name", required: true },
-                { key: "lastName", label: "Last Name", required: true },
-                { key: "email", label: "Email", type: "email", required: true },
-                { key: "phone", label: "Phone" },
-                { key: "dateOfBirth", label: "DOB", type: "date" },
-                { key: "image", label: "Image URL" },
-              ]}
-              withImageUpload
-            />
-          )}
-
-          {/* Scheduled Lessons (per-teacher) */}
-          {tab === "schedule" && (
-            <SchedulePanel
-              teacherOptions={teacherOptions}
-              studentOptions={studentOptions}
-            />
-          )}
-
-          {/* Reviews (per-teacher) */}
-          {tab === "reviews" && (
-            <ReviewsPanel
-              teacherOptions={teacherOptions}
-              studentOptions={studentOptions}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* --------------------- Lessons embedded in Subject --------------------- */
-function LessonsEmbedded({ subjects, reloadSubjects }) {
-  const [subjectId, setSubjectId] = useState("");
-  const [err, setErr] = useState("");
-  const subject = useMemo(
-    () => subjects.find((s) => s._id === subjectId),
-    [subjects, subjectId]
-  );
-  const lessons = subject?.lessons || [];
-
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", description: "", image: "" });
-
-  const startCreate = () => {
-    setEditing(null);
-    setForm({ name: "", description: "", image: "" });
-    setOpen(true);
-  };
-  const startEdit = (l) => {
-    setEditing(l);
-    setForm({
-      name: l.name || "",
-      description: l.description || "",
-      image: l.image || "",
-    });
-    setOpen(true);
-  };
-  const close = () => {
-    setOpen(false);
-    setEditing(null);
-    setForm({ name: "", description: "", image: "" });
-  };
-
-  const save = async (e) => {
-    e.preventDefault();
-    if (!subjectId) {
-      setErr("Select a subject");
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Are you sure you want to delete this ${activeTab.slice(0, -1)}?`)) {
       return;
     }
+
     try {
-      setErr("");
-      const updated = [...lessons];
-      if (editing) {
-        const idx = updated.findIndex(
-          (x) => String(x._id) === String(editing._id)
-        );
-        if (idx >= 0) updated[idx] = { ...editing, ...form };
+      const response = await fetch(`${API_URL}/${activeTab}/${item._id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        loadData();
+        alert(`${activeTab.slice(0, -1)} deleted successfully!`);
       } else {
-        updated.push({ ...form, _id: crypto.randomUUID() }); // temp id; server may replace
+        alert("Failed to delete item");
       }
-      await apiSend(`/subjects/${subjectId}`, "PUT", {
-        ...subject,
-        lessons: updated,
-      });
-      close();
-      await reloadSubjects();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      alert("Error deleting item");
     }
   };
 
-  const remove = async (l) => {
-    if (!window.confirm("Delete this lesson?")) return;
+  const handleSave = async () => {
     try {
-      setErr("");
-      const updated = lessons.filter((x) => String(x._id) !== String(l._id));
-      await apiSend(`/subjects/${subjectId}`, "PUT", {
-        ...subject,
-        lessons: updated,
+      const url = editingItem
+        ? `${API_URL}/${activeTab}/${editingItem._id}`
+        : `${API_URL}/${activeTab}`;
+
+      const method = editingItem ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
       });
-      await reloadSubjects();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
+
+      if (response.ok) {
+        setShowModal(false);
+        loadData();
+        alert(`${activeTab.slice(0, -1)} ${editingItem ? 'updated' : 'created'} successfully!`);
+      } else {
+        alert(`Failed to ${editingItem ? 'update' : 'create'} item`);
+      }
+    } catch (error) {
+      console.error("Error saving item:", error);
+      alert("Error saving item");
     }
   };
 
-  return (
-    <section className="rounded-2xl bg-white ring-1 ring-slate-200 shadow">
-      <div className="flex items-center justify-between p-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">
-            Lessons (by Subject)
-          </h3>
-          <p className="text-sm text-slate-600">
-            Select a subject to manage its lessons.
-          </p>
-          {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+
+    try {
+      let result;
+      
+      if (editingItem?._id) {
+        // For existing items, use the upload service
+        console.log('Uploading image for existing user ID:', editingItem._id);
+        result = await uploadImage(editingItem._id, file);
+      } else {
+        // For new items, upload directly to Cloudinary without user association
+        result = await uploadImageDirectly(file);
+      }
+      
+      console.log('Upload result:', result);
+      
+      if (result?.imageUrl || result?.secure_url) {
+        const imageUrl = result.imageUrl || result.secure_url;
+        setFormData(prev => ({ ...prev, image: imageUrl }));
+        setShowImageUpload(false);
+        alert("Image uploaded successfully!");
+      } else {
+        console.error('No image URL in result:', result);
+        alert("Upload failed: No image URL received");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert(`Error uploading image: ${error.message}`);
+    }
+  };
+
+  const handleEditLesson = (lesson, index) => {
+    setEditingLesson({ lesson, index });
+    setLessonFormData(lesson);
+    setShowLessonModal(true);
+  };
+
+  const handleDeleteLesson = (index) => {
+    if (!window.confirm("Are you sure you want to delete this lesson?")) {
+      return;
+    }
+
+    const updatedLessons = [...(formData.lessons || [])];
+    updatedLessons.splice(index, 1);
+    setFormData({ ...formData, lessons: updatedLessons });
+  };
+
+  const handleSaveLesson = () => {
+    const updatedLessons = [...(formData.lessons || [])];
+
+    if (editingLesson) {
+      // Update existing lesson
+      updatedLessons[editingLesson.index] = lessonFormData;
+    } else {
+      // Add new lesson
+      updatedLessons.push({
+        ...lessonFormData,
+        _id: Date.now().toString() // Temporary ID for new lessons
+      });
+    }
+
+    setFormData({ ...formData, lessons: updatedLessons });
+    setShowLessonModal(false);
+    setEditingLesson(null);
+    setLessonFormData({});
+  };
+
+  const handleLessonImageUpload = async (file) => {
+    if (!file) return;
+
+    try {
+      // For lessons, always use direct upload since they're not associated with users
+      const result = await uploadImageDirectly(file);
+      
+      if (result?.imageUrl) {
+        setLessonFormData(prev => ({ ...prev, image: result.imageUrl }));
+        alert("Lesson image uploaded successfully!");
+      } else {
+        alert("Upload failed: No image URL received");
+      }
+    } catch (error) {
+      console.error("Error uploading lesson image:", error);
+      alert(`Error uploading lesson image: ${error.message}`);
+    }
+  };
+
+  const getDefaultFormData = () => {
+    switch (activeTab) {
+      case "teachers":
+      case "students":
+        return {
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          dateOfBirth: "",
+          password: "",
+          image: defaultUserImage,
+          subjects: [],
+          isTeacher: activeTab === "teachers"
+        };
+      case "subjects":
+        return {
+          name: "",
+          description: "",
+          image: "https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/subjects/default_subject.png",
+          lessons: []
+        };
+      case "scheduled":
+        return {
+          teacher: { _id: "", firstName: "", lastName: "" },
+          student: { _id: "", firstName: "", lastName: "" },
+          slots: [],
+          peers: []
+        };
+      default:
+        return {};
+    }
+  };
+
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case "teachers": return teachersData;
+      case "students": return studentsData;
+      case "subjects": return subjectsData;
+      case "scheduled": return scheduledLessonsData;
+      default: return [];
+    }
+  };
+
+  const renderTable = () => {
+    const data = getCurrentData();
+
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={subjectId}
-            onChange={(e) => setSubjectId(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100"
-          >
-            <option value="">Choose subject…</option>
-            {subjects.map((s) => (
-              <option key={s._id} value={s._id}>
-                {s.name}
-              </option>
+      );
+    }
+
+    if (data.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No {activeTab} found</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              {activeTab === "teachers" || activeTab === "students" ? (
+                <>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </>
+              ) : activeTab === "subjects" ? (
+                <>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lessons</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slots</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </>
+              )}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.map((item) => (
+              <tr key={item._id} className="hover:bg-gray-50">
+                {activeTab === "teachers" || activeTab === "students" ? (
+                  <>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <img
+                        src={item.image || defaultUserImage}
+                        alt={`${item.firstName} ${item.lastName}`}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.firstName} {item.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.phone}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                        >
+                          <FiEdit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                ) : activeTab === "subjects" ? (
+                  <>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-10 w-10 rounded object-cover"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                      {item.description}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.lessons?.length || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                        >
+                          <FiEdit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.teacher?.firstName} {item.teacher?.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.student?.firstName} {item.student?.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.slots?.length || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                )}
+              </tr>
             ))}
-          </select>
-          <button
-            onClick={startCreate}
-            disabled={!subjectId}
-            className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
-              ${
-                subjectId
-                  ? "bg-indigo-600 hover:bg-indigo-700"
-                  : "bg-slate-300 cursor-not-allowed"
-              }`}
-          >
-            <PlusIcon className="h-4 w-4" /> Add Lesson
-          </button>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderModal = () => {
+    if (!showModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+        <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">
+              {editingItem ? 'Edit' : 'Create'} {activeTab.slice(0, -1)}
+            </h2>
+            <button
+              onClick={() => setShowModal(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {activeTab === "teachers" || activeTab === "students" ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.firstName || ""}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lastName || ""}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email || ""}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone || ""}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.dateOfBirth || ""}
+                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.password || ""}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Profile Image
+                    </label>
+                    <button
+                      onClick={() => setShowImageUpload(true)}
+                      className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      <FiImage size={16} />
+                      <span>Upload Image</span>
+                    </button>
+                  </div>
+                  {formData.image && (
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="h-16 w-16 rounded object-cover"
+                    />
+                  )}
+                </div>
+              </>
+            ) : activeTab === "subjects" ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Subject Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name || ""}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={formData.description || ""}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Subject Image
+                    </label>
+                    <button
+                      onClick={() => setShowImageUpload(true)}
+                      className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      <FiImage size={16} />
+                      <span>Upload Image</span>
+                    </button>
+                  </div>
+                  {formData.image && (
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="h-16 w-16 rounded object-cover"
+                    />
+                  )}
+                </div>
+
+                {/* Lessons Management */}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Lessons</h3>
+                    <button
+                      onClick={() => setShowLessonModal(true)}
+                      className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                    >
+                      <FiPlus size={14} />
+                      <span>Add Lesson</span>
+                    </button>
+                  </div>
+
+                  {formData.lessons && formData.lessons.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {formData.lessons.map((lesson, index) => (
+                        <div key={lesson._id || index} className="flex items-center justify-between p-2 border rounded bg-gray-50">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={lesson.image}
+                              alt={lesson.name}
+                              className="h-8 w-8 rounded object-cover"
+                            />
+                            <div>
+                              <p className="font-medium text-sm">{lesson.name}</p>
+                              <p className="text-xs text-gray-500 truncate max-w-xs">{lesson.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => handleEditLesson(lesson, index)}
+                              className="text-blue-600 hover:text-blue-800 p-1"
+                            >
+                              <FiEdit2 size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteLesson(index)}
+                              className="text-red-600 hover:text-red-800 p-1"
+                            >
+                              <FiTrash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No lessons added yet</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Teacher
+                    </label>
+                    <select
+                      value={formData.teacher?._id || ""}
+                      onChange={(e) => {
+                        const selectedTeacher = teachersData.find(t => t._id === e.target.value);
+                        setFormData({
+                          ...formData,
+                          teacher: selectedTeacher ? {
+                            _id: selectedTeacher._id,
+                            firstName: selectedTeacher.firstName,
+                            lastName: selectedTeacher.lastName
+                          } : { _id: "", firstName: "", lastName: "" }
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Teacher</option>
+                      {teachersData.map(teacher => (
+                        <option key={teacher._id} value={teacher._id}>
+                          {teacher.firstName} {teacher.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Student
+                    </label>
+                    <select
+                      value={formData.student?._id || ""}
+                      onChange={(e) => {
+                        const selectedStudent = studentsData.find(s => s._id === e.target.value);
+                        setFormData({
+                          ...formData,
+                          student: selectedStudent ? {
+                            _id: selectedStudent._id,
+                            firstName: selectedStudent.firstName,
+                            lastName: selectedStudent.lastName
+                          } : { _id: "", firstName: "", lastName: "" }
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Student</option>
+                      {studentsData.map(student => (
+                        <option key={student._id} value={student._id}>
+                          {student.firstName} {student.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scheduled Slots
+                  </label>
+                  <div className="border rounded p-4 bg-gray-50">
+                    <p className="text-gray-500 text-sm">
+                      Slot management would be implemented here for creating/editing scheduled lessons
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      This would include date, time, day selection and lesson assignment
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2"
+            >
+              <FiSave size={16} />
+              <span>Save</span>
+            </button>
+          </div>
         </div>
       </div>
+    );
+  };
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-t border-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Lesson
-              </th>
-              <th className="p-3 text-left font-semibold text-slate-700">
+  const renderImageUploadModal = () => {
+    if (!showImageUpload) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Upload Image</h3>
+            <button
+              onClick={() => setShowImageUpload(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  handleImageUpload(file);
+                  // Reset the input value so the same file can be selected again if needed
+                  e.target.value = '';
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            {uploadLoading && (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2">Uploading...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLessonModal = () => {
+    if (!showLessonModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">
+              {editingLesson ? 'Edit' : 'Add'} Lesson
+            </h3>
+            <button
+              onClick={() => {
+                setShowLessonModal(false);
+                setEditingLesson(null);
+                setLessonFormData({});
+              }}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lesson Name
+              </label>
+              <input
+                type="text"
+                value={lessonFormData.name || ""}
+                onChange={(e) => setLessonFormData({ ...lessonFormData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
-              </th>
-              <th className="p-3 text-right font-semibold text-slate-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {!subjectId ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={3}>
-                  Select a subject…
-                </td>
-              </tr>
-            ) : lessons.length === 0 ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={3}>
-                  No lessons
-                </td>
-              </tr>
-            ) : (
-              lessons.map((l) => (
-                <tr key={l._id} className="border-t border-slate-200">
-                  <td className="p-3">{l.name}</td>
-                  <td className="p-3">{l.description || "—"}</td>
-                  <td className="p-3">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => startEdit(l)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-50"
-                      >
-                        <PencilIcon className="h-4 w-4" /> Edit
-                      </button>
-                      <button
-                        onClick={() => remove(l)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
-                      >
-                        <TrashIcon className="h-4 w-4" /> Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h4 className="text-lg font-semibold">
-                {editing ? "Edit Lesson" : "Create Lesson"}
-              </h4>
-              <button
-                className="rounded-full p-1.5 hover:bg-slate-100"
-                onClick={() => setOpen(false)}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
+              </label>
+              <textarea
+                value={lessonFormData.description || ""}
+                onChange={(e) => setLessonFormData({ ...lessonFormData, description: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
-            <form onSubmit={save} className="p-4 space-y-4">
-              <FieldInput
-                field={{ key: "name", label: "Lesson Name", required: true }}
-                value={form.name}
-                onChange={(v) => setForm((s) => ({ ...s, name: v }))}
-              />
-              <FieldInput
-                field={{
-                  key: "description",
-                  label: "Description",
-                  type: "textarea",
-                }}
-                value={form.description}
-                onChange={(v) => setForm((s) => ({ ...s, description: v }))}
-              />
-              <FieldInput
-                field={{ key: "image", label: "Image URL" }}
-                value={form.image}
-                onChange={(v) => setForm((s) => ({ ...s, image: v }))}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                >
-                  Save
-                </button>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lesson Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleLessonImageUpload(file);
+                      // Reset the input value so the same file can be selected again if needed
+                      e.target.value = '';
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-            </form>
+              {lessonFormData.image && (
+                <img
+                  src={lessonFormData.image}
+                  alt="Preview"
+                  className="h-12 w-12 rounded object-cover ml-4"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              onClick={() => {
+                setShowLessonModal(false);
+                setEditingLesson(null);
+                setLessonFormData({});
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveLesson}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center space-x-2"
+            >
+              <FiSave size={16} />
+              <span>Save Lesson</span>
+            </button>
           </div>
         </div>
-      )}
-    </section>
-  );
-}
-
-/* --------------------- Schedule (per-teacher) --------------------- */
-function SchedulePanel({ teacherOptions, studentOptions }) {
-  const [teacherId, setTeacherId] = useState("");
-  const [items, setItems] = useState([]);
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!teacherId) return;
-    try {
-      setLoading(true);
-      setErr("");
-      const data = await apiGet(`/schedule/user/${teacherId}`);
-      const arr = Array.isArray(data?.data) ? data.data : [];
-      setItems(arr);
-    } catch (e) {
-      setErr(e.message || String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [teacherId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Simple create form for schedule/add (uses your existing route)
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    teacherId: "",
-    studentId: "",
-    slots: [
-      {
-        day: "Monday",
-        date: new Date().toLocaleDateString("en-US"),
-        time: "10:00",
-      },
-    ],
-  });
-
-  const createSchedule = async (e) => {
-    e.preventDefault();
-    try {
-      setErr("");
-      const teacher = { _id: form.teacherId };
-      const student = { _id: form.studentId };
-      await apiSend("/schedule/add", "POST", {
-        teacher,
-        student,
-        slots: form.slots,
-      });
-      setOpen(false);
-      await load();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
-    }
-  };
-
-  const remove = async (row) => {
-    if (!window.confirm("Delete this scheduled entry?")) return;
-    try {
-      setErr("");
-      await apiSend(`/schedule/${row._id}`, "DELETE");
-      await load();
-    } catch (e2) {
-      setErr("Delete failed (endpoint missing?). " + (e2.message || e2));
-    }
+      </div>
+    );
   };
 
   return (
-    <section className="rounded-2xl bg-white ring-1 ring-slate-200 shadow">
-      <div className="flex items-center justify-between p-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">
-            Scheduled Lessons
-          </h3>
-          <p className="text-sm text-slate-600">
-            Pick a teacher to view their schedule.
-          </p>
-          {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="mt-2 text-gray-600">Manage all system data and users</p>
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={teacherId}
-            onChange={(e) => setTeacherId(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100"
-          >
-            <option value="">Choose teacher…</option>
-            {teacherOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => {
-              setOpen(true);
-              setForm((s) => ({ ...s, teacherId }));
-            }}
-            disabled={!teacherId}
-            className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
-              ${
-                teacherId
-                  ? "bg-indigo-600 hover:bg-indigo-700"
-                  : "bg-slate-300 cursor-not-allowed"
-              }`}
-          >
-            <PlusIcon className="h-4 w-4" /> Add Schedule
-          </button>
-        </div>
-      </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-t border-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Student
-              </th>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Slots
-              </th>
-              <th className="p-3 text-right font-semibold text-slate-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {!teacherId ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={3}>
-                  Select a teacher…
-                </td>
-              </tr>
-            ) : loading ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={3}>
-                  Loading…
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={3}>
-                  No scheduled lessons
-                </td>
-              </tr>
-            ) : (
-              items.map((row) => (
-                <tr key={row._id} className="border-t border-slate-200">
-                  <td className="p-3">
-                    {row?.student?.firstName} {row?.student?.lastName}
-                  </td>
-                  <td className="p-3">
-                    {(row.slots || []).map((s, i) => (
-                      <span
-                        key={i}
-                        className="mr-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs ring-1 ring-slate-200"
-                      >
-                        {s.day} • {s.date} • {s.time}
-                      </span>
-                    ))}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => remove(row)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
-                      >
-                        <TrashIcon className="h-4 w-4" /> Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h4 className="text-lg font-semibold">Create Schedule</h4>
-              <button
-                className="rounded-full p-1.5 hover:bg-slate-100"
-                onClick={() => setOpen(false)}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-            <form onSubmit={createSchedule} className="p-4 space-y-4">
-              <FieldInput
-                field={{
-                  key: "teacherId",
-                  label: "Teacher",
-                  type: "select",
-                  options: teacherOptions,
-                  required: true,
-                }}
-                value={form.teacherId}
-                onChange={(v) => setForm((s) => ({ ...s, teacherId: v }))}
-              />
-              <FieldInput
-                field={{
-                  key: "studentId",
-                  label: "Student",
-                  type: "select",
-                  options: studentOptions,
-                  required: true,
-                }}
-                value={form.studentId}
-                onChange={(v) => setForm((s) => ({ ...s, studentId: v }))}
-              />
-              <FieldInput
-                field={{
-                  key: "slots",
-                  label: "Slots (JSON array)",
-                  type: "json",
-                  rows: 8,
-                }}
-                value={form.slots}
-                onChange={(v) => {
-                  try {
-                    const parsed = typeof v === "string" ? JSON.parse(v) : v;
-                    setForm((s) => ({ ...s, slots: parsed }));
-                  } catch {
-                    setForm((s) => ({ ...s, slots: v }));
-                  }
-                }}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
+        {/* Tabs */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                  >
+                    <Icon size={18} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
         </div>
-      )}
-    </section>
-  );
-}
 
-/* --------------------- Reviews (per-teacher) --------------------- */
-function ReviewsPanel({ teacherOptions, studentOptions }) {
-  const [teacherId, setTeacherId] = useState("");
-  const [items, setItems] = useState([]);
-  const [avg, setAvg] = useState(0);
-  const [count, setCount] = useState(0);
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!teacherId) return;
-    try {
-      setLoading(true);
-      setErr("");
-      const data = await apiGet(`/reviews/teacher/${teacherId}`);
-      setAvg(data?.avg || 0);
-      setCount(data?.count || 0);
-      setItems(Array.isArray(data?.items) ? data.items : []);
-    } catch (e) {
-      setErr(e.message || String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [teacherId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // admin create review (optional)
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ studentId: "", rating: 5, comment: "" });
-
-  const create = async (e) => {
-    e.preventDefault();
-    try {
-      setErr("");
-      await apiSend("/reviews", "POST", {
-        teacherId,
-        rating: Number(form.rating),
-        comment: form.comment,
-      });
-      setOpen(false);
-      await load();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
-    }
-  };
-
-  const remove = async (row) => {
-    if (!window.confirm("Delete this review?")) return;
-    try {
-      setErr("");
-      await apiSend(`/reviews/${row._id}`, "DELETE");
-      await load();
-    } catch (e2) {
-      setErr(e2.message || String(e2));
-    }
-  };
-
-  return (
-    <section className="rounded-2xl bg-white ring-1 ring-slate-200 shadow">
-      <div className="flex items-center justify-between p-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">Reviews</h3>
-          <p className="text-sm text-slate-600">
-            Pick a teacher to view all reviews (visible to everyone on profile).
-          </p>
-          {err && <p className="mt-1 text-sm text-rose-600">{err}</p>}
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={teacherId}
-            onChange={(e) => setTeacherId(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100"
-          >
-            <option value="">Choose teacher…</option>
-            {teacherOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+        {/* Action Bar */}
+        <div className="mb-6 flex justify-between items-center">
+          <div className="text-lg font-semibold text-gray-900 capitalize">
+            {activeTab} Management
+          </div>
           <button
-            onClick={() => setOpen(true)}
-            disabled={!teacherId}
-            className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-white shadow 
-              ${
-                teacherId
-                  ? "bg-indigo-600 hover:bg-indigo-700"
-                  : "bg-slate-300 cursor-not-allowed"
-              }`}
+            onClick={handleCreate}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
           >
-            <PlusIcon className="h-4 w-4" /> Add Review
+            <FiPlus size={18} />
+            <span>Add {activeTab.slice(0, -1)}</span>
           </button>
         </div>
-      </div>
 
-      <div className="px-4 pb-3">
-        {teacherId && (
-          <p className="text-sm text-slate-700">
-            Average: <b>{avg.toFixed(1)}</b> • Count: <b>{count}</b>
-          </p>
-        )}
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full border-t border-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Student
-              </th>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Rating
-              </th>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Comment
-              </th>
-              <th className="p-3 text-left font-semibold text-slate-700">
-                Date
-              </th>
-              <th className="p-3 text-right font-semibold text-slate-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {!teacherId ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={5}>
-                  Select a teacher…
-                </td>
-              </tr>
-            ) : loading ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={5}>
-                  Loading…
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td className="p-4 text-slate-500" colSpan={5}>
-                  No reviews
-                </td>
-              </tr>
-            ) : (
-              items.map((row) => (
-                <tr key={row._id} className="border-t border-slate-200">
-                  <td className="p-3">
-                    {row?.student
-                      ? `${row.student.firstName} ${row.student.lastName}`
-                      : "—"}
-                  </td>
-                  <td className="p-3">{row.rating}</td>
-                  <td className="p-3">{row.comment || "—"}</td>
-                  <td className="p-3">
-                    {row.createdAt
-                      ? new Date(row.createdAt).toLocaleString()
-                      : "—"}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => remove(row)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
-                      >
-                        <TrashIcon className="h-4 w-4" /> Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <h4 className="text-lg font-semibold">Create Review</h4>
-              <button
-                className="rounded-full p-1.5 hover:bg-slate-100"
-                onClick={() => setOpen(false)}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-            <form onSubmit={create} className="p-4 space-y-4">
-              <FieldInput
-                field={{
-                  key: "rating",
-                  label: "Rating (1-5)",
-                  type: "number",
-                  min: 1,
-                  max: 5,
-                  step: 1,
-                  required: true,
-                }}
-                value={form.rating}
-                onChange={(v) => setForm((s) => ({ ...s, rating: v }))}
-              />
-              <FieldInput
-                field={{ key: "comment", label: "Comment", type: "textarea" }}
-                value={form.comment}
-                onChange={(v) => setForm((s) => ({ ...s, comment: v }))}
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                >
-                  Save
-                </button>
-              </div>
-              <p className="text-xs text-slate-500">
-                * Uses your <code>/reviews</code> POST (session auth). If you
-                want admin to spoof a student, add a server-side admin endpoint.
-              </p>
-            </form>
-          </div>
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow">
+          {renderTable()}
         </div>
-      )}
-    </section>
+
+        {/* Modals */}
+        {renderModal()}
+        {renderImageUploadModal()}
+        {renderLessonModal()}
+      </div>
+    </div>
   );
 }

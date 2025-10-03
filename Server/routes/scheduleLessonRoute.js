@@ -4,6 +4,21 @@ import { Schedule } from "../models/scheduleSchema.js";
 
 const router = express.Router();
 
+// Get all scheduled lessons (admin)
+router.get("/all", async (req, res) => {
+  try {
+    const scheduledLessons = await Schedule.find();
+    res.status(200).json({
+      data: scheduledLessons,
+      message: "All scheduled lessons fetched successfully",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching scheduled lessons", error });
+  }
+});
+
 // Get scheduled lessons from db to User
 router.get("/user/:id", async (req, res) => {
   const userId = req.params.id;
@@ -85,7 +100,26 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// Delete scheduled lesson
+// Delete entire scheduled lesson
+router.delete("/:id", async (req, res) => {
+  try {
+    const scheduleId = req.params.id;
+    const deletedSchedule = await Schedule.findByIdAndDelete(scheduleId);
+    
+    if (!deletedSchedule) {
+      return res.status(404).json({ message: "Scheduled lesson not found" });
+    }
+
+    return res.status(200).json({
+      message: "Scheduled lesson deleted successfully",
+      scheduleId,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting scheduled lesson", error });
+  }
+});
+
+// Delete scheduled lesson slot
 router.delete("/delete/:id", async (req, res) => {
   try {
     const slotId = req.params.id;

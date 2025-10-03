@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import fetchData from "./services/fetchData";
-import API_URL from "./services/apiBase.js";
 
 const CarouselSubjects = ({ onSubjectClick }) => {
   const [subjectData, setSubjectData] = useState([]);
@@ -112,7 +111,7 @@ const CarouselSubjects = ({ onSubjectClick }) => {
                   {/* Image */}
                   <div className="relative pb-[66%]">
                     <img
-                      src={`${API_URL}${subject.image}`}
+                      src={subject.image}
                       alt={subject.name}
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                       loading="lazy"

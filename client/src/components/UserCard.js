@@ -8,7 +8,7 @@ import SelectSubjectsForm from "./SelectSubjectsForm";
 import { LogOut, Calendar, User, Phone } from "lucide-react";
 
 const animatedComponents = makeAnimated();
-const defaultUserImage = `https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/user_mtgtft.png`
+const defaultUserImage = `https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/user_mtgtft.png`;
 
 function UserCard({ authUser }) {
   const [subjectData, setSubjectData] = useState([]);

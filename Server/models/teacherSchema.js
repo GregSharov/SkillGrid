@@ -30,7 +30,7 @@ const teacherSchema = new Schema({
   subjects: [Subject.schema],
   image: {
     type: String,
-    default: "http://localhost:3000/images/user.png",
+    default: "https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/user_mtgtft.png",
     // required: true,
   },
   isTeacher: {
