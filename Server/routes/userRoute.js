@@ -4,8 +4,6 @@ import Teacher from "../models/teacherSchema.js";
 import { Subject } from "../models/subjectSchema.js";
 import { HashPassword, VerifyPassword } from "../utils/auth.js";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import uploadImage from "./cloudinary.js";
 
 const router = express.Router();
@@ -104,7 +102,7 @@ router.post("/signup", async (req, res) => {
   } = req.body;
   try {
     // Detect correct model (Student or Teacher)
-    const Model = isTeacher ? Teacher : Student;
+    Model = isTeacher ? Teacher : Student;
 
     // Check if user already exists
     const existingUser = await Model.findOne({ email });
@@ -137,9 +135,9 @@ router.post("/signup", async (req, res) => {
 // Login user
 router.post("/login", async (req, res) => {
   const { email, password, isTeacher } = req.body;
-  
+
   try {
-    const Model = isTeacher ? Teacher : Student;
+    Model = isTeacher ? Teacher : Student;
     const user = await Model.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found." });
 
@@ -201,6 +199,62 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: "Error fetching user by ID." });
   }
 });
+
+// PUT update user
+router.put("/:id", async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, dateOfBirth, password, image, subjects } = req.body;
+
+    const updateData = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      dateOfBirth,
+      image
+    };
+
+    // Only hash password if provided
+    if (password) {
+      updateData.password = await HashPassword(password);
+    }
+
+    // Update subjects if provided
+    if (subjects) {
+      updateData.subjects = subjects;
+    }
+
+    Model = (await Student.findById(id)) || (await Teacher.findById(id));
+    const user = await Model.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update user.", error: error.message });
+  }
+});
+
+// Delete user
+router.delete("/:id", async (req, res) => {
+  try {
+    Model = (await Student.findById(id)) || (await Teacher.findById(id));
+    const user = await Model.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete user.", error: error.message });
+  }
+});
+
 
 // Logout
 router.post("/logout", (req, res) => {

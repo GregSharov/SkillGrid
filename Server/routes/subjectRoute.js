@@ -166,32 +166,32 @@ router.delete("/:id/lessons/:lessonId", async (req, res) => {
 });
 
 // Legacy routes for backward compatibility
-router.post("/add", async (req, res) => {
-  try {
-    const newSubject = new Subject(req.body);
-    await newSubject.save();
-    res.status(201).json({ message: "Subject added successfully!" });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// router.post("/add", async (req, res) => {
+//   try {
+//     const newSubject = new Subject(req.body);
+//     await newSubject.save();
+//     res.status(201).json({ message: "Subject added successfully!" });
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// });
 
-router.put("/update", async (req, res) => {
-  try {
-    const updatedSubject = await Subject.findByIdAndUpdate(req.body._id, req.body, { new: true });
-    res.status(200).json(updatedSubject);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// router.put("/update", async (req, res) => {
+//   try {
+//     const updatedSubject = await Subject.findByIdAndUpdate(req.body._id, req.body, { new: true });
+//     res.status(200).json(updatedSubject);
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// });
 
-router.delete("/delete", async (req, res) => {
-  try {
-    await Subject.findByIdAndDelete(req.body._id);
-    res.status(200).json({ message: "Subject deleted successfully!" });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// router.delete("/delete", async (req, res) => {
+//   try {
+//     await Subject.findByIdAndDelete(req.body._id);
+//     res.status(200).json({ message: "Subject deleted successfully!" });
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// });
 
 export default router;

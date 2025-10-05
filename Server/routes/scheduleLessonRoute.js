@@ -100,12 +100,38 @@ router.post("/add", async (req, res) => {
   }
 });
 
+// Update scheduled lesson peer id
+router.put("/update/:id/peer", async (req, res) => {
+  const { id } = req.params;
+  const { teacherPeerId, studentPeerId } = req.body;
+  
+  try {
+    const updatedSchedule = await Schedule.findByIdAndUpdate(id, { teacherPeerId, studentPeerId }, { new: true });
+    res.status(200).json({ message: "Scheduled lesson peer id updated successfully", data: updatedSchedule });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating scheduled lesson peer id", error });
+  }
+});
+
+// Update scheduled lesson (admin)
+router.put("/update/:id", async (req, res) => {
+  const { id } = req.params;
+  const { teacher, student, slots } = req.body;
+
+  try {
+    const updatedSchedule = await Schedule.findByIdAndUpdate(id, { teacher, student, slots }, { new: true });
+    res.status(200).json({ message: "Scheduled lesson updated successfully", data: updatedSchedule });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating scheduled lesson", error });
+  }
+});
+
 // Delete entire scheduled lesson
 router.delete("/:id", async (req, res) => {
   try {
     const scheduleId = req.params.id;
     const deletedSchedule = await Schedule.findByIdAndDelete(scheduleId);
-    
+
     if (!deletedSchedule) {
       return res.status(404).json({ message: "Scheduled lesson not found" });
     }
