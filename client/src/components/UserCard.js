@@ -88,7 +88,7 @@ function UserCard({ authUser }) {
         }),
       });
       if (response.ok) {
-        toast.success("Cganges is added 🎉");
+        toast.success("Changes are added 🎉");
       } else {
         toast.error("Failed to save. Please try again.");
       }

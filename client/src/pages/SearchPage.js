@@ -135,7 +135,7 @@ export default function SearchPage() {
                     {/* Restored image dimensions */}
                     <div className="relative h-1/2 w-full">
                       <img
-                        src={`${API_URL}${teacher.image}`}
+                        src={teacher.image}
                         alt={`${teacher.firstName} ${teacher.lastName}`}
                         className="absolute h-full w-full object-cover object-[95%_5%]"
                         loading="lazy"
@@ -242,7 +242,7 @@ export default function SearchPage() {
                   className="border rounded bg-white p-3 flex flex-col"
                 >
                   <img
-                    src={`${API_URL}${l.image}` }
+                    src={l.image}
                     alt={name}
                     className="w-full h-40 object-cover rounded mb-2"
                     loading="lazy"

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import CarouselLessons from "./carouselLessons.js";
+import { useNavigate } from "react-router-dom";
 
 // NEW: reviews UI
 import RatingStars from "./components/RatingStars.js";
@@ -259,6 +260,12 @@ function DisplayTeacherData() {
       console.error("Error setting teacher lessons:", error);
     }
   }, [teacherProfile]);
+
+  // Navigate to Account page
+  const navigate = useNavigate();
+  const handleNavigateToAccount = () => {
+    navigate("/account");
+  };
 
   return (
     <>
@@ -521,7 +528,7 @@ function DisplayTeacherData() {
                       disabled={isBooking}
                       aria-busy={isBooking}
                       className={"inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-lg transition bg-indigo-600 text-white active:scale-[0.98]"}
-                      onClick={() => {window.location.href = "/sign-in";}}
+                      onClick={handleNavigateToAccount}
                     >
                       Log-In as student to book lessons
                     </button>
