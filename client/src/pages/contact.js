@@ -30,9 +30,15 @@ const ContactUs = () => {
           <FaEnvelope className="text-emerald-500 text-4xl mb-4" />
           <h3 className="font-bold text-xl text-slate-900 mb-2">Email</h3>
           <h6 className="font-bold text-slate-900 mb-2 mt-4">Gregory</h6>
-          <p className="text-slate-600">grigorysharov@icloud.com</p>
+          <a href="mailto:grigorysharov@icloud.com"
+            className="text-indigo-600 font-medium hover:underline">
+              grigorysharov@icloud.com
+          </a>
           <h6 className="font-bold text-slate-900 mb">Ivan</h6>
-          <p className="text-slate-600">Latishovi@gmail.com</p>
+          <a href="mailto:Latishovi@gmail.com"
+            className="text-indigo-600 font-medium hover:underline">
+              Latishovi@gmail.com
+          </a>
         </div>
 
         <div className="p-8 bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 hover:shadow-xl transition flex flex-col items-center text-center">
@@ -42,42 +48,6 @@ const ContactUs = () => {
           <p className="text-slate-600">City Ashkelon</p>
         </div>
       </div>
-
-      {/* Contact Form */}
-      {/* <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-10">
-        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">
-          Send us a message
-        </h2>
-        <form className="space-y-6">
-          <div>
-            <input
-              type="text"
-              placeholder="Your name"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 shadow-sm focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition"
-            />
-          </div>
-          <div>
-            <input
-              type="email"
-              placeholder="Your email"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 shadow-sm focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition"
-            />
-          </div>
-          <div>
-            <textarea
-              rows="4"
-              placeholder="Your message"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 shadow-sm focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition"
-            ></textarea>
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition active:scale-[0.98]"
-          >
-            Send Message
-          </button>
-        </form>
-      </div> */}
     </div>
   );
 };

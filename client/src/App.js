@@ -20,7 +20,7 @@ import CallPage from "./pages/CallPage";
 import JoinCall from "./pages/JoinCall";
 import LessonInfoWrapper from "./pages/LessonInfoWrapper";
 import Admin from "./pages/AdminDashboard.js";
-
+import Privacy from "./pages/Privacy.js";
 
 
 function App() {
@@ -43,7 +43,7 @@ function App() {
           <Route path="call/:roomId" element={<CallPage />} />
           <Route path="lesson-info-search" element={<LessonInfoWrapper />} />
           <Route path="admin" element={<Admin />} />
-
+          <Route path="privacy" element={<Privacy />} />
         </Route>
       </Routes>
       <Footer />
