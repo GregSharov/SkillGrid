@@ -20,24 +20,31 @@ const ContactUs = () => {
         <div className="p-8 bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 hover:shadow-xl transition flex flex-col items-center text-center">
           <FaPhoneAlt className="text-indigo-500 text-4xl mb-4" />
           <h3 className="font-bold text-xl text-slate-900 mb-2">Phone</h3>
-          <p className="text-slate-600">+1 234 567 890</p>
+          <h6 className="font-bold text-slate-900 mb-2 mt-4">Gregory</h6>
+          <p className="text-slate-600">+972 50-221-9630</p>
+          <h6 className="font-bold text-slate-900 mb">Ivan</h6>
+          <p className="text-slate-600">+972 54-834-6620</p>
         </div>
 
         <div className="p-8 bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 hover:shadow-xl transition flex flex-col items-center text-center">
           <FaEnvelope className="text-emerald-500 text-4xl mb-4" />
           <h3 className="font-bold text-xl text-slate-900 mb-2">Email</h3>
-          <p className="text-slate-600">example@example.com</p>
+          <h6 className="font-bold text-slate-900 mb-2 mt-4">Gregory</h6>
+          <p className="text-slate-600">grigorysharov@icloud.com</p>
+          <h6 className="font-bold text-slate-900 mb">Ivan</h6>
+          <p className="text-slate-600">Latishovi@gmail.com</p>
         </div>
 
         <div className="p-8 bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 hover:shadow-xl transition flex flex-col items-center text-center">
           <FaMapMarkerAlt className="text-rose-500 text-4xl mb-4" />
           <h3 className="font-bold text-xl text-slate-900 mb-2">Address</h3>
-          <p className="text-slate-600">123 Education St, Learning City</p>
+          <p className="text-lg text-slate-600">Israel</p>
+          <p className="text-slate-600">City Ashkelon</p>
         </div>
       </div>
 
       {/* Contact Form */}
-      <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-10">
+      {/* <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-lg ring-1 ring-slate-200 p-10">
         <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">
           Send us a message
         </h2>
@@ -70,7 +77,7 @@ const ContactUs = () => {
             Send Message
           </button>
         </form>
-      </div>
+      </div> */}
     </div>
   );
 };
