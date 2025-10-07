@@ -22,11 +22,14 @@ import LessonInfoWrapper from "./pages/LessonInfoWrapper";
 import Admin from "./pages/AdminDashboard.js";
 import Privacy from "./pages/Privacy.js";
 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Routes>      
         <Route path="/" element={<Header />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
@@ -47,6 +50,8 @@ function App() {
         </Route>
       </Routes>
       <Footer />
+          <ToastContainer position="top-right" autoClose={3000} />
+
     </BrowserRouter>
   );
 }

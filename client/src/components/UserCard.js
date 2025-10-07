@@ -7,6 +7,9 @@ import API_URL from "../services/apiBase";
 import SelectSubjectsForm from "./SelectSubjectsForm";
 import { LogOut, Calendar, User, Phone } from "lucide-react";
 
+import { toast } from 'react-toastify';
+
+
 const animatedComponents = makeAnimated();
 const defaultUserImage = `https://res.cloudinary.com/de3jgizbm/image/upload/v1759523927/user_mtgtft.png`;
 
@@ -58,15 +61,16 @@ function UserCard({ authUser }) {
 
   // Handle save
   const handleSave = async () => {
-    if (!selectedSubjects.length) return;
+    if (!selectedSubjects.length){
+      toast.warn("Please select at least one subject.");
+      return;
+    }
     const cleanSubjects = selectedSubjects.map((s) => ({
       value: s.value,
       label: s.label,
     }));
     const cleanLessons = {};
-    for (const [subjectId, lessonsArr] of Object.entries(
-      selectedLessonsBySubject
-    )) {
+    for (const [subjectId, lessonsArr] of Object.entries(selectedLessonsBySubject)) {
       cleanLessons[subjectId] = lessonsArr.map((l) => ({
         value: l.value,
         label: l.label,
@@ -74,7 +78,7 @@ function UserCard({ authUser }) {
     }
 
     try {
-      await fetch(`${API_URL}/user/${authUser?.id}/subjects`, {
+      const response = await fetch(`${API_URL}/user/${authUser?.id}/subjects`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -83,8 +87,14 @@ function UserCard({ authUser }) {
           lessons: cleanLessons,
         }),
       });
+      if (response.ok) {
+        toast.success("Cganges is added 🎉");
+      } else {
+        toast.error("Failed to save. Please try again.");
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error while saving:", error);
+      toast.error("Something went wrong.");
     }
   };
 
