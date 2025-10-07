@@ -521,8 +521,9 @@ function DisplayTeacherData() {
                       disabled={isBooking}
                       aria-busy={isBooking}
                       className={"inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-lg transition bg-indigo-600 text-white active:scale-[0.98]"}
+                      onClick={() => {window.location.href = "/sign-in";}}
                     >
-                      Log in as student to book lessons
+                      Log-In as student to book lessons
                     </button>
                   ) : (
                     <button
@@ -569,7 +570,7 @@ function DisplayTeacherData() {
                     />
                   ) : (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">
-                      Log in as a student to leave a review after your lesson.
+                      Log-In as a student to leave a review after your lesson.
                     </div>
                   )}
                 </section>
