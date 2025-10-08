@@ -2,17 +2,17 @@ import { useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
 export default function JoinCall() {
-  const { roomId } = useParams();
+  const { roomId, slotId } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (roomId) {
       const t = setTimeout(() => {
-        navigate(`/call/${encodeURIComponent(roomId)}`, { replace: true });
+        navigate(`/call/${encodeURIComponent(roomId)}/${encodeURIComponent(slotId)}`, { replace: true });
       }, 1000);
       return () => clearTimeout(t);
     }
-  }, [roomId, navigate]);
+  }, [roomId, slotId, navigate]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-16 px-6">
@@ -65,7 +65,7 @@ export default function JoinCall() {
               </Link>
               <button
                 onClick={() =>
-                  navigate(`/call/${encodeURIComponent(roomId)}`, {
+                  navigate(`/call/${encodeURIComponent(roomId)}/${encodeURIComponent(slotId)}`, {
                     replace: true,
                   })
                 }

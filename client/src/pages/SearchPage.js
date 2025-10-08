@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import fetchData from "../services/fetchData";
 import filterData from "../services/filterData";
-import API_URL from "../services/apiBase.js";
 
 export default function SearchPage() {
   //  do NOT lowercase the query, since filterData is case-sensitive

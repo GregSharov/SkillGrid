@@ -31,10 +31,10 @@ function UserCard({ authUser }) {
   };
 
   // Open video manager
-  const openVideoManager = async (roomId) => {
+  const openVideoManager = async (roomId, slotId) => {
     try {
       if (authUser?.role === "teacher" || authUser?.role === "student")
-        navigate(`/join/${roomId}`);
+        navigate(`/join/${roomId}/${slotId}`);
       else alert("Unregistered user. Please sign in again.");
     } catch (error) {
       console.error("Error opening video manager:", error);
@@ -393,7 +393,7 @@ function UserCard({ authUser }) {
                       <div className="flex gap-2">
                         {!isPast && (
                           <button
-                            onClick={() => openVideoManager(slot?._id)}
+                          onClick={() => openVideoManager(slot.lessonData?._id, slot?._id)}
                             className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition"
                           >
                             Join

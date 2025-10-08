@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
+import { useParams } from 'react-router-dom';
+import API_URL from '../services/apiBase';
 
 // Function to generate short UUID
-function generateShortUuid() {
-  return uuidv4().substring(0, 4).toUpperCase();
-}
+// function generateShortUuid() {
+// return uuidv4().substring(0, 4).toUpperCase();
+// }
 
 export default function CallPage() {
+  const { roomId, slotId } = useParams();
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -19,8 +22,71 @@ export default function CallPage() {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
   const [showIncomingCallModal, setShowIncomingCallModal] = useState(false);
+  const [scheduledLesson, setScheduledLesson] = useState(null);
+  const [lessonName, setLessonName] = useState('');
+  const [teachersName, setTeachersName] = useState('');
+  const [studentsName, setStudentsName] = useState('');
+  const [userRole, setUserRole] = useState(null);
+
+  // Get user's role
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(`${API_URL}/user/me`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      setUserRole(data.user.role);
+    })();
+  }, []);
+
+  // Get scheduled lesson by room id
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/schedule/room/${roomId}`);
+        const data = await res.json();
+        setScheduledLesson(data.data);
+        setTeachersName(data.data.teacher.firstName + ' ' + data.data.teacher.lastName);
+        setStudentsName(data.data.student.firstName + ' ' + data.data.student.lastName);
+
+        // Find the specific slot by slotId
+        const specificSlot = data.data.slots.find(slot => slot._id === slotId);
+        if (specificSlot) {
+          setLessonName(specificSlot.lesson.name);
+        }
+      } catch (error) {
+        console.error('Error fetching scheduled lesson', error);
+      }
+    })();
+  }, [roomId, slotId]);
+
+  // Set user's peerId from DB by role
+  useEffect(() => {
+    if (!scheduledLesson || !userRole) return;
+
+    try {
+      if (userRole === "teacher") {
+        setMyId(scheduledLesson.peers[0].teacherPeerId);
+        setRemoteId(scheduledLesson.peers[0].studentPeerId);
+      } else if (userRole === "student") {
+        setMyId(scheduledLesson.peers[0].studentPeerId);
+        setRemoteId(scheduledLesson.peers[0].teacherPeerId);
+      }
+    } catch (error) {
+      console.error('Error setting peer ID by role', error);
+    }
+  }, [scheduledLesson, userRole]);
 
   useEffect(() => {
+    // Don't create peer until we have myId from database
+    if (!myId) {
+      console.log('Waiting for myId to be set from database...');
+      return;
+    }
+
+    console.log('Creating peer with ID:', myId);
+    console.log('Will connect to remote peer:', remoteId);
+
     (async () => {
       // get local media
       try {
@@ -34,8 +100,8 @@ export default function CallPage() {
         return;
       }
 
-      // Create Peer instance, configured to use our peerjs server
-      const peer = new Peer(generateShortUuid(), {
+      // Create Peer instance with the ID from database
+      const peer = new Peer(myId, {
         debug: 3,
         config: {
           iceServers: [
@@ -43,7 +109,6 @@ export default function CallPage() {
             { urls: "stun:stun.l.google.com:19302" },
             { urls: "stun:stun1.l.google.com:19302" },
             { urls: "stun:stun2.l.google.com:19302" },
-
 
             // Your TURN server (UDP + TCP)
             {
@@ -59,12 +124,10 @@ export default function CallPage() {
         }
       });
 
-
       peerRef.current = peer;
 
       peer.on('open', (id) => {
-        console.log('peer open id=', id);
-        setMyId(id);
+        console.log('Peer connection opened with ID:', id);
       });
 
       // When someone calls us:
@@ -85,7 +148,7 @@ export default function CallPage() {
         localStreamRef.current.getTracks().forEach(t => t.stop());
       }
     };
-  }, []);
+  }, [myId, remoteId]); // Only recreate peer when myId changes
 
   function callPeer() {
     if (!peerRef.current) return;
@@ -149,13 +212,19 @@ export default function CallPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                PeerJS <span className="text-indigo-600">P2P Demo</span>
+                <span className="text-indigo-600">Lesson</span> {lessonName}
               </h1>
-              <p className="text-sm text-slate-600 mt-1">
-                Peer-to-peer encrypted video session.
-              </p>
+              {/* <p className="text-sm text-slate-600 mt-1">
+                {teachersName} is teaching you {lessonName}
+              </p> */}
             </div>
             <div className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                {userRole === "student" ? `Teacher: ${teachersName}` : `Student: ${studentsName}`}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                {userRole === "teacher" ? teachersName : studentsName}
+              </span>
               <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
                 Status:
                 <span className="ml-1 text-indigo-700">
@@ -172,23 +241,20 @@ export default function CallPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Your Peer ID
+                You
               </label>
               <div className="inline-flex items-center rounded-full bg-slate-50 px-4 py-2 text-sm font-mono text-slate-800 ring-1 ring-slate-200">
-                {myId || 'Connecting...'}
+                {userRole === "teacher" ? teachersName : studentsName}
               </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Connect to Peer
+                Connect to
               </label>
               <div className="flex gap-3">
-                <input
-                  className="flex-1 rounded-2xl border-0 bg-slate-50 px-4 py-2 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Enter remote peer ID"
-                  value={remoteId}
-                  onChange={(e) => setRemoteId(e.target.value)}
-                />
+                <div className="inline-flex items-center rounded-full bg-slate-50 px-4 py-2 text-sm font-mono text-slate-800 ring-1 ring-slate-200">
+                  {userRole === "teacher" ? studentsName : teachersName}
+                </div>
                 <button
                   className="rounded-2xl px-6 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={callPeer}

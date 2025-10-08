@@ -42,8 +42,8 @@ function App() {
           <Route path="account" element={<AcountPage />} />
           <Route path="teacher-info/:teacherId" element={<DisplayTeachersData />} />
           <Route path="search" element={<SearchPage />} />
-          <Route path="join/:roomId" element={<JoinCall />} />
-          <Route path="call/:roomId" element={<CallPage />} />
+          <Route path="join/:roomId/:slotId" element={<JoinCall />} />
+          <Route path="call/:roomId/:slotId" element={<CallPage />} />
           <Route path="lesson-info-search" element={<LessonInfoWrapper />} />
           <Route path="admin" element={<Admin />} />
           <Route path="privacy" element={<Privacy />} />

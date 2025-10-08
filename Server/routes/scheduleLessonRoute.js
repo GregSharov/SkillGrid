@@ -50,6 +50,18 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
+// Get scheduled lesson by room id
+router.get("/room/:id", async (req, res) => {
+  const roomId = req.params.id;
+  
+  try {
+    const scheduledLesson = await Schedule.findById({ _id: roomId });
+    res.status(200).json({ data: scheduledLesson, message: "Scheduled lesson fetched successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching scheduled lesson", error });
+  }
+});
+
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
   const { teacher, student, slots } = req.body;
@@ -104,7 +116,7 @@ router.post("/add", async (req, res) => {
 router.put("/update/:id/peer", async (req, res) => {
   const { id } = req.params;
   const { teacherPeerId, studentPeerId } = req.body;
-  
+
   try {
     const updatedSchedule = await Schedule.findByIdAndUpdate(id, { teacherPeerId, studentPeerId }, { new: true });
     res.status(200).json({ message: "Scheduled lesson peer id updated successfully", data: updatedSchedule });
