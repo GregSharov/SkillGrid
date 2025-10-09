@@ -5,7 +5,7 @@ import fetchData from "../services/fetchData";
 import useUploadImage from "../services/uploadImage";
 import API_URL from "../services/apiBase";
 import SelectSubjectsForm from "./SelectSubjectsForm";
-import { LogOut, Calendar, User, Phone } from "lucide-react";
+import { LogOut, Calendar, User, Phone, Edit, Save, X } from "lucide-react";
 
 import { toast } from 'react-toastify';
 
@@ -21,6 +21,14 @@ function UserCard({ authUser }) {
   const [profile, setProfile] = useState(null);
   const [userImage, setUserImage] = useState(defaultUserImage);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+  });
 
   const navigate = useNavigate();
 
@@ -52,6 +60,15 @@ function UserCard({ authUser }) {
       const data = await res.json();
       setProfile(data.user);
       setUserImage(`${data.user?.image || ""}`);
+      
+      // Populate edit form data
+      setEditFormData({
+        firstName: data.user?.firstName || "",
+        lastName: data.user?.lastName || "",
+        email: data.user?.email || "",
+        phone: data.user?.phone || "",
+        dateOfBirth: data.user?.dateOfBirth ? data.user.dateOfBirth.split('T')[0] : "",
+      });
     })();
   }, [authUser]);
 
@@ -234,6 +251,57 @@ function UserCard({ authUser }) {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
+  // Handle edit mode toggle
+  const handleEditToggle = () => {
+    setIsEditMode(true);
+  };
+
+  // Handle edit form changes
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle save profile changes
+  const handleSaveProfile = async () => {
+    try {
+      const response = await fetch(`${API_URL}/user/${authUser?.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(editFormData),
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setProfile(updatedUser);
+        setIsEditMode(false);
+        toast.success("Profile updated successfully! 🎉");
+      } else {
+        toast.error("Failed to update profile. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Something went wrong.");
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    // Reset form data to current profile values
+    setEditFormData({
+      firstName: profile?.firstName || "",
+      lastName: profile?.lastName || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
+      dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.split('T')[0] : "",
+    });
+    setIsEditMode(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -272,22 +340,114 @@ function UserCard({ authUser }) {
             </div>
 
             {/* Body */}
-            <div className="px-6 py-4 space-y-2 text-center">
-              <h2 className="text-xl font-bold text-slate-900">
-                {profile?.firstName} {profile?.lastName}
-              </h2>
-              <p className="text-sm text-slate-600 flex justify-center gap-1">
-                <User className="w-4 h-4 text-indigo-500" /> {profile?.email}
-              </p>
-              <p className="text-sm text-slate-600 flex justify-center gap-1">
-                <Phone className="w-4 h-4 text-indigo-500" /> {profile?.phone}
-              </p>
-              <p className="text-sm text-slate-600 flex justify-center gap-1">
-                <Calendar className="w-4 h-4 text-indigo-500" /> DOB:{" "}
-                {new Date(profile?.dateOfBirth)
-                  .toLocaleDateString("en-GB")
-                  .replaceAll("/", "-")}
-              </p>
+            <div className="px-6 py-4 space-y-3">
+              {!isEditMode ? (
+                // View Mode
+                <div className="space-y-2 text-center">
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {profile?.firstName} {profile?.lastName}
+                  </h2>
+                  <p className="text-sm text-slate-600 flex justify-center gap-1">
+                    <User className="w-4 h-4 text-indigo-500" /> {profile?.email}
+                  </p>
+                  <p className="text-sm text-slate-600 flex justify-center gap-1">
+                    <Phone className="w-4 h-4 text-indigo-500" /> {profile?.phone}
+                  </p>
+                  <p className="text-sm text-slate-600 flex justify-center gap-1">
+                    <Calendar className="w-4 h-4 text-indigo-500" /> DOB:{" "}
+                    {new Date(profile?.dateOfBirth)
+                      .toLocaleDateString("en-GB")
+                      .replaceAll("/", "-")}
+                  </p>
+                  <button
+                    onClick={handleEditToggle}
+                    className="mt-3 flex items-center justify-center gap-2 mx-auto px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Profile
+                  </button>
+                </div>
+              ) : (
+                // Edit Mode
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={editFormData.firstName}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={editFormData.lastName}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={editFormData.email}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={editFormData.phone}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={editFormData.dateOfBirth}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer → Subject Selection (teachers only) */}
