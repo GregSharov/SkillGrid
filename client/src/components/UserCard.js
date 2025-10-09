@@ -5,7 +5,7 @@ import fetchData from "../services/fetchData";
 import useUploadImage from "../services/uploadImage";
 import API_URL from "../services/apiBase";
 import SelectSubjectsForm from "./SelectSubjectsForm";
-import { LogOut, Calendar, User, Phone, Edit, Save, X } from "lucide-react";
+import { LogOut, Calendar, User, Phone, Edit, Save, X, Trash2, AlertTriangle } from "lucide-react";
 
 import { toast } from 'react-toastify';
 
@@ -22,6 +22,7 @@ function UserCard({ authUser }) {
   const [userImage, setUserImage] = useState(defaultUserImage);
   const [sortOrder, setSortOrder] = useState("asc");
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
     firstName: "",
     lastName: "",
@@ -302,6 +303,31 @@ function UserCard({ authUser }) {
     setIsEditMode(false);
   };
 
+  // Handle delete account
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await fetch(`${API_URL}/user/${authUser?.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        toast.success("Account deleted successfully");
+        // Logout and redirect to sign-in
+        await fetch(`${API_URL}/user/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+        navigate("/sign-in");
+      } else {
+        toast.error("Failed to delete account. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Something went wrong.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -359,13 +385,22 @@ function UserCard({ authUser }) {
                       .toLocaleDateString("en-GB")
                       .replaceAll("/", "-")}
                   </p>
-                  <button
-                    onClick={handleEditToggle}
-                    className="mt-3 flex items-center justify-center gap-2 mx-auto px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit Profile
-                  </button>
+                  <div className="flex flex-col gap-2 mt-3">
+                    <button
+                      onClick={handleEditToggle}
+                      className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 rounded-lg hover:bg-rose-100 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Account
+                    </button>
+                  </div>
                 </div>
               ) : (
                 // Edit Mode
@@ -584,6 +619,52 @@ function UserCard({ authUser }) {
 
         {loading && (
           <p className="mt-2 text-slate-500 font-medium">Uploading...</p>
+        )}
+
+        {/* Delete Account Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Delete Account</h3>
+                  <p className="text-sm text-slate-600">This action cannot be undone</p>
+                </div>
+              </div>
+
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
+                <p className="text-sm text-slate-700">
+                  Are you sure you want to delete your account? This will permanently remove:
+                </p>
+                <ul className="mt-2 text-sm text-slate-700 space-y-1 list-disc list-inside">
+                  <li>Your profile and personal information</li>
+                  <li>All scheduled lessons ({scheduledLessons.length} {scheduledLessons.length === 1 ? 'lesson' : 'lessons'})</li>
+                  <li>Your subjects and preferences</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    handleDeleteAccount();
+                  }}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

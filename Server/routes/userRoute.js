@@ -2,6 +2,7 @@ import express from "express";
 import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
 import { Subject } from "../models/subjectSchema.js";
+import { Schedule } from "../models/scheduleSchema.js";
 import { HashPassword, VerifyPassword } from "../utils/auth.js";
 import multer from "multer";
 import uploadImage from "./cloudinary.js";
@@ -251,6 +252,15 @@ router.delete("/:id", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Delete all scheduled lessons associated with this user (as teacher or student)
+    await Schedule.deleteMany({
+      $or: [
+        { "teacher._id": id },
+        { "student._id": id }
+      ]
+    });
+
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete user.", error: error.message });
