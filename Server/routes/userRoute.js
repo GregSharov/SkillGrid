@@ -203,6 +203,7 @@ router.get("/:id", async (req, res) => {
 // PUT update user
 router.put("/:id", async (req, res) => {
   try {
+    const { id } = req.params;
     const { firstName, lastName, email, phone, dateOfBirth, password, image, subjects } = req.body;
 
     const updateData = {
@@ -224,15 +225,15 @@ router.put("/:id", async (req, res) => {
       updateData.subjects = subjects;
     }
 
-    Model = (await Student.findById(id)) || (await Teacher.findById(id));
+    Model = (await Student.findById(id)) ? Student : Teacher;
     const user = await Model.findByIdAndUpdate(
-      req.params.id,
+      id,
       updateData,
       { new: true, runValidators: true }
     );
 
     if (!user) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.status(200).json(user);
@@ -244,8 +245,9 @@ router.put("/:id", async (req, res) => {
 // Delete user
 router.delete("/:id", async (req, res) => {
   try {
-    Model = (await Student.findById(id)) || (await Teacher.findById(id));
-    const user = await Model.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    Model = (await Student.findById(id)) ? Student : Teacher;
+    const user = await Model.findByIdAndDelete(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
