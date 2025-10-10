@@ -33,6 +33,8 @@
     "mongodb": "^6.14.2",
     "mongoose": "^8.12.1",
     "multer": "^2.0.2",
+    "nodemailer": "^7.0.9",
+    "openai": "^6.2.0",
     "socket.io": "^4.8.1",
     "uuid": "^13.0.0"
   }

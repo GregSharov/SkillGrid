@@ -211,13 +211,18 @@ function UserCard({ authUser }) {
     }
   };
 
-  const handleDeleteLesson = async (slotId) => {
+  const handleDeleteLesson = async (slotId, authUser) => {
     try {
-      const response = await fetch(`${API_URL}/schedule/delete/${slotId}`, {
+      const response = await fetch(`${API_URL}/schedule/delete/${slotId}/${authUser?.role}`, {
         method: "DELETE",
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Failed to delete lesson");
+      if (!response.ok) {
+        toast.error("Failed to delete lesson");
+        return;
+      } else {
+        toast.success("Lesson deleted successfully");
+      }
 
       setScheduledLessons((prev) =>
         prev
@@ -229,6 +234,7 @@ function UserCard({ authUser }) {
       );
     } catch (error) {
       console.error(error);
+      toast.error("Something went wrong.");
     }
   };
 
@@ -595,7 +601,7 @@ function UserCard({ authUser }) {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDeleteLesson(slot?._id)}
+                          onClick={() => handleDeleteLesson(slot?._id, authUser)}
                           className="px-3 py-1.5 rounded-lg bg-rose-100 text-rose-600 text-sm font-medium hover:bg-rose-200 transition"
                         >
                           Delete

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import CarouselLessons from "./carouselLessons.js";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // NEW: reviews UI
 import RatingStars from "./components/RatingStars.js";
@@ -59,11 +60,6 @@ function DisplayTeacherData() {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [chosenLesson, setChosenLesson] = useState(null);
 
-  // State for Response from Server
-  const [responseData, setResponseData] = useState(null);
-  // Response Style Color
-  const [resStyleColor, setResStyleColor] = useState("");
-
   const daysOfWeek = [
     "Sunday",
     "Monday",
@@ -116,7 +112,7 @@ function DisplayTeacherData() {
   // Enroll in selected slots
   const handleEnroll = async () => {
     if (selectedSlots.length === 0) {
-      alert("Please select at least one slot.");
+      toast.error("Please select at least one slot.");
       return;
     }
     if (isBooking || inFlightRef.current) return;
@@ -136,22 +132,20 @@ function DisplayTeacherData() {
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        setResponseData(data);
-        setResStyleColor("text-red-600");
-        throw new Error("Failed to schedule lessons");
+        toast.error("Failed to schedule lessons");
+        return;
+      } else {
+        toast.success("Lessons scheduled successfully");
       }
 
       setChosenLesson(lessonsArray[0] || null);
       setSelectedSlots([]);
-      setResponseData(data);
-      setResStyleColor("text-emerald-600");
 
       await fetchTeacherScheduledLessons();
     } catch (error) {
       console.error("Error scheduling lessons:", error);
+      toast.error("Something went wrong.");
     } finally {
       setIsBooking(false);
       inFlightRef.current = false;
@@ -545,12 +539,6 @@ function DisplayTeacherData() {
                     >
                       {isBooking ? "Booking..." : "Book Selected Lessons"}
                     </button>
-                  )}
-
-                  {responseData && (
-                    <p className={`${resStyleColor} text-center text-sm`}>
-                      {responseData.message}
-                    </p>
                   )}
                 </div>
 
