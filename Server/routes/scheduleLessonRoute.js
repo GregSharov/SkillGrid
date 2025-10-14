@@ -70,6 +70,16 @@ router.get("/room/:id", async (req, res) => {
 // Post route to schedule a lesson
 router.post("/add", async (req, res) => {
   const { teacher, student, slots } = req.body;
+  const slotsDataArray = slots.map((slot) => ({
+    time: slot.time,
+    date: slot.date,
+    day: slot.day,
+    lesson: {
+      _id: slot.lesson._id,
+      name: slot.lesson.name,
+      description: slot.lesson.description,
+    },
+  }));
 
   // Logic to schedule the lesson
   try {
@@ -84,16 +94,7 @@ router.post("/add", async (req, res) => {
         firstName: student.firstName,
         lastName: student.lastName,
       },
-      slots: slots.map((slot) => ({
-        time: slot.time,
-        date: slot.date,
-        day: slot.day,
-        lesson: {
-          _id: slot.lesson._id,
-          name: slot.lesson.name,
-          description: slot.lesson.description,
-        },
-      })),
+      slots: slotsDataArray,
       peers: [
         {
           teacherPeerId: uuidv4(),
@@ -106,22 +107,24 @@ router.post("/add", async (req, res) => {
     if (savedScheduledLesson) {
       // Determine target email
       const teacherObj = await Teacher.findById(teacher._id);
-      // const studentObj = await Student.findById(student._id);
 
-      const aiMsg = await generateLessonNotification({
-        initiatorRole: "student",
-        initiatorName: `${student.firstName} ${student.lastName}`,
-        actionType: "scheduled",
-        targetRole: "teacher",
-        lessonName: slots[0].lesson.name,
-        date: slots[0].date,
-        time: slots[0].time,
-      });
+      slotsDataArray.forEach(async (slot) => {
+        const aiMsg = await generateLessonNotification({
+          initiatorRole: "student",
+          initiatorName: `${student.firstName} ${student.lastName}`,
+          recipientName: `${teacherObj.firstName} ${teacherObj.lastName}`,
+          actionType: "scheduled",
+          targetRole: "teacher",
+          lessonName: slot.lesson.name,
+          date: slot.date,
+          time: slot.time,
+        });
 
-      await sendEmail({
-        to: teacherObj.email,
-        subject: aiMsg.subject,
-        text: aiMsg.message,
+        await sendEmail({
+          to: teacherObj.email,
+          subject: aiMsg.subject,
+          text: aiMsg.message,
+        });
       });
     }
 
@@ -207,17 +210,20 @@ router.delete("/delete/:id/:userRole", async (req, res) => {
       { new: true }
     );
 
-    // if (!updatedLesson) {
-    //   return res.status(404).json({ message: "Lesson not found" });
-    // }
+    if (!updatedLesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
 
     const initiator = userRole === "teacher" ? await Teacher.findById(updatedLesson.teacher._id) : await Student.findById(updatedLesson.student._id);
     const target = userRole === "teacher" ? await Student.findById(updatedLesson.student._id) : await Teacher.findById(updatedLesson.teacher._id);
+    console.log('Check initiator and target users: ', initiator.firstName, target.firstName);
+    console.log('Check userRole: ', userRole);
 
     // Send email to user by who deleted the lesson
     const aiMsg = await generateLessonNotification({
       initiatorRole: userRole,
       initiatorName: `${initiator.firstName} ${initiator.lastName}`,
+      recipientName: `${target.firstName} ${target.lastName}`,
       actionType: "deleted",
       targetRole: userRole === "teacher" ? "student" : "teacher",
       lessonName: slotToDelete.lesson.name,

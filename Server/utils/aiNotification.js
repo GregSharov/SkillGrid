@@ -6,7 +6,8 @@ dotenv.config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function generateLessonNotification({ initiatorRole, initiatorName, actionType, targetRole, lessonName, date, time }) {
+export async function generateLessonNotification({ initiatorRole, initiatorName, recipientName, actionType, targetRole, lessonName, date, time }) {
+    console.log('Recipietn Name: ', recipientName);
     // Format the date nicely for fallback
     const formattedDate = new Date(date).toLocaleDateString('en-US', {
         weekday: 'long',
@@ -29,7 +30,7 @@ export async function generateLessonNotification({ initiatorRole, initiatorName,
            📚 SKILLGRID NOTIFICATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello!
+Hello ${recipientName}!
 
 ${initiatorName} (${initiatorRole}) has ${actionText} a lesson with you.
 
@@ -54,7 +55,7 @@ This is an automated message. Please do not reply directly.
     const prompt = `
 You are an assistant for an educational scheduling platform called SkillGrid.
 A ${initiatorRole} named ${initiatorName} just ${actionType} a lesson "${lessonName}" scheduled on ${formattedDate} at ${time}.
-Write a short, friendly email notification message that will be sent to the ${targetRole}.
+Write a short, friendly email notification message that will be sent to the ${targetRole} named ${recipientName}.
 Include clear context (who did what and when) and a polite closing line.
 Keep it professional but warm.
 Return only the subject and message in JSON format: { "subject": "", "message": "" }.
