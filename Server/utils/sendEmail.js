@@ -4,7 +4,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    service: "gmail", // or smtp server
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // true for port 465
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -13,13 +15,13 @@ const transporter = nodemailer.createTransport({
 
 export async function sendEmail({ to, subject, text }) {
     try {
-        await transporter.sendMail({
+        const info = await transporter.sendMail({
             from: `"SkillGrid Notifications" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text,
         });
-        console.log("📩 Email sent to:", to);
+        console.log("📩 Email sent:", info.response);
     } catch (error) {
         console.error("❌ Email send failed:", error);
     }
