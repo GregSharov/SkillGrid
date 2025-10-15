@@ -23,6 +23,8 @@ function UserCard({ authUser }) {
   const [sortOrder, setSortOrder] = useState("asc");
   const [isEditMode, setIsEditMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteLessonModal, setShowDeleteLessonModal] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState(null);
   const [editFormData, setEditFormData] = useState({
     firstName: "",
     lastName: "",
@@ -211,6 +213,11 @@ function UserCard({ authUser }) {
     }
   };
 
+  const handleDeleteLessonClick = (slot) => {
+    setLessonToDelete(slot);
+    setShowDeleteLessonModal(true);
+  };
+
   const handleDeleteLesson = async (slotId, authUser) => {
     try {
       const response = await fetch(`${API_URL}/schedule/delete/${slotId}/${authUser?.role}`, {
@@ -232,6 +239,9 @@ function UserCard({ authUser }) {
           }))
           .filter((doc) => (doc.slots || []).length > 0)
       );
+      
+      setShowDeleteLessonModal(false);
+      setLessonToDelete(null);
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong.");
@@ -601,7 +611,7 @@ function UserCard({ authUser }) {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDeleteLesson(slot?._id, authUser)}
+                          onClick={() => handleDeleteLessonClick(slot)}
                           className="px-3 py-1.5 rounded-lg bg-rose-100 text-rose-600 text-sm font-medium hover:bg-rose-200 transition"
                         >
                           Delete
@@ -667,6 +677,62 @@ function UserCard({ authUser }) {
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition"
                 >
                   Delete Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Lesson Confirmation Modal */}
+        {showDeleteLessonModal && lessonToDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Delete Lesson</h3>
+                  <p className="text-sm text-slate-600">This action cannot be undone</p>
+                </div>
+              </div>
+
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
+                <p className="text-sm text-slate-700 font-medium mb-2">
+                  Are you sure you want to delete this lesson?
+                </p>
+                <div className="space-y-1.5 text-sm text-slate-700">
+                  <p><span className="font-medium">Lesson:</span> {lessonToDelete.lesson.name}</p>
+                  <p><span className="font-medium">Date:</span> {new Date(`${lessonToDelete.date} ${lessonToDelete.time}`).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}</p>
+                  <p><span className="font-medium">Time:</span> {lessonToDelete.time}</p>
+                </div>
+                <p className="mt-3 text-sm text-slate-600">
+                  {authUser?.role === "teacher" 
+                    ? `The student (${lessonToDelete.lessonData.student.firstName} ${lessonToDelete.lessonData.student.lastName}) will be notified about this cancellation.`
+                    : `The teacher (${lessonToDelete.lessonData.teacher.firstName} ${lessonToDelete.lessonData.teacher.lastName}) will be notified about this cancellation.`
+                  }
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteLessonModal(false);
+                    setLessonToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteLesson(lessonToDelete._id, authUser)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition"
+                >
+                  Delete Lesson
                 </button>
               </div>
             </div>
