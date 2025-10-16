@@ -214,29 +214,33 @@ router.delete("/delete/:id/:userRole", async (req, res) => {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
-    const initiator = userRole === "teacher" ? await Teacher.findById(updatedLesson.teacher._id) : await Student.findById(updatedLesson.student._id);
-    const target = userRole === "teacher" ? await Student.findById(updatedLesson.student._id) : await Teacher.findById(updatedLesson.teacher._id);
-    console.log('Check initiator and target users: ', initiator.firstName, target.firstName);
-    console.log('Check userRole: ', userRole);
+    // Send email only if lesson's date and time is in the future
+    const isFuture = new Date(slotToDelete.date + ' ' + slotToDelete.time) > new Date();
+    console.log('Is future: ', isFuture);
 
-    // Send email to user by who deleted the lesson
-    const aiMsg = await generateLessonNotification({
-      initiatorRole: userRole,
-      initiatorName: `${initiator.firstName} ${initiator.lastName}`,
-      recipientName: `${target.firstName} ${target.lastName}`,
-      actionType: "deleted",
-      targetRole: userRole === "teacher" ? "student" : "teacher",
-      lessonName: slotToDelete.lesson.name,
-      date: slotToDelete.date,
-      time: slotToDelete.time,
-    });
-    console.log('AI Message ', aiMsg);
+    if (isFuture) {
+      const initiator = userRole === "teacher" ? await Teacher.findById(updatedLesson.teacher._id) : await Student.findById(updatedLesson.student._id);
+      const target = userRole === "teacher" ? await Student.findById(updatedLesson.student._id) : await Teacher.findById(updatedLesson.teacher._id);
 
-    await sendEmail({
-      to: target.email,
-      subject: aiMsg.subject,
-      text: aiMsg.message,
-    });
+      // Send email to user by who deleted the lesson
+      const aiMsg = await generateLessonNotification({
+        initiatorRole: userRole,
+        initiatorName: `${initiator.firstName} ${initiator.lastName}`,
+        recipientName: `${target.firstName} ${target.lastName}`,
+        actionType: "deleted",
+        targetRole: userRole === "teacher" ? "student" : "teacher",
+        lessonName: slotToDelete.lesson.name,
+        date: slotToDelete.date,
+        time: slotToDelete.time,
+      });
+      console.log('AI Message ', aiMsg);
+
+      await sendEmail({
+        to: target.email,
+        subject: aiMsg.subject,
+        text: aiMsg.message,
+      });
+    }
 
     // Clean up schedules with no slots left
     await Schedule.deleteMany({ slots: { $size: 0 } });
