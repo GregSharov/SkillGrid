@@ -82,6 +82,7 @@ app.use(
       // sameSite: "lax",
       path: "/",
       maxAge: 1000 * 60 * 60 * 24,
+      partitioned: true,
     },
   })
 );
