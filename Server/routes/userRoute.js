@@ -6,6 +6,8 @@ import { Schedule } from "../models/scheduleSchema.js";
 import { HashPassword, VerifyPassword } from "../utils/auth.js";
 import multer from "multer";
 import uploadImage from "./cloudinary.js";
+import { sendInformationEmail } from "../utils/aiNotification.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 const router = express.Router();
 
@@ -126,6 +128,18 @@ router.post("/signup", async (req, res) => {
     });
 
     await newUser.save();
+    // Send congratulation email to user
+    const aiMsg = await sendInformationEmail({
+      recipientName: `${firstName} ${lastName}`,
+      recipientEmail: email,
+      actionType: "signed up",
+    });
+
+    await sendEmail({
+      to: email,
+      subject: aiMsg.subject,
+      text: aiMsg.message,
+    });
 
     res.status(201).json({ message: "User registered successfully." });
   } catch (error) {
@@ -253,6 +267,19 @@ router.delete("/:id", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Send email to user
+    const aiMsg = await sendInformationEmail({
+      recipientName: `${user.firstName} ${user.lastName}`,
+      recipientEmail: user.email,
+      actionType: "deleted",
+    });
+
+    await sendEmail({
+      to: user.email,
+      subject: aiMsg.subject,
+      text: aiMsg.message,
+    });
 
     // Delete all scheduled lessons associated with this user (as teacher or student)
     await Schedule.deleteMany({
