@@ -303,7 +303,11 @@ router.post("/logout", (req, res) => {
       console.error("Error logging out:", err);
       return res.status(500).json({ message: "Error logging out." });
     }
-    res.clearCookie("sid", { path: "/" });
+    res.clearCookie("sid", {
+      path: "/",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax"
+    });
     res.status(200).json({ message: "Logout successful." });
   });
 });
