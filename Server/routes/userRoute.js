@@ -126,6 +126,7 @@ router.post("/signup", async (req, res) => {
     });
 
     await newUser.save();
+
     res.status(201).json({ message: "User registered successfully." });
   } catch (error) {
     console.error("Error signing up user:", error);

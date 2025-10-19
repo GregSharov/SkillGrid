@@ -5,7 +5,14 @@ import { generateLessonNotification } from "../utils/aiNotification.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
+import { sendReminder } from "../utils/sendReminder.js";
+import cron from "node-cron";
 
+// Running the cron task sun - fri 7:00 - 20:00 every one minute
+cron.schedule('0 6-19 * * 0-5', () => {
+  console.log('Running task every hour from 7:00 to 20:00, Sun–Fri');
+  sendReminder();
+});
 
 const router = express.Router();
 

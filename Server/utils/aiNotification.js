@@ -19,8 +19,9 @@ export async function generateLessonNotification({ initiatorRole, initiatorName,
     // Create action message based on type
     const actionText = actionType === 'scheduled' ? '📅 scheduled' :
         actionType === 'cancelled' ? '❌ cancelled' :
-            actionType === 'updated' ? '✏️ updated' :
-                actionType === 'deleted' ? '🗑️ deleted' : actionType;
+            actionType === 'reminder' ? '📝 reminder' :
+                actionType === 'deleted' ? '🗑️ deleted' :
+                    actionType === 'updated' ? '✏️ updated' : actionType;
 
     // Well-formatted fallback message
     const fallbackMessage = {
@@ -58,6 +59,7 @@ A ${initiatorRole} named ${initiatorName} just ${actionType} a lesson "${lessonN
 Write a short, friendly email notification message that will be sent to the ${targetRole} named ${recipientName}.
 Include clear context (who did what and when) and a polite closing line.
 Keep it professional but warm.
+If ${actionType} is 'reminder', both teacher and student will receive the same message.
 Return only the subject and message in JSON format: { "subject": "", "message": "" }.
 `;
 
