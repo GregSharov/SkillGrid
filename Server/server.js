@@ -75,11 +75,9 @@ app.use(
       ttl: 60 * 60 * 24 * 7, // 1 week
     }) : undefined,
     cookie: {
-      httpOnly: true,
+      httpOnly: isProd,
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
-      // secure: false,
-      // sameSite: "lax",
       path: "/",
       maxAge: 1000 * 60 * 60 * 24,
     },

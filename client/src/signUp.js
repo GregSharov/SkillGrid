@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import API_URL from "./services/apiBase";
+import { toast } from "react-toastify";
 
 function SignUp() {
   const [formData, setFormData] = useState({
@@ -93,7 +94,7 @@ function SignUp() {
       });
 
       const data = await res.json();
-      alert(`Server says: ${data.message || "Signed up"}`);
+      toast.success(`${data.message || "Signed up"} 🎉`);
 
       setFormData({
         firstName: "",
@@ -104,8 +105,10 @@ function SignUp() {
         password: "",
         isTeacher: false,
       });
+
+      navigate("/sign-in", { replace: true });
     } catch (err) {
-      console.error("Error:", err);
+      toast.error("Error: " + err.message);
     }
   };
 
@@ -144,10 +147,9 @@ function SignUp() {
                   placeholder="Enter your first name"
                   required
                   className={`w-full rounded-xl border px-4 py-2.5 text-slate-900 shadow-sm focus:ring-4 transition
-                    ${
-                      validFirst
-                        ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-                        : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                    ${validFirst
+                      ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+                      : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
                     }`}
                   aria-invalid={!validFirst}
                 />
@@ -173,10 +175,9 @@ function SignUp() {
                   placeholder="Enter your last name"
                   required
                   className={`w-full rounded-xl border px-4 py-2.5 text-slate-900 shadow-sm focus:ring-4 transition
-                    ${
-                      validLast
-                        ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-                        : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                    ${validLast
+                      ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+                      : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
                     }`}
                   aria-invalid={!validLast}
                 />
@@ -204,10 +205,9 @@ function SignUp() {
                 onChange={handleChange}
                 required
                 className={`w-full rounded-xl border px-4 py-2.5 text-slate-900 shadow-sm focus:ring-4 transition
-                  ${
-                    validDOB
-                      ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-                      : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                  ${validDOB
+                    ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+                    : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
                   }`}
                 aria-invalid={!validDOB}
               />
@@ -236,10 +236,9 @@ function SignUp() {
                 placeholder="you@example.com"
                 required
                 className={`w-full rounded-xl border px-4 py-2.5 text-slate-900 shadow-sm focus:ring-4 transition
-                  ${
-                    validEmail
-                      ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-                      : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                  ${validEmail
+                    ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+                    : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
                   }`}
                 aria-invalid={!validEmail}
               />
@@ -269,17 +268,15 @@ function SignUp() {
                 required
                 maxLength={16}
                 className={`w-full rounded-xl border px-4 py-2.5 text-slate-900 shadow-sm focus:ring-4 transition
-                  ${
-                    validPhone
-                      ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-                      : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                  ${validPhone
+                    ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+                    : "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
                   }`}
                 aria-invalid={!validPhone}
               />
               <p
-                className={`mt-1 text-xs ${
-                  validPhone ? "text-slate-500" : "text-rose-600"
-                }`}
+                className={`mt-1 text-xs ${validPhone ? "text-slate-500" : "text-rose-600"
+                  }`}
               >
                 {validPhone
                   ? "Format: (XXX) XXX-XXXX"
@@ -304,10 +301,9 @@ function SignUp() {
                 placeholder="Minimum 8 characters"
                 required
                 className={`w-full rounded-xl border px-4 py-2.5 text-slate-900 shadow-sm focus:ring-4 transition
-                  ${
-                    validPassword
-                      ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-                      : "border-amber-300 focus:border-amber-400 focus:ring-amber-100"
+                  ${validPassword
+                    ? "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+                    : "border-amber-300 focus:border-amber-400 focus:ring-amber-100"
                   }`}
                 aria-invalid={!validPassword}
                 aria-describedby="pw-help"
@@ -318,9 +314,8 @@ function SignUp() {
                 {passwordBar.map((on, i) => (
                   <span
                     key={i}
-                    className={`h-1.5 flex-1 rounded ${
-                      on ? passwordColors[passwordScore] : "bg-slate-200"
-                    }`}
+                    className={`h-1.5 flex-1 rounded ${on ? passwordColors[passwordScore] : "bg-slate-200"
+                      }`}
                   />
                 ))}
               </div>
@@ -331,39 +326,35 @@ function SignUp() {
               {/* Checklist */}
               <ul className="mt-2 space-y-1 text-xs">
                 <li
-                  className={`${
-                    formData.password.length >= 8
-                      ? "text-emerald-600"
-                      : "text-slate-500"
-                  }`}
+                  className={`${formData.password.length >= 8
+                    ? "text-emerald-600"
+                    : "text-slate-500"
+                    }`}
                 >
                   • At least 8 characters
                 </li>
                 <li
-                  className={`${
-                    /[A-Z]/.test(formData.password) &&
+                  className={`${/[A-Z]/.test(formData.password) &&
                     /[a-z]/.test(formData.password)
-                      ? "text-emerald-600"
-                      : "text-slate-500"
-                  }`}
+                    ? "text-emerald-600"
+                    : "text-slate-500"
+                    }`}
                 >
                   • Upper & lower case
                 </li>
                 <li
-                  className={`${
-                    /\d/.test(formData.password)
-                      ? "text-emerald-600"
-                      : "text-slate-500"
-                  }`}
+                  className={`${/\d/.test(formData.password)
+                    ? "text-emerald-600"
+                    : "text-slate-500"
+                    }`}
                 >
                   • At least one number
                 </li>
                 <li
-                  className={`${
-                    /[^A-Za-z0-9]/.test(formData.password)
-                      ? "text-emerald-600"
-                      : "text-slate-500"
-                  }`}
+                  className={`${/[^A-Za-z0-9]/.test(formData.password)
+                    ? "text-emerald-600"
+                    : "text-slate-500"
+                    }`}
                 >
                   • At least one symbol
                 </li>
@@ -393,10 +384,9 @@ function SignUp() {
               type="submit"
               disabled={!formValid}
               className={`w-full rounded-2xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition active:scale-[0.98]
-                ${
-                  formValid
-                    ? "bg-indigo-600 hover:bg-indigo-700"
-                    : "bg-slate-300 cursor-not-allowed"
+                ${formValid
+                  ? "bg-indigo-600 hover:bg-indigo-700"
+                  : "bg-slate-300 cursor-not-allowed"
                 }`}
               aria-disabled={!formValid}
             >
