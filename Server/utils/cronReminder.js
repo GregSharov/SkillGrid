@@ -4,7 +4,7 @@ import { sendReminder } from "./sendReminder.js";
 
 export function startReminderCron() {
     // Run every hour between 7:00–20:00 (Sun–Fri)
-    cron.schedule('0 6-19 * * 0-5', async () => {
+    cron.schedule('0 6-20 * * 0-5', async () => {
         console.log('🕒 Running SkillGrid reminder check...');
         await sendReminder();
     });
