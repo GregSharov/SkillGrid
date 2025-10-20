@@ -17,6 +17,7 @@ import teacherRoutes from "./routes/teacherRoute.js";
 import subjectRoutes from "./routes/subjectRoute.js";
 import scheduleLessonRoutes from "./routes/scheduleLessonRoute.js";
 import reviews from "./routes/reviews.js";
+import { startReminderCron } from "./utils/cronReminder.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,9 +133,13 @@ if (!isProd) {
       socketTimeoutMS: 20000,
     });
     console.log("Connected to MongoDB!");
+
     const HOST = process.env.HOST;
     server.listen(PORT, () => {
       console.log(`Server runs on ${protocol}://${HOST}:${PORT}`);
+      
+      // Start Cron Reminder
+      startReminderCron();
     });
   } catch (error) {
     console.error("Mongo connect failed:", error);
