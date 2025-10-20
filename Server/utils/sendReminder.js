@@ -23,15 +23,23 @@ export async function sendReminder() {
 
             lesson.slots.forEach(async (slot) => {
                 const slotDate = new Date(slot.date + ' ' + slot.time);
+                const diffOneHour = Math.abs(slotDate - oneHourFromNow);
+                const diff24Hours = Math.abs(slotDate - twentyFourHoursFromNow);
 
-                if (slotDate === oneHourFromNow || slotDate === twentyFourHoursFromNow) {
+                // 5 minute tolerance
+                if (diffOneHour <= 5 * 60 * 1000 || diff24Hours <= 5 * 60 * 1000) {
+                    if (!teacher?.email || !student?.email) {
+                        console.warn('Missing teacher/student email for', lesson._id);
+                        return;
+                    }
+
                     // Send email reminder both to teacher and student
                     const aiMsg = await generateLessonNotification({
-                        initiatorRole: "student",
-                        initiatorName: student.firstName + ' ' + student.lastName,
-                        recipientName: teacher.firstName + ' ' + teacher.lastName,
+                        initiatorRole: "system",
+                        initiatorName: "SkillGrid Reminder",
+                        recipientName: `${teacher.firstName} ${teacher.lastName} and ${student.firstName} ${student.lastName}`,
                         actionType: "reminder",
-                        targetRole: "teacher",
+                        targetRole: "both",
                         lessonName: slot.lesson.name,
                         date: slot.date,
                         time: slot.time,
@@ -41,7 +49,9 @@ export async function sendReminder() {
                         to: [teacher.email, student.email],
                         subject: aiMsg.subject,
                         text: aiMsg.message,
-                    })
+                    });
+
+                    console.log(`📩 Reminder sent for ${slot.lesson.name} at ${slot.date} ${slot.time}`);
                 }
             })
         });
