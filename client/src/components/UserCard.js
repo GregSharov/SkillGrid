@@ -255,9 +255,12 @@ function UserCard({ authUser }) {
         allSlots.push({ ...slot, lessonData: lesson });
       });
     });
+
+    // Sort by date and by time. Time is always ascending.
     return allSlots.sort((a, b) => {
-      const dateA = new Date(`${a.date} ${a.time}`);
-      const dateB = new Date(`${b.date} ${b.time}`);
+      const dateA = new Date(`${a.date}`);
+      const dateB = new Date(`${b.date}`);
+
       return sortOrder === "asc"
         ? dateB.getTime() - dateA.getTime()
         : dateA.getTime() - dateB.getTime();
