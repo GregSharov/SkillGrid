@@ -1,8 +1,10 @@
 import { useState, useMemo } from "react";
 import API_URL from "./services/apiBase";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function SignUp() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -106,6 +108,7 @@ function SignUp() {
         isTeacher: false,
       });
 
+      // Navigate to log in page after successful sign up
       navigate("/sign-in", { replace: true });
     } catch (err) {
       toast.error("Error: " + err.message);
