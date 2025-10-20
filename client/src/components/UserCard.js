@@ -539,7 +539,7 @@ function UserCard({ authUser }) {
             <div className="grid md:grid-cols-2 gap-6">
               {getSortedScheduledLessons().map((slot) => {
                 const slotDate = new Date(`${slot.date} ${slot.time}`);
-                const isPast = slotDate < new Date();
+                const isPast = slotDate < new Date(Date.now() + 1 * 60 * 60 * 1000);
                 const isSoon =
                   slotDate > new Date() &&
                   slotDate < new Date(Date.now() + 24 * 60 * 60 * 1000);
