@@ -7,6 +7,9 @@ export function startReminderCron() {
     cron.schedule('0 6-20 * * 0-5', async () => {
         console.log('🕒 Running SkillGrid reminder check...');
         await sendReminder();
+    }, {
+        schedule: true,
+        timezone: 'Asia/Jerusalem'
     });
 
     console.log("✅ Reminder cron job scheduled (Sun–Fri 07:00–20:00 hourly)");
