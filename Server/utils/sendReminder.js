@@ -18,16 +18,18 @@ export async function sendReminder() {
             return;
         }
 
-        scheduledLessons.forEach(async (lesson) => {
+        for (const lesson of scheduledLessons) {
             const teacher = await Teacher.findById(lesson.teacher._id);
             const student = await Student.findById(lesson.student._id);
 
-            lesson.slots.forEach(async (slot) => {
+            for (const slot of lesson.slots) {
                 if (!slot.reminderSent) {
-                    slot.reminderSent = true;
-                    await slot.save();
-                    console.log('ReminderSent set to true');
-                    
+                    await Schedule.updateOne(
+                        { _id: lesson._id, "slots._id": slot._id },
+                        { $set: { "slots.$.reminderSent": true } }
+                    );
+                    console.log(`ReminderSent set to true for slot ${slot._id}`);
+
                     const slotDate = new Date(slot.date + ' ' + slot.time);
                     const slotDateInMs = slotDate.getTime();
 
@@ -58,8 +60,8 @@ export async function sendReminder() {
                         console.log(`📩 Reminder sent for ${slot.lesson.name} at ${slot.date} ${slot.time}`);
                     }
                 }
-            })
-        });
+            }
+        };
 
 
     } catch (error) {
