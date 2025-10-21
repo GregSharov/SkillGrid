@@ -1,16 +1,18 @@
-// /cronJobs/reminderCron.js
+// /utils/cronReminder.js
 import cron from "node-cron";
 import { sendReminder } from "./sendReminder.js";
 
 export function startReminderCron() {
-    // Run every hour between 7:00–20:00 (Sun–Fri)
-    cron.schedule('0 6-20 * * 0-5', async () => {
-        console.log('🕒 Running SkillGrid reminder check...');
+    // Run every hour between 06:00–19:00 (Sun–Fri) IL time
+    cron.schedule("0 6-19 * * 0-5", async () => {
+        const utcNow = new Date().toLocaleString("en-IL", { timeZone: "UTC" });
+        const ilNow = new Date().toLocaleString("en-IL", { timeZone: "Asia/Jerusalem" });
+        console.log(`🕒 Running SkillGrid reminder check (IL time: ${ilNow}, UTC: ${utcNow})`);
+
         await sendReminder();
     }, {
-        schedule: true,
-        timezone: 'Asia/Jerusalem'
+        timezone: "Asia/Jerusalem",
     });
 
-    console.log("✅ Reminder cron job scheduled (Sun–Fri 07:00–20:00 hourly)");
+    console.log("✅ Reminder cron job scheduled (Sun–Fri 06:00–19:00 IL time — one hour before lessons start)");
 }
