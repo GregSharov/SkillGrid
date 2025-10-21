@@ -19,6 +19,7 @@ const slotSchema = new Schema({
   date: { type: String, required: true },
   day: { type: String, required: true },
   lesson: { type: Object },
+  reminderSent: { type: Boolean, default: false },
 });
 
 // Define the schedule schema

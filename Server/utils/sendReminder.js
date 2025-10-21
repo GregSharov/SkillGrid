@@ -23,34 +23,40 @@ export async function sendReminder() {
             const student = await Student.findById(lesson.student._id);
 
             lesson.slots.forEach(async (slot) => {
-                const slotDate = new Date(slot.date + ' ' + slot.time);
-                const slotDateInMs = slotDate.getTime();
+                if (!slot.reminderSent) {
+                    slot.reminderSent = true;
+                    await slot.save();
+                    console.log('ReminderSent set to true');
+                    
+                    const slotDate = new Date(slot.date + ' ' + slot.time);
+                    const slotDateInMs = slotDate.getTime();
 
-                if (now === slotDateInMs || oneHourFromNow === slotDateInMs || twentyFourHoursFromNow === slotDateInMs) {
-                    if (!teacher?.email || !student?.email) {
-                        console.warn('Missing teacher/student email for', lesson._id);
-                        return;
+                    if (now === slotDateInMs || oneHourFromNow === slotDateInMs || twentyFourHoursFromNow === slotDateInMs) {
+                        if (!teacher?.email || !student?.email) {
+                            console.warn('Missing teacher/student email for', lesson._id);
+                            return;
+                        }
+
+                        // Send email reminder both to teacher and student
+                        const aiMsg = await generateLessonNotification({
+                            initiatorRole: "system",
+                            initiatorName: "SkillGrid Reminder",
+                            recipientName: `${teacher.firstName} ${teacher.lastName} and ${student.firstName} ${student.lastName}`,
+                            actionType: "reminder",
+                            targetRole: "both",
+                            lessonName: slot.lesson.name,
+                            date: slot.date,
+                            time: slot.time,
+                        });
+
+                        await sendEmail({
+                            to: [teacher.email, student.email],
+                            subject: aiMsg.subject,
+                            text: aiMsg.message,
+                        });
+
+                        console.log(`📩 Reminder sent for ${slot.lesson.name} at ${slot.date} ${slot.time}`);
                     }
-
-                    // Send email reminder both to teacher and student
-                    const aiMsg = await generateLessonNotification({
-                        initiatorRole: "system",
-                        initiatorName: "SkillGrid Reminder",
-                        recipientName: `${teacher.firstName} ${teacher.lastName} and ${student.firstName} ${student.lastName}`,
-                        actionType: "reminder",
-                        targetRole: "both",
-                        lessonName: slot.lesson.name,
-                        date: slot.date,
-                        time: slot.time,
-                    });
-
-                    await sendEmail({
-                        to: [teacher.email, student.email],
-                        subject: aiMsg.subject,
-                        text: aiMsg.message,
-                    });
-
-                    console.log(`📩 Reminder sent for ${slot.lesson.name} at ${slot.date} ${slot.time}`);
                 }
             })
         });
