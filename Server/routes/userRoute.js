@@ -11,6 +11,8 @@ import { sendEmail } from "../utils/sendEmail.js";
 
 const router = express.Router();
 
+const isProd = process.env.NODE_ENV === "production";
+
 // Configure multer to store files in memory
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
