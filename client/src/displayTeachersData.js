@@ -22,6 +22,9 @@ function DisplayTeacherData() {
   // State for student data (id, role)
   const [student, setStudent] = useState();
 
+  // State for student's ID
+  const [studentId, setStudentId] = useState();
+
   // convenience flag
   const isStudent = student?.role === "student";
 
@@ -37,8 +40,12 @@ function DisplayTeacherData() {
   // State for teacher's scheduled lessons
   const [teacherScheduledLessons, setTeacherScheduledLessons] = useState([]);
 
+  // State for student's scheduled lessons
+  const [studentScheduledLessons, setStudentScheduledLessons] = useState([]);
+
   // State for Reviews refresh trigger
   const [reviewsRefreshKey, setReviewsRefreshKey] = useState(0);
+
 
   // Function to check if chosen slot's time and date match teacher's scheduled lessons
   const isSlotConflicting = (time, dateObj) => {
@@ -48,6 +55,21 @@ function DisplayTeacherData() {
     chosen.setHours(hour, 0, 0, 0);
 
     return teacherScheduledLessons.some((slot) => {
+      const slotHour = Number(String(slot.time).split(":")[0]);
+      const slotDate = new Date(slot.date);
+      slotDate.setHours(slotHour, 0, 0, 0);
+      return slotDate.getTime() === chosen.getTime();
+    });
+  };
+
+  // Function to check if chosen slot's time and date match student's scheduled lessons
+  const isStudentSlotConflicting = (time, dateObj) => {
+    const hour = Number(String(time).split(":")[0]);
+
+    const chosen = new Date(dateObj);
+    chosen.setHours(hour, 0, 0, 0);
+
+    return studentScheduledLessons.some((slot) => {
       const slotHour = Number(String(slot.time).split(":")[0]);
       const slotDate = new Date(slot.date);
       slotDate.setHours(slotHour, 0, 0, 0);
@@ -143,6 +165,7 @@ function DisplayTeacherData() {
       setSelectedSlots([]);
 
       await fetchTeacherScheduledLessons();
+      await fetchStudentScheduledLessons();
     } catch (error) {
       console.error("Error scheduling lessons:", error);
       toast.error("Something went wrong.");
@@ -175,9 +198,33 @@ function DisplayTeacherData() {
     }
   }, [teacherId]);
 
+  // Fetch student's scheduled lessons
+  const fetchStudentScheduledLessons = useCallback(async () => {
+    if (!studentId) return;
+    try {
+      const response = await fetch(`${API_URL}/schedule/user/${studentId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const lessons = (data.data || []).flatMap((doc) => doc.slots || []);
+        setStudentScheduledLessons(lessons);
+      } else {
+        console.error("Error fetching student's scheduled lessons:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching student's scheduled lessons:", error);
+    }
+  }, [studentId]);
+
   useEffect(() => {
     fetchTeacherScheduledLessons();
   }, [fetchTeacherScheduledLessons]);
+
+  useEffect(() => {
+    if (studentId) fetchStudentScheduledLessons();
+  }, [studentId, fetchStudentScheduledLessons]);
 
   // Fetch student ID (session)
   useEffect(() => {
@@ -190,6 +237,7 @@ function DisplayTeacherData() {
         const data = await response.json();
         if (response.ok) {
           setStudent(data.user);
+          setStudentId(data.user?.id);
         } else {
           console.error("Error fetching student data:", data);
         }
@@ -447,7 +495,7 @@ function DisplayTeacherData() {
                               );
                               const isPast = slotDate < new Date();
 
-                              if (isSlotConflicting(time, date)) {
+                              if (isSlotConflicting(time, date) && !isStudentSlotConflicting(time, date)) {
                                 return (
                                   <td
                                     key={key}
@@ -457,6 +505,21 @@ function DisplayTeacherData() {
                                     <span className="inline-flex items-center rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
                                       Booked
                                     </span>
+                                  </td>
+                                );
+                              }
+
+                              if (isStudentSlotConflicting(time, date)) {
+                                return (
+                                  <td
+                                    key={key}
+                                    className="border-t border-slate-200 p-3 text-center"
+                                    title="This lesson is already scheduled for you"
+                                  >
+                                    <p className="inline-flex items-center rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 ring-1 ring-green-200">
+                                      Scheduled
+                                    </p>
+                                    <p className="text-xs text-slate-500">{studentScheduledLessons.find(slot => slot.date === formattedDate && slot.time === time)?.lesson?.name}</p>
                                   </td>
                                 );
                               }
