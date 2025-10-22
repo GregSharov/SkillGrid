@@ -30,11 +30,10 @@ export async function sendReminder() {
                 if (!slot.reminderSent) {
                     // Construct IL datetime from slot.date + slot.time
                     const slotDateTime = new Date(`${slot.date} ${slot.time}`);
-                    // const slotIL = new Date(slotDateTime.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
                     const slotIL = new Date(slotDateTime);
                     const diffMinutes = (slotIL - ilNow) / (1000 * 60);
                     const diff24HoursCondition = diffMinutes <= twentyFourHours && diffMinutes > twentyFourHours - hour / 2;
-                    const diff1HourCondition = diffMinutes <= hour && diffMinutes > hour / 2;
+                    const diff1HourCondition = diffMinutes <= hour && diffMinutes >= hour / 2;
                     console.log('Slot Date Time: ', slotDateTime);
                     console.log('Slot IL: ', slotIL);
                     console.log('Diff Minutes: ', diffMinutes);
