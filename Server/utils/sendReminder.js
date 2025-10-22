@@ -5,14 +5,16 @@ import Student from "../models/studentSchema.js";
 import Teacher from "../models/teacherSchema.js";
 
 export async function sendReminder() {
-    const now = new Date();
-    now.setMinutes(0, 0, 0);
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000).getTime();
-    const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000).getTime();
+    // const now = new Date();
+    // now.setMinutes(0, 0, 0);
+    // const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000).getTime();
+    // const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000).getTime();
 
     try {
         const ilNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
-        const nowMs = ilNow.getTime();
+        const hour = 60;
+        const twentyFourHours = 1440;
+
         const scheduledLessons = await Schedule.find({});
 
         if (!scheduledLessons || scheduledLessons.length === 0) {
@@ -27,15 +29,18 @@ export async function sendReminder() {
             for (const slot of lesson.slots) {
                 if (!slot.reminderSent) {
                     // Construct IL datetime from slot.date + slot.time
-                    const slotDateTime = new Date(`${slot.date}T${slot.time}:00`);
+                    const slotDateTime = new Date(`${slot.date} ${slot.time}`);
                     const slotIL = new Date(slotDateTime.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
                     const diffMinutes = (slotIL - ilNow) / (1000 * 60);
+                    const diff24HoursCondition = diffMinutes <= twentyFourHours && diffMinutes > twentyFourHours - hour / 2;
+                    const diff1HourCondition = diffMinutes <= hour && diffMinutes > hour / 2;
                     console.log('Slot Date Time: ', slotDateTime);
                     console.log('Slot IL: ', slotIL);
                     console.log('Diff Minutes: ', diffMinutes);
+                    console.log('Difference 24 hours: ', diff24HoursCondition);
 
                     // 🔔 Send reminder ~1 hour before
-                    if (diffMinutes <= 30 && diffMinutes > 0) {
+                    if (diff24HoursCondition || diff1HourCondition) {
                         if (!teacher?.email || !student?.email) {
                             console.warn('Missing teacher/student email for', lesson._id);
                             return;
@@ -59,14 +64,15 @@ export async function sendReminder() {
                             text: aiMsg.message,
                         });
 
+                        // Update reminderSent to true
+                        await Schedule.updateOne(
+                            { _id: lesson._id, "slots._id": slot._id },
+                            { $set: { "slots.$.reminderSent": true } }
+                        );
+
+                        console.log(`ReminderSent set to true for slot ${slot.lesson.name} at ${slot.date} ${slot.time}`);
                         console.log(`📩 Reminder sent for ${slot.lesson.name} at ${slot.date} ${slot.time}`);
                     }
-
-                    await Schedule.updateOne(
-                        { _id: lesson._id, "slots._id": slot._id },
-                        { $set: { "slots.$.reminderSent": true } }
-                    );
-                    console.log(`ReminderSent set to true for slot ${slot._id}`);
                 } else {
                     console.log('No scheduled lessons for now');
                 }
