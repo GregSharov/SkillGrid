@@ -82,7 +82,7 @@ const AdminDashboard = () => {
   const handleImageUpload = async (file) => {
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('directUpload', 'true');
+    formData.append('file', 'true');
 
     try {
       const response = await fetch(`${API_URL}/user/upload`, {
