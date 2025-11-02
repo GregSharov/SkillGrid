@@ -22,10 +22,10 @@ var Model = Student;
 // Upload profile image
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    const { userId, directUpload } = req.body;
+    const { userId, file } = req.body;
 
     // For direct uploads (new items), just upload to Cloudinary without user association
-    if (directUpload === "true") {
+    if (file === "true") {
       const cloudinaryResult = await new Promise((resolve, reject) => {
         const stream = uploadImage.uploader.upload_stream(
           {
