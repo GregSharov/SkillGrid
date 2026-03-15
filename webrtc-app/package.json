@@ -1,0 +1,20 @@
+{
+  "name": "webrtc-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev -- --host",
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "build": "npm --prefix client run build && rm -rf server/client_dist && cp -r client/dist server/client_dist",
+    "start": "npm --prefix server run start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
